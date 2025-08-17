@@ -1,0 +1,11 @@
+CREATE TABLE Food (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT
+);
+
+selectAll:
+SELECT * FROM Food;
+
+insert:
+INSERT INTO Food(name, description) VALUES (?, ?);
