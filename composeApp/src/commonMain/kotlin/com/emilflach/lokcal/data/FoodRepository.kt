@@ -49,8 +49,8 @@ class FoodRepository(private val database: Database) {
             return best
         }
 
-        return candidates.sortedWith(compareBy<Food> { sourcePriority(it.source) }
-            .thenBy { if (exactMatch(it)) 0 else 1 }
+        return candidates.sortedWith(compareBy<Food> { if (exactMatch(it)) 0 else 1 }
+            .thenBy { sourcePriority(it.source) }
             .thenBy { if (prefixMatch(it)) 0 else 1 }
             .thenBy { containsPos(it) }
             .thenBy { levScore(it) }
