@@ -1,0 +1,41 @@
+CREATE TABLE Meal (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE MealItem (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    meal_id INTEGER NOT NULL REFERENCES Meal(id) ON DELETE CASCADE,
+    food_id INTEGER NOT NULL REFERENCES Food(id) ON DELETE RESTRICT,
+    quantity_g REAL NOT NULL CHECK (quantity_g >= 0)
+);
+
+mealInsert:
+INSERT INTO Meal(name, description) VALUES (?, ?);
+
+mealSelectAll:
+SELECT * FROM Meal ORDER BY created_at DESC;
+
+mealSelectById:
+SELECT * FROM Meal WHERE id = ?;
+
+mealItemInsert:
+INSERT INTO MealItem(meal_id, food_id, quantity_g) VALUES (?, ?, ?);
+
+mealItemsForMeal:
+SELECT mi.*, f.*
+FROM MealItem mi
+JOIN Food f ON f.id = mi.food_id
+WHERE mi.meal_id = ?
+ORDER BY mi.id;
+
+-- Simplified items for kcal-only computation
+mealItemsForMealSimple:
+SELECT mi.quantity_g AS item_quantity_g,
+       f.energy_kcal_per_100g AS food_energy_kcal_per_100g
+FROM MealItem mi
+JOIN Food f ON f.id = mi.food_id
+WHERE mi.meal_id = ?
+ORDER BY mi.id;

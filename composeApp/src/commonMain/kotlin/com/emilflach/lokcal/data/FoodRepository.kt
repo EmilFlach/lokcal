@@ -8,6 +8,11 @@ class FoodRepository(private val database: Database) {
 
     fun getAll(): List<Food> = queries.selectAll().executeAsList()
 
+    fun search(query: String): List<Food> {
+        val like = "%${query.trim()}%"
+        return queries.searchByName(like).executeAsList()
+    }
+
     fun insert(name: String, description: String?) {
         queries.insert(name = name, description = description)
     }

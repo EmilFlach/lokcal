@@ -7,7 +7,7 @@ import com.emilflach.lokcal.Database
 
 actual class SqlDriverFactory {
     actual fun createDriver(): SqlDriver {
-        val driver: SqlDriver = JdbcSqliteDriver("jdbc:sqlite:test.db", Properties(), Database.Schema)
+        val driver: SqlDriver = JdbcSqliteDriver("jdbc:sqlite:lokcal.db", Properties(), Database.Schema)
         return driver
     }
 }

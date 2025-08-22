@@ -42,6 +42,11 @@ kotlin {
     }
 
     sourceSets {
+        commonMain {
+            // Include the large JSON as a resource without bundling .kt sources
+            resources.srcDirs("src/commonMain/resources", "src/commonMain/kotlin")
+            resources.exclude("**/*.kt")
+        }
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.ui)

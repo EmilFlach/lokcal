@@ -6,6 +6,6 @@ import com.emilflach.lokcal.Database
 
 actual class SqlDriverFactory {
     actual fun createDriver(): SqlDriver {
-        return NativeSqliteDriver(Database.Schema, "test.db")
+        return NativeSqliteDriver(Database.Schema, "lokcal.db")
     }
 }

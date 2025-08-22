@@ -7,6 +7,6 @@ import com.emilflach.lokcal.Database
 
 actual class SqlDriverFactory(private val context: Context) {
     actual fun createDriver(): SqlDriver {
-        return AndroidSqliteDriver(Database.Schema, context, "test.db")
+        return AndroidSqliteDriver(Database.Schema, context, "lokcal.db")
     }
 }

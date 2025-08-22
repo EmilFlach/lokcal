@@ -1,0 +1,28 @@
+CREATE TABLE Intake (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL,
+    meal_type TEXT NOT NULL CHECK (meal_type IN ('BREAKFAST','LUNCH','DINNER','SNACK')),
+    source_type TEXT NOT NULL CHECK (source_type IN ('FOOD','MEAL')),
+    source_food_id INTEGER REFERENCES Food(id) ON DELETE SET NULL,
+    source_meal_id INTEGER REFERENCES Meal(id) ON DELETE SET NULL,
+    quantity_g REAL NOT NULL CHECK (quantity_g >= 0),
+    -- Snapshot fields to preserve historical values at time of logging
+    item_name TEXT NOT NULL,
+    energy_kcal_total REAL NOT NULL,
+    notes TEXT,
+    CHECK (
+        (source_type = 'FOOD' AND source_food_id IS NOT NULL AND source_meal_id IS NULL) OR
+        (source_type = 'MEAL' AND source_meal_id IS NOT NULL AND source_food_id IS NULL)
+    )
+);
+
+logFoodIntake:
+INSERT INTO Intake(timestamp, meal_type, source_type, source_food_id, quantity_g, item_name, energy_kcal_total, notes)
+VALUES (?, ?, 'FOOD', ?, ?, ?, ?, ?);
+
+logMealIntake:
+INSERT INTO Intake(timestamp, meal_type, source_type, source_meal_id, quantity_g, item_name, energy_kcal_total, notes)
+VALUES (?, ?, 'MEAL', ?, ?, ?, ?, ?);
+
+selectIntakeByDateRange:
+SELECT * FROM Intake WHERE timestamp BETWEEN ? AND ? ORDER BY timestamp DESC;
