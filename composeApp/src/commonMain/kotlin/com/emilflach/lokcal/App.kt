@@ -13,7 +13,6 @@ import com.emilflach.lokcal.viewmodel.IntakeViewModel
 import com.emilflach.lokcal.viewmodel.MainViewModel
 import com.emilflach.lokcal.viewmodel.MealDetailViewModel
 import androidx.compose.material3.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import com.emilflach.lokcal.util.SystemBackHandler
 
 private sealed class Screen {
@@ -32,19 +31,16 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
 
     var screen by remember { mutableStateOf<Screen>(Screen.Main) }
     var refreshToggle by remember { mutableStateOf(false) }
-    var showIntakeSheet by rememberSaveable { mutableStateOf(false) }
-    var intakeMealType by rememberSaveable { mutableStateOf<String?>(null) }
 
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    // Handle Android system back: close sheet if open, else navigate back from detail
+    // Handle Android system back: navigate back from Intake/Detail to previous
     SystemBackHandler(enabled = true) {
-        when {
-            showIntakeSheet -> {
-                // Close the intake sheet first
-                showIntakeSheet = false
+        when (val s = screen) {
+            is Screen.Intake -> {
+                // Go back to meal detail from intake
+                screen = Screen.MealDetail(s.mealType)
+                refreshToggle = !refreshToggle
             }
-            screen is Screen.MealDetail -> {
+            is Screen.MealDetail -> {
                 screen = Screen.Main
                 refreshToggle = !refreshToggle
             }
@@ -56,7 +52,7 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
 
     when (val s = screen) {
         Screen.Main -> {
-            // Recreate VM when refreshToggle changes to force reload logic in screen's LaunchedEffect
+            // Recreate VM when refreshToggle changes
             val vm = remember(intakeRepo, refreshToggle) { MainViewModel(intakeRepo) }
             MainScreen(
                 viewModel = vm,
@@ -69,35 +65,22 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                 viewModel = vm,
                 onBack = { screen = Screen.Main; refreshToggle = !refreshToggle },
                 onAdd = { meal ->
-                    intakeMealType = meal
-                    showIntakeSheet = true
+                    screen = Screen.Intake(meal)
                 }
             )
         }
         is Screen.Intake -> {
-            // Deprecated path: migrate to bottom sheet; keep fallback no-op.
-        }
-    }
-
-    if (showIntakeSheet && intakeMealType != null) {
-        val mealType = intakeMealType!!
-        val intakeVm = remember(foodRepo, intakeRepo, mealType) { IntakeViewModel(foodRepo, intakeRepo, mealType) }
-        ModalBottomSheet(
-            onDismissRequest = { showIntakeSheet = false },
-            sheetState = sheetState
-        ) {
-            // Ensure sheet opens fully
-            LaunchedEffect(Unit) { sheetState.expand() }
+            val intakeVm = remember(foodRepo, intakeRepo, s.mealType) { IntakeViewModel(foodRepo, intakeRepo, s.mealType) }
             IntakeScreen(
                 viewModel = intakeVm,
                 onDone = {
-                    showIntakeSheet = false
-                    // Trigger refresh in the underlying screen (MealDetail/Main)
+                    // Navigate back to meal detail and refresh
+                    screen = Screen.MealDetail(s.mealType)
                     refreshToggle = !refreshToggle
                 },
                 autoFocusSearch = true,
                 onChanged = {
-                    // Live-refresh the underlying detail screen when items are added/updated
+                    // Live-refresh the detail/main when returning
                     refreshToggle = !refreshToggle
                 }
             )

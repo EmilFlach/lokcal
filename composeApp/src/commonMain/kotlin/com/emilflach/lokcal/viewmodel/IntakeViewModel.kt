@@ -23,11 +23,12 @@ class IntakeViewModel(
         val addedSummaryText: String = "",
     )
 
-    private val _state = MutableStateFlow(UiState(selectedMealType = initialMealType, foods = foodRepo.getAll()))
+    private val _state = MutableStateFlow(UiState(selectedMealType = initialMealType, foods = emptyList()))
     val state: StateFlow<UiState> = _state.asStateFlow()
 
     init {
         loadAddedSummary()
+        refreshSearch()
     }
 
     fun setQuery(value: String) {
@@ -42,8 +43,23 @@ class IntakeViewModel(
 
     fun refreshSearch() {
         val q = _state.value.query
-        val foods = if (q.isBlank()) foodRepo.getAll() else foodRepo.search(q)
-        _state.value = _state.value.copy(foods = foods)
+        if (q.isBlank()) {
+            // Show top 100 most recently selected foods, padded with alphabetical items
+            val recent = intakeRepo.getRecentFoods(100)
+            if (recent.size >= 100) {
+                _state.value = _state.value.copy(foods = recent)
+            } else {
+                val recentIds = recent.map { it.id }.toSet()
+                val all = foodRepo.getAll()
+                val remaining = all.filter { it.id !in recentIds }
+                    .sortedBy { it.name.lowercase() }
+                val padded = if (remaining.isEmpty()) recent else recent + remaining.take(100 - recent.size)
+                _state.value = _state.value.copy(foods = padded)
+            }
+        } else {
+            val foods = foodRepo.search(q)
+            _state.value = _state.value.copy(foods = foods)
+        }
     }
 
     private fun nowIso(): String = currentDateIso() + "T12:00:00"

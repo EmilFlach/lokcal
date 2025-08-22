@@ -38,3 +38,15 @@ UPDATE Intake
 SET energy_kcal_total = energy_kcal_total * (? / quantity_g),
     quantity_g = ?
 WHERE id = ?;
+
+-- Most recently selected foods (by last intake timestamp), returns Food rows
+recentFoods:
+SELECT f.* FROM Food f
+JOIN (
+  SELECT source_food_id AS food_id, MAX(timestamp) AS last_ts
+  FROM Intake
+  WHERE source_type = 'FOOD' AND source_food_id IS NOT NULL
+  GROUP BY source_food_id
+) r ON r.food_id = f.id
+ORDER BY r.last_ts DESC
+LIMIT ?;

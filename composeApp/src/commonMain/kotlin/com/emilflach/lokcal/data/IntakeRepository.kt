@@ -8,6 +8,10 @@ class IntakeRepository(private val database: Database) {
     private val mealQ = database.mealsQueries
     private val intakeQ = database.intakeQueries
 
+    fun getRecentFoods(limit: Long): List<com.emilflach.lokcal.Food> {
+        return intakeQ.recentFoods(limit).executeAsList()
+    }
+
     /**
      * Logs intake for a single Food by taking a snapshot of the nutritional totals at log time.
      * mealType must be one of: BREAKFAST, LUNCH, DINNER, SNACK
