@@ -3,6 +3,8 @@ package com.emilflach.lokcal.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,9 +21,13 @@ fun MealDetailScreen(
     val items by viewModel.items.collectAsState()
 
     Scaffold(
+        floatingActionButtonPosition = FabPosition.Start,
         floatingActionButton = {
             LargeFloatingActionButton(onClick = { onAdd(viewModel.mealType) }) {
-                Text("Add item")
+                Column (horizontalAlignment = Alignment.CenterHorizontally){
+                    Icon(imageVector = Icons.Filled.Add, contentDescription = "Add portion")
+                    Text("Add")
+                }
             }
         }
     ) { paddingValues ->

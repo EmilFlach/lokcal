@@ -1,34 +1,77 @@
 package com.emilflach.lokcal.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Scale
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.viewmodel.IntakeViewModel
+
+@Stable
+class FocusRequesters {
+    private val map = mutableStateMapOf<Any, FocusRequester>()
+    operator fun get(key: Any): FocusRequester = map.getOrPut(key) { FocusRequester() }
+    fun request(key: Any) { map[key]?.requestFocus() }
+}
+
+@Composable
+fun rememberFocusRequesters(): FocusRequesters = remember { FocusRequesters() }
 
 @Composable
 fun IntakeScreen(
     viewModel: IntakeViewModel,
     onDone: () -> Unit,
     autoFocusSearch: Boolean = false,
-    onChanged: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -83,7 +126,6 @@ fun IntakeScreen(
         // Keep per-row state in remembered maps keyed by food id
         val gramsById = remember { mutableStateMapOf<Long, String>() }
         val portionsById = remember { mutableStateMapOf<Long, String>() }
-        val expandedById = remember { mutableStateMapOf<Long, Boolean>() }
         val usePortionsById = remember { mutableStateMapOf<Long, Boolean>() }
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -108,63 +150,33 @@ fun IntakeScreen(
 
                 val kcalPer100 = item.energy_kcal_per_100g
 
-                val expanded = expandedById[item.id] ?: false
                 val usePortions = usePortionsById[item.id] ?: false
+
+                val requesters = rememberFocusRequesters()
+                val keyboard = LocalSoftwareKeyboardController.current
+
+
+
+
+
+
 
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
                         .clip(MaterialTheme.shapes.medium)
-                        .clickable { expandedById[item.id] = !expanded }
-                        .padding(vertical = 8.dp),
+                        .clickable {
+                            requesters.request(item.id)
+                            keyboard?.show()
+                        }
+                        .padding(16.dp),
                 ) {
-                    // Compact row: Add 1 portion + two-line info (clickable to expand)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        FilledIconButton(onClick = {
-                            val gramsToAdd = if (usePortions) {
-                                portionsValue * defaultPortionG
-                            } else {
-                                gramsValue
-                            }
-                            if (gramsToAdd > 0.0) {
-                                viewModel.logPortion(item.id, gramsToAdd)
-                                onChanged()
-                            }
-                        }) {
-                            Icon(imageVector = Icons.Filled.Add, contentDescription = "Add portion")
-                        }
-                        val tfValue = if (usePortions) (portionsById[item.id] ?: initialPortions) else (gramsById[item.id] ?: initialGrams)
-                        BasicTextField(
-                            value = tfValue,
-                            onValueChange = { newVal ->
-                                val cleaned = newVal.filter { it.isDigit() }.take(5)
-                                if (usePortions) portionsById[item.id] = cleaned else gramsById[item.id] = cleaned
-                            },
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            textStyle = MaterialTheme.typography.bodyMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurface,
-                                textAlign = TextAlign.Center
-                            ),
-                            cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
-                            modifier = Modifier
-                                .width(40.dp)
-                                .height(40.dp)
-                                .background(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.small),
-                            decorationBox = { innerTextField ->
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    innerTextField()
-                                }
-                            }
-                        )
                         Column(
                             modifier = Modifier
                                 .weight(1f)
@@ -179,77 +191,76 @@ fun IntakeScreen(
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
-                    }
-                    if (expanded) {
-                        Spacer(Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Column (modifier = Modifier.width(70.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(if (usePortions) "Portions" else "Grams", style = MaterialTheme.typography.bodyMedium)
-                                IconToggleButton(
-                                    checked = usePortions,
-                                    onCheckedChange = { usePortionsById[item.id] = it },
-                                ) {
-                                    Icon(imageVector = Icons.Filled.Scale, contentDescription = "Add portion")
-                                }
-                            }
 
-                            if (usePortions) {
-                                // Portions mode: decrement buttons
-                                StepButton(label = "-5") {
-                                    val newVal = (portionsValue - 5).coerceAtLeast(0)
-                                    portionsById[item.id] = newVal.toString()
+                        var tf by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+                            mutableStateOf(TextFieldValue(text = gramsById[item.id] ?: initialGrams))
+                        }
+
+                        val onAddClick: () -> Unit = {
+                            val gramsToAdd = if (usePortions) portionsValue * defaultPortionG else gramsValue
+                            if (gramsToAdd > 0.0) {
+                                viewModel.logPortion(item.id, gramsToAdd)
+                                onDone()
+                            }
+                        }
+
+                        BasicTextField(
+                            value = tf,
+                            onValueChange = { newVal ->
+                                val cleaned = newVal.text.filter { it.isDigit() }.take(5)
+                                gramsById[item.id] = cleaned
+                                tf = newVal.copy(
+                                    text = cleaned,
+                                    selection = TextRange(newVal.selection.start.coerceIn(0, cleaned.length))
+                                )
+                            },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    onAddClick()
                                 }
-                                StepButton(label = "-2") {
-                                    val newVal = (portionsValue - 2).coerceAtLeast(0)
-                                    portionsById[item.id] = newVal.toString()
+                            ),
+
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                color = MaterialTheme.colorScheme.onSurface,
+                                textAlign = TextAlign.Center
+                            ),
+                            cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
+                            modifier = Modifier
+                                .width(50.dp)
+                                .height(50.dp)
+                                .background(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.small)
+                                .focusRequester(requesters[item.id])
+                                .onFocusChanged { state ->
+                                    if (state.isFocused) {
+                                        tf = tf.copy(selection = TextRange(0, tf.text.length))
+                                    }
                                 }
-                                StepButton(label = "-1") {
-                                    val newVal = (portionsValue - 1).coerceAtLeast(0)
-                                    portionsById[item.id] = newVal.toString()
-                                }
-                                StepButton(label = "+1") {
-                                    val newVal = portionsValue + 1
-                                    portionsById[item.id] = newVal.toString()
-                                }
-                                StepButton(label = "+2") {
-                                    val newVal = portionsValue + 2
-                                    portionsById[item.id] = newVal.toString()
-                                }
-                                StepButton(label = "+5") {
-                                    val newVal = portionsValue + 5
-                                    portionsById[item.id] = newVal.toString()
-                                }
-                            } else {
-                                // Grams mode: decrement/increment buttons
-                                StepButton(label = "-100") {
-                                    val newVal = (gramsValue - 100).coerceAtLeast(0.0)
-                                    gramsById[item.id] = newVal.toInt().toString()
-                                }
-                                StepButton(label = "-10") {
-                                    val newVal = (gramsValue - 10).coerceAtLeast(0.0)
-                                    gramsById[item.id] = newVal.toInt().toString()
-                                }
-                                StepButton(label = "-5") {
-                                    val newVal = (gramsValue - 5).coerceAtLeast(0.0)
-                                    gramsById[item.id] = newVal.toInt().toString()
-                                }
-                                StepButton(label = "+5") {
-                                    val newVal = (gramsValue + 5)
-                                    gramsById[item.id] = newVal.toInt().toString()
-                                }
-                                StepButton(label = "+10") {
-                                    val newVal = (gramsValue + 10)
-                                    gramsById[item.id] = newVal.toInt().toString()
-                                }
-                                StepButton(label = "+100") {
-                                    val newVal = (gramsValue + 100)
-                                    gramsById[item.id] = newVal.toInt().toString()
+                                .onPreviewKeyEvent { event ->
+                                    if (event.type == KeyEventType.KeyUp &&
+                                        (event.key == Key.Enter || event.key == Key.NumPadEnter)
+                                    ) {
+                                        onAddClick()
+                                        true
+                                    } else {
+                                        false
+                                    }
+                                },
+                            decorationBox = { innerTextField ->
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    innerTextField()
                                 }
                             }
+                        )
+
+                        FilledIconButton(modifier = Modifier.size(50.dp), onClick = {
+                            onAddClick()
+                        }) {
+                            Icon(imageVector = Icons.Filled.Add, contentDescription = "Add portion")
                         }
                     }
                 }
@@ -258,13 +269,5 @@ fun IntakeScreen(
     }
 }
 
-@Composable
-private fun StepButton(label: String, onClick: () -> Unit) {
-    OutlinedButton(
-        onClick = onClick,
-        contentPadding = PaddingValues(horizontal = 2.dp, vertical = 6.dp),
-        modifier = Modifier.height(50.dp).width(50.dp)
-    ) {
-        Text(label, style = MaterialTheme.typography.labelSmall)
-    }
-}
+
+
