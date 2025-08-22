@@ -26,3 +26,15 @@ VALUES (?, ?, 'MEAL', ?, ?, ?, ?, ?);
 
 selectIntakeByDateRange:
 SELECT * FROM Intake WHERE timestamp BETWEEN ? AND ? ORDER BY timestamp DESC;
+
+selectIntakeByMealAndDateRange:
+SELECT * FROM Intake WHERE meal_type = ? AND timestamp BETWEEN ? AND ? ORDER BY timestamp DESC;
+
+deleteIntakeById:
+DELETE FROM Intake WHERE id = ?;
+
+updateIntakeQuantity:
+UPDATE Intake
+SET energy_kcal_total = energy_kcal_total * (? / quantity_g),
+    quantity_g = ?
+WHERE id = ?;

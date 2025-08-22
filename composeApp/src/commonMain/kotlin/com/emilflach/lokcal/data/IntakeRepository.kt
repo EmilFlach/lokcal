@@ -84,4 +84,18 @@ class IntakeRepository(private val database: Database) {
     fun getIntakeByDateRange(startIso: String, endIso: String): List<Intake> {
         return intakeQ.selectIntakeByDateRange(startIso, endIso).executeAsList()
     }
+
+    fun getIntakeByMealAndDateRange(mealType: String, startIso: String, endIso: String): List<Intake> {
+        return intakeQ.selectIntakeByMealAndDateRange(mealType, startIso, endIso).executeAsList()
+    }
+
+    fun deleteIntakeById(id: Long) {
+        intakeQ.deleteIntakeById(id)
+    }
+
+    fun updateIntakeQuantity(id: Long, newQuantityG: Double) {
+        require(newQuantityG >= 0.0) { "newQuantityG must be >= 0" }
+        // Adjust energy proportionally to the new quantity in SQL to support both FOOD and MEAL sources
+        intakeQ.updateIntakeQuantity(newQuantityG, newQuantityG, id)
+    }
 }

@@ -13,6 +13,17 @@ actual fun loadIngredientsJsonText(): String? {
             return stream.bufferedReader().use { it.readText() }
         }
     }
-    // If not found, return null (no seeding on Android until file is bundled as a resource)
-    return null
+    // Android fallback: provide a tiny built-in seed so the app is not empty on first run.
+    // This keeps the change minimal without requiring Android-specific asset wiring.
+    val fallback = """
+        [
+          {"id":"builtin-1","name":"Apple","description":"Raw apple","pluralName":"Apples","labelId":"builtin","onHand":false,
+            "extras":{"kcal":"52","servingSize":"100","englishName":"Apple","dutchName":"Appel","source":"builtin"}},
+          {"id":"builtin-2","name":"Banana","description":"Raw banana","pluralName":"Bananas","labelId":"builtin","onHand":false,
+            "extras":{"kcal":"89","servingSize":"100","englishName":"Banana","dutchName":"Banaan","source":"builtin"}},
+          {"id":"builtin-3","name":"Bread","description":"White bread","pluralName":"Bread","labelId":"builtin","onHand":false,
+            "extras":{"kcal":"265","servingSize":"30","englishName":"Bread","dutchName":"Brood","source":"builtin"}}
+        ]
+    """.trimIndent()
+    return fallback
 }
