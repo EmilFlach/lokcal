@@ -57,11 +57,14 @@ SELECT id FROM Food WHERE external_id = ?;
 foodAliasInsert:
 INSERT INTO FoodAlias(food_id, alias) VALUES (?, ?);
 
-foodAliasesForFood:
-SELECT * FROM FoodAlias WHERE food_id = ? ORDER BY id;
-
 selectById:
 SELECT * FROM Food WHERE id = ?;
 
-searchByName:
-SELECT * FROM Food WHERE name LIKE ? ORDER BY name;
+-- Multi-field, case-insensitive search across key name/brand fields
+searchByAny:
+SELECT * FROM Food
+WHERE lower(name) LIKE ?
+   OR lower(english_name) LIKE ?
+   OR lower(dutch_name) LIKE ?
+   OR lower(brand_name) LIKE ?
+ORDER BY name;
