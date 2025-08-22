@@ -14,6 +14,7 @@ import com.emilflach.lokcal.viewmodel.MainViewModel
 import com.emilflach.lokcal.viewmodel.MealDetailViewModel
 import androidx.compose.material3.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import com.emilflach.lokcal.util.SystemBackHandler
 
 private sealed class Screen {
     data object Main : Screen()
@@ -35,6 +36,23 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
     var intakeMealType by rememberSaveable { mutableStateOf<String?>(null) }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    // Handle Android system back: close sheet if open, else navigate back from detail
+    SystemBackHandler(enabled = true) {
+        when {
+            showIntakeSheet -> {
+                // Close the intake sheet first
+                showIntakeSheet = false
+            }
+            screen is Screen.MealDetail -> {
+                screen = Screen.Main
+                refreshToggle = !refreshToggle
+            }
+            else -> {
+                // On Main screen: allow default behavior (app can close). No-op here.
+            }
+        }
+    }
 
     when (val s = screen) {
         Screen.Main -> {
@@ -68,6 +86,8 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
             onDismissRequest = { showIntakeSheet = false },
             sheetState = sheetState
         ) {
+            // Ensure sheet opens fully
+            LaunchedEffect(Unit) { sheetState.expand() }
             IntakeScreen(
                 viewModel = intakeVm,
                 onDone = {
@@ -75,7 +95,11 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                     // Trigger refresh in the underlying screen (MealDetail/Main)
                     refreshToggle = !refreshToggle
                 },
-                autoFocusSearch = true
+                autoFocusSearch = true,
+                onChanged = {
+                    // Live-refresh the underlying detail screen when items are added/updated
+                    refreshToggle = !refreshToggle
+                }
             )
         }
     }

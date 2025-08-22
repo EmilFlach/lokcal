@@ -17,45 +17,38 @@ fun IntakeScreen(
     viewModel: IntakeViewModel,
     onDone: () -> Unit,
     autoFocusSearch: Boolean = false,
+    onChanged: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-            .padding(16.dp)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.Start
     ) {
+        // Top actions kept minimal to maximize space
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text("Add intake", style = MaterialTheme.typography.titleLarge)
             TextButton(onClick = onDone) { Text("Done") }
         }
-
-        Text("Meal type", style = MaterialTheme.typography.titleSmall)
+        // Short summary of items already added today for this section — always shown even if zero
         Spacer(Modifier.height(8.dp))
-        com.emilflach.lokcal.ui.components.MealTypeSelector(
-            selected = state.selectedMealType,
-            onSelect = { viewModel.selectMealType(it) }
-        )
-
-        // Short summary of items already added today for this section
-        if (state.addedCount > 0) {
-            Spacer(Modifier.height(12.dp))
-            OutlinedCard(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(12.dp)) {
-                    Text(
-                        text = "Added today: ${state.addedCount} • ${state.addedTotalKcal.toInt()} kcal",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    if (state.addedSummaryText.isNotEmpty()) {
-                        Spacer(Modifier.height(4.dp))
-                        Text(state.addedSummaryText, style = MaterialTheme.typography.bodySmall)
-                    }
+        OutlinedCard(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(12.dp)) {
+                Text(
+                    text = "Added today: ${state.addedCount} • ${state.addedTotalKcal.toInt()} kcal",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                if (state.addedSummaryText.isNotEmpty()) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(state.addedSummaryText, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         val focusRequester = remember { FocusRequester() }
         LaunchedEffect(autoFocusSearch) {
@@ -70,10 +63,7 @@ fun IntakeScreen(
                 .focusRequester(focusRequester)
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
-        HorizontalDivider()
-        Spacer(modifier = Modifier.height(8.dp))
-        Text("Results", style = MaterialTheme.typography.titleMedium)
+        // Remove extra spacing and titles to bring results higher
         Spacer(modifier = Modifier.height(8.dp))
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -84,19 +74,16 @@ fun IntakeScreen(
                         .padding(vertical = 8.dp)
                 ) {
                     Text(text = item.name, style = MaterialTheme.typography.bodyLarge)
-                    val desc = item.description
-                    if (!desc.isNullOrBlank()) {
-                        Text(text = desc, style = MaterialTheme.typography.bodyMedium)
-                    }
+                    // Description intentionally hidden per requirement
 
                     Spacer(Modifier.height(8.dp))
 
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         val portionG: Double = item.serving_size?.toDoubleOrNull()?.takeIf { it > 0 } ?: 100.0
 
-                        Button(onClick = { viewModel.logPortion(item.id, portionG) }) { Text("1 portion (${portionG.toInt()} g)") }
-                        OutlinedButton(onClick = { viewModel.logPortion(item.id, 20.0) }) { Text("20 g") }
-                        OutlinedButton(onClick = { viewModel.logPortion(item.id, 100.0) }) { Text("100 g") }
+                        Button(onClick = { viewModel.logPortion(item.id, portionG); onChanged() }) { Text("1 portion (${portionG.toInt()} g)") }
+                        OutlinedButton(onClick = { viewModel.logPortion(item.id, 20.0); onChanged() }) { Text("20 g") }
+                        OutlinedButton(onClick = { viewModel.logPortion(item.id, 100.0); onChanged() }) { Text("100 g") }
                     }
                 }
                 HorizontalDivider()

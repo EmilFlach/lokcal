@@ -18,51 +18,56 @@ fun MealDetailScreen(
 ) {
     val items by viewModel.items.collectAsState()
 
-    LaunchedEffect(viewModel) { viewModel.loadToday() }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-            .padding(16.dp)
-    ) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(viewModel.mealType.lowercase().replaceFirstChar { it.titlecase() }, style = MaterialTheme.typography.titleLarge)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = { onAdd(viewModel.mealType) }) { Text("Add") }
-                TextButton(onClick = onBack) { Text("Done") }
+    Scaffold(
+        floatingActionButton = {
+            LargeFloatingActionButton(onClick = { onAdd(viewModel.mealType) }) {
+                Text("Add item")
             }
         }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp)
+        ) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(viewModel.mealType.lowercase().replaceFirstChar { it.titlecase() }, style = MaterialTheme.typography.titleLarge)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(onClick = onBack) { Text("Done") }
+                }
+            }
 
-        Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(12.dp))
 
-        if (items.isEmpty()) {
-            Text("No items yet.", style = MaterialTheme.typography.bodyMedium)
-        } else {
-            LazyColumn(Modifier.fillMaxSize()) {
-                items(items, key = { it.id }) { entry ->
-                    var gramsText by remember(entry.id) { mutableStateOf(entry.quantity_g.toString()) }
-                    Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-                        Text(entry.item_name, style = MaterialTheme.typography.titleMedium)
-                        Spacer(Modifier.height(6.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            OutlinedTextField(
-                                value = gramsText,
-                                onValueChange = { gramsText = it },
-                                label = { Text("Grams") },
-                                modifier = Modifier.weight(1f)
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Button(onClick = {
-                                gramsText.toDoubleOrNull()?.let { g -> viewModel.updateQuantity(entry.id, g) }
-                            }) { Text("Save") }
-                            Spacer(Modifier.width(8.dp))
-                            OutlinedButton(onClick = { viewModel.deleteItem(entry.id) }) { Text("Delete") }
+            if (items.isEmpty()) {
+                Text("No items yet.", style = MaterialTheme.typography.bodyMedium)
+            } else {
+                LazyColumn(Modifier.fillMaxSize()) {
+                    items(items, key = { it.id }) { entry ->
+                        var gramsText by remember(entry.id, entry.quantity_g) { mutableStateOf(entry.quantity_g.toString()) }
+                        Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                            Text(entry.item_name, style = MaterialTheme.typography.titleMedium)
+                            Spacer(Modifier.height(6.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                OutlinedTextField(
+                                    value = gramsText,
+                                    onValueChange = { gramsText = it },
+                                    label = { Text("Grams") },
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Button(onClick = {
+                                    gramsText.toDoubleOrNull()?.let { g -> viewModel.updateQuantity(entry.id, g) }
+                                }) { Text("Save") }
+                                Spacer(Modifier.width(8.dp))
+                                OutlinedButton(onClick = { viewModel.deleteItem(entry.id) }) { Text("Delete") }
+                            }
+                            Spacer(Modifier.height(4.dp))
+                            Text("${entry.energy_kcal_total.toInt()} kcal", style = MaterialTheme.typography.bodySmall)
                         }
-                        Spacer(Modifier.height(4.dp))
-                        Text("${entry.energy_kcal_total.toInt()} kcal", style = MaterialTheme.typography.bodySmall)
+                        HorizontalDivider()
                     }
-                    HorizontalDivider()
                 }
             }
         }

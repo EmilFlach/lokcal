@@ -1,12 +1,23 @@
 package com.emilflach.lokcal.ui.screens
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -19,10 +30,9 @@ fun MainScreen(
     onOpenMeal: (String) -> Unit,
 ) {
     val summaries by viewModel.summaries.collectAsState()
-
-    LaunchedEffect(viewModel) {
-        viewModel.loadToday()
-    }
+    val eaten by viewModel.eatenKcal.collectAsState()
+    val left by viewModel.leftKcal.collectAsState()
+    val progress by viewModel.progress.collectAsState()
 
     Column(
         modifier = Modifier
@@ -30,8 +40,25 @@ fun MainScreen(
             .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(16.dp)
     ) {
-        Text("Today", style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(12.dp))
+        // Massive number up top showing kcal left for the day
+        Text("${left.toInt()} kcal left", style = MaterialTheme.typography.displayLarge)
+        Spacer(Modifier.height(4.dp))
+        // Smaller number showing eaten so far
+        Text("Eaten: ${eaten.toInt()} kcal", style = MaterialTheme.typography.bodyLarge)
+        Spacer(Modifier.height(8.dp))
+        // Visualization of progress towards using up kcal
+        LinearProgressIndicator(
+        progress = { progress },
+        modifier = Modifier.fillMaxWidth(),
+        color = ProgressIndicatorDefaults.linearColor,
+        trackColor = ProgressIndicatorDefaults.linearTrackColor,
+        strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
+        )
+
+        // Push sections to the bottom
+        Spacer(Modifier.weight(1f))
+
+        // Meal sections displayed at the bottom
         summaries.forEach { s ->
             OutlinedCard(
                 modifier = Modifier

@@ -55,10 +55,14 @@ class IntakeViewModel(
 
     private fun buildSummary(list: List<Intake>): String {
         if (list.isEmpty()) return ""
-        val counts = list.groupingBy { it.item_name }.eachCount().entries
-            .sortedByDescending { it.value }
+        // Group by item name to show total grams per item (more informative summary)
+        val grouped = list.groupBy { it.item_name }
+        val items = grouped.map { (name, entries) ->
+            val totalG = entries.sumOf { it.quantity_g }
+            name to totalG
+        }.sortedByDescending { it.second }
             .take(3)
-        return counts.joinToString(", ") { (name, count) -> if (count > 1) "$name x$count" else name }
+        return items.joinToString(", ") { (name, g) -> "$name ${g.toInt()} g" }
     }
 
     fun loadAddedSummary() {
@@ -75,13 +79,24 @@ class IntakeViewModel(
     }
 
     fun logPortion(foodId: Long, portionG: Double) {
-        intakeRepo.logFoodIntake(
-            foodId = foodId,
-            quantityG = portionG,
-            timestamp = nowIso(),
-            mealType = _state.value.selectedMealType,
-            notes = null
-        )
+        val (startIso, endIso) = todayRange()
+        val type = _state.value.selectedMealType
+        val todayItems = intakeRepo.getIntakeByMealAndDateRange(type, startIso, endIso)
+        val existing = todayItems.firstOrNull { it.source_type == "FOOD" && it.source_food_id == foodId }
+        if (existing == null) {
+            // No entry yet for this food today in this meal: create one
+            intakeRepo.logFoodIntake(
+                foodId = foodId,
+                quantityG = portionG,
+                timestamp = nowIso(),
+                mealType = type,
+                notes = null
+            )
+        } else {
+            // Increase grams for the existing item
+            val newQty = existing.quantity_g + portionG
+            intakeRepo.updateIntakeQuantity(existing.id, newQty)
+        }
         // Refresh the summary so the user immediately sees their addition reflected
         loadAddedSummary()
     }

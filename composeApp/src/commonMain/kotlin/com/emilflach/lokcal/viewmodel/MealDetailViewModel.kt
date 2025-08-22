@@ -14,6 +14,10 @@ class MealDetailViewModel(
     private val _items = MutableStateFlow<List<Intake>>(emptyList())
     val items: StateFlow<List<Intake>> = _items.asStateFlow()
 
+    init {
+        loadToday()
+    }
+
     fun loadToday() {
         val date = currentDateIso()
         val startIso = "${date}T00:00:00"

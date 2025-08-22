@@ -22,6 +22,20 @@ class MainViewModel(private val intakeRepo: IntakeRepository) {
     private val _summaries = MutableStateFlow<List<MealSummary>>(emptyList())
     val summaries: StateFlow<List<MealSummary>> = _summaries.asStateFlow()
 
+    // Derived totals for the header
+    private val _eatenKcal = MutableStateFlow(0.0)
+    val eatenKcal: StateFlow<Double> = _eatenKcal.asStateFlow()
+
+    private val _leftKcal = MutableStateFlow(1690.0)
+    val leftKcal: StateFlow<Double> = _leftKcal.asStateFlow()
+
+    private val _progress = MutableStateFlow(0f)
+    val progress: StateFlow<Float> = _progress.asStateFlow()
+
+    init {
+        loadToday()
+    }
+
     fun loadToday() {
         val date = currentDateIso()
         val startIso = "${date}T00:00:00"
@@ -39,6 +53,14 @@ class MainViewModel(private val intakeRepo: IntakeRepository) {
                 summaryText = buildSummary(list)
             )
         }
+        // Update derived totals
+        val eaten = _summaries.value.sumOf { it.totalKcal }.coerceAtLeast(0.0)
+        val start = 1690.0
+        val left = start - eaten
+        val prog = if (eaten + left > 0) (eaten / (eaten + left)).toFloat() else 0f
+        _eatenKcal.value = eaten
+        _leftKcal.value = left
+        _progress.value = prog
     }
 
     private fun buildSummary(list: List<Intake>): String {
