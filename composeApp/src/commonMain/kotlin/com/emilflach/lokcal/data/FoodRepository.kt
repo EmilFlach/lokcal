@@ -4,7 +4,7 @@ import com.emilflach.lokcal.Database
 import com.emilflach.lokcal.Food
 import com.emilflach.lokcal.util.levenshtein
 
-class FoodRepository(private val database: Database) {
+class FoodRepository(database: Database) {
     private val queries = database.foodQueries
 
     fun getAll(): List<Food> = queries.selectAll().executeAsList()
@@ -15,8 +15,7 @@ class FoodRepository(private val database: Database) {
         val qLower = q.lowercase()
         val like = "%$qLower%"
         // Fetch candidates across multiple fields (case-insensitive)
-        val candidates = queries.searchByAny(like, like, like, like).executeAsList()
-        if (candidates.isEmpty()) return candidates
+        val candidatesLike = queries.searchByAny(like, like, like, like).executeAsList()
 
         fun sourcePriority(src: String?): Int = when (src?.lowercase()) {
             "manual" -> 0
@@ -49,12 +48,26 @@ class FoodRepository(private val database: Database) {
             return best
         }
 
-        return candidates.sortedWith(compareBy<Food> { if (exactMatch(it)) 0 else 1 }
-            .thenBy { sourcePriority(it.source) }
-            .thenBy { if (prefixMatch(it)) 0 else 1 }
-            .thenBy { containsPos(it) }
-            .thenBy { levScore(it) }
-            .thenBy { it.name.lowercase() })
+        // If LIKE found candidates, use the existing relevance ordering
+        if (candidatesLike.isNotEmpty()) {
+            return candidatesLike.sortedWith(
+                compareBy<Food> { if (exactMatch(it)) 0 else 1 }
+                    .thenBy { sourcePriority(it.source) }
+                    .thenBy { if (prefixMatch(it)) 0 else 1 }
+                    .thenBy { containsPos(it) }
+                    .thenBy { levScore(it) }
+                    .thenBy { it.name.lowercase() }
+            )
+        }
+
+        // Fuzzy fallback: when LIKE returns nothing (e.g., misspellings), search all by Levenshtein
+        val all = getAll()
+        if (all.isEmpty()) return emptyList()
+        return all.sortedWith(
+            compareBy<Food> { levScore(it) }
+                .thenBy { sourcePriority(it.source) }
+                .thenBy { it.name.lowercase() }
+        ).take(100)
     }
 
     fun insert(name: String, description: String?) {

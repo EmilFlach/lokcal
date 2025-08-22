@@ -8,6 +8,7 @@ import com.emilflach.lokcal.util.currentDateIso
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class IntakeViewModel(
     private val foodRepo: FoodRepository,
@@ -26,39 +27,49 @@ class IntakeViewModel(
     private val _state = MutableStateFlow(UiState(selectedMealType = initialMealType, foods = emptyList()))
     val state: StateFlow<UiState> = _state.asStateFlow()
 
+    // Background scope for debounced searches to keep UI responsive
+    private val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Default)
+    private var searchJob: kotlinx.coroutines.Job? = null
+
     init {
         loadAddedSummary()
-        refreshSearch()
+        launchSearchDebounced()
     }
 
     fun setQuery(value: String) {
         _state.value = _state.value.copy(query = value)
-        refreshSearch()
+        launchSearchDebounced()
     }
 
-    fun selectMealType(type: String) {
-        _state.value = _state.value.copy(selectedMealType = type)
-        loadAddedSummary()
+    private fun launchSearchDebounced() {
+        searchJob?.cancel()
+        val qSnapshot = _state.value.query
+        searchJob = scope.launch {
+            kotlinx.coroutines.delay(50)
+            // If the query changed during delay, let the newer job handle it
+            if (qSnapshot != _state.value.query) return@launch
+            val foods = computeFoodsForQuery(qSnapshot)
+            // Only apply if still relevant
+            if (qSnapshot == _state.value.query) {
+                _state.value = _state.value.copy(foods = foods)
+            }
+        }
     }
 
-    fun refreshSearch() {
-        val q = _state.value.query
-        if (q.isBlank()) {
-            // Show top 100 most recently selected foods, padded with alphabetical items
+    private fun computeFoodsForQuery(q: String): List<Food> {
+        return if (q.isBlank()) {
             val recent = intakeRepo.getRecentFoods(100)
             if (recent.size >= 100) {
-                _state.value = _state.value.copy(foods = recent)
+                recent
             } else {
                 val recentIds = recent.map { it.id }.toSet()
                 val all = foodRepo.getAll()
                 val remaining = all.filter { it.id !in recentIds }
                     .sortedBy { it.name.lowercase() }
-                val padded = if (remaining.isEmpty()) recent else recent + remaining.take(100 - recent.size)
-                _state.value = _state.value.copy(foods = padded)
+                if (remaining.isEmpty()) recent else recent + remaining.take(100 - recent.size)
             }
         } else {
-            val foods = foodRepo.search(q)
-            _state.value = _state.value.copy(foods = foods)
+            foodRepo.search(q)
         }
     }
 
