@@ -3,7 +3,6 @@ package com.emilflach.lokcal.data
 import com.emilflach.lokcal.Database
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -14,12 +13,15 @@ import kotlinx.serialization.json.jsonPrimitive
 object IngredientSeeder {
     private const val META_KEY = "ingredients_seeded"
 
+    // Optional platform override to supply JSON text (e.g., Android assets)
+    var provideJsonText: (() -> String?)? = null
+
     fun seedIfNeeded(database: Database) {
         val metaQ = database.metaQueries
         val already = metaQ.getMeta(META_KEY).executeAsOneOrNull()
         if (already != null) return
 
-        val jsonText = loadIngredientsJsonText() ?: return
+        val jsonText = provideJsonText?.invoke() ?: loadIngredientsJsonText() ?: return
 
         val json = try {
             Json.parseToJsonElement(jsonText)
