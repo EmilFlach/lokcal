@@ -3,10 +3,11 @@ package com.emilflach.lokcal.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
@@ -64,14 +65,15 @@ fun IntakeScreen(
             val gramsById = remember { mutableStateMapOf<Long, String>() }
             val requesters = rememberFocusRequesters()
 
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(
-                    items = state.foods,
-                    key = { it.id },
-                    contentType = { "food" }
-                ) { item ->
+            LazyColumn(
+                contentPadding = PaddingValues(vertical = 16.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                itemsIndexed(items = state.foods) { index, item ->
                     IntakeListItem(
                         item = item,
+                        index = index,
+                        size = state.foods.size,
                         viewModel = viewModel,
                         gramsById = gramsById,
                         requesters = requesters,

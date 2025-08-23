@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -88,6 +89,7 @@ fun MealTopBar(
                     onValueChange = onQueryChange,
                     label = { Text("Search food") },
                     singleLine = true,
+                    shape = MaterialTheme.shapes.medium,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = color.borderFocus,
                         focusedTextColor = color.foregroundDefault,
@@ -96,7 +98,7 @@ fun MealTopBar(
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 32.dp, end = 32.dp, bottom = 16.dp)
+                        .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                         .focusRequester(focusRequester)
                 )
             }
@@ -126,6 +128,7 @@ private fun TopAppBarSurface(
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = appBarContainerColor,
+        shadowElevation = if (colorTransitionFraction > 0f) 8.dp else 0.dp,
         content = content,
     )
 }

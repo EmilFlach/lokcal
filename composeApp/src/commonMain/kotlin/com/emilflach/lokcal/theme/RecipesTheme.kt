@@ -5,23 +5,23 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 // Brand palette
-val BrandDarkest = Color(0xFF2d3307)
-val BrandDarker = Color(0xFF394109)
-val BrandDefault = Color(0xFF464d0a)
-val BrandLighter = Color(0xFF737942)
-val BrandLightest = Color(0xFFa0a57a)
+val BrandDarkest = Color(0xFF865908)
+val BrandDarker = Color(0xFFbb7d0b)
+val BrandDefault = Color(0xFFD9910D)
+val BrandLighter = Color(0xFFf4b644)
+val BrandLightest = Color(0xFFf7cb79)
 
 // Neutral palette
-val Neutral50 = Color(0xFFf7f1e7)
-val Neutral100 = Color(0xFFe3d8cf)
-val Neutral200 = Color(0xFFcdbdb7)
-val Neutral300 = Color(0xFFb7a29f)
-val Neutral400 = Color(0xFFa18787)
-val Neutral500 = Color(0xFF8b6c6f)
-val Neutral600 = Color(0xFF755157)
-val Neutral700 = Color(0xFF5f363f)
-val Neutral800 = Color(0xFF491b27)
-val Neutral900 = Color(0xFF33000f)
+val Neutral50 = Color(0xFFeef0fc)
+val Neutral100 = Color(0xFFccd3f7)
+val Neutral200 = Color(0xFFaab6f2)
+val Neutral300 = Color(0xFF8898ec)
+val Neutral400 = Color(0xFF4b63e3)
+val Neutral500 = Color(0xFF2340dc)
+val Neutral600 = Color(0xFF16298c)
+val Neutral700 = Color(0xFF101d64)
+val Neutral800 = Color(0xFF09123c)
+val Neutral900 = Color(0xFF030614)
 
 // Contextual colors
 val InfoLight = Color(0xFF90CAF9)
@@ -225,7 +225,7 @@ class RecipesColors(
 
             // Foreground Colors
             foregroundDefault = Neutral50,
-            foregroundSupport = Neutral200,
+            foregroundSupport = Neutral100,
             foregroundBrand = BrandDefault,
             foregroundInfo = InfoLight,
             foregroundSuccess = SuccessLight,
