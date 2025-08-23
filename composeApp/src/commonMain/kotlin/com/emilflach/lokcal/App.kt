@@ -78,11 +78,7 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                     screen = Screen.MealDetail(s.mealType)
                     refreshToggle = !refreshToggle
                 },
-                autoFocusSearch = true,
-                onChanged = {
-                    // Live-refresh the detail/main when returning
-                    refreshToggle = !refreshToggle
-                }
+                autoFocusSearch = true
             )
         }
     }

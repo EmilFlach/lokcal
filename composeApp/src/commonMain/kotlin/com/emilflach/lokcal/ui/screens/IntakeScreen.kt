@@ -192,7 +192,7 @@ fun IntakeScreen(
                             )
                         }
 
-                        var tf by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+                        var tf by rememberSaveable(item.id, stateSaver = TextFieldValue.Saver) {
                             mutableStateOf(TextFieldValue(text = gramsById[item.id] ?: initialGrams))
                         }
 
