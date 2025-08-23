@@ -58,15 +58,15 @@ class IntakeViewModel(
 
     private fun computeFoodsForQuery(q: String): List<Food> {
         return if (q.isBlank()) {
-            val recent = intakeRepo.getRecentFoods(100)
-            if (recent.size >= 100) {
+            val recent = intakeRepo.getRecentFoods(20)
+            if (recent.size >= 20) {
                 recent
             } else {
                 val recentIds = recent.map { it.id }.toSet()
                 val all = foodRepo.getAll()
                 val remaining = all.filter { it.id !in recentIds }
                     .sortedBy { it.name.lowercase() }
-                if (remaining.isEmpty()) recent else recent + remaining.take(100 - recent.size)
+                if (remaining.isEmpty()) recent else recent + remaining.take(20 - recent.size)
             }
         } else {
             foodRepo.search(q)

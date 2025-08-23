@@ -52,10 +52,10 @@ class FoodRepository(database: Database) {
         if (candidatesLike.isNotEmpty()) {
             return candidatesLike.sortedWith(
                 compareBy<Food> { if (exactMatch(it)) 0 else 1 }
-                    .thenBy { sourcePriority(it.source) }
                     .thenBy { if (prefixMatch(it)) 0 else 1 }
                     .thenBy { containsPos(it) }
                     .thenBy { levScore(it) }
+                    .thenBy { sourcePriority(it.source) }
                     .thenBy { it.name.lowercase() }
             )
         }
