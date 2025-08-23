@@ -44,6 +44,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.Food
+import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.screens.FocusRequesters
 import com.emilflach.lokcal.viewmodel.IntakeViewModel
 
@@ -72,11 +73,14 @@ fun IntakeListItem(
         }
     }
 
+    val colors = LocalRecipesColors.current
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .clip(MaterialTheme.shapes.medium)
+            .background(colors.backgroundSurface1)
             .clickable {
                 requesters.request(item.id)
                 keyboard?.show()
@@ -93,13 +97,14 @@ fun IntakeListItem(
                 modifier = Modifier
                     .weight(1f)
             ) {
-                Text(text = item.name, style = MaterialTheme.typography.bodyLarge)
+                Text(text = item.name, style = MaterialTheme.typography.bodyLarge, color = colors.foregroundDefault)
                 Text(
                     text = viewModel.buildSubtitle(
                         food = item,
                         gramsText = gramsById.getOrPut(item.id) { initialGrams },
                     ),
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.foregroundSupport
                 )
             }
 
@@ -127,15 +132,15 @@ fun IntakeListItem(
                 ),
 
                 textStyle = MaterialTheme.typography.bodyMedium.copy(
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = colors.foregroundDefault,
                     textAlign = TextAlign.Center
                 ),
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
+                cursorBrush = SolidColor(colors.foregroundDefault),
                 modifier = Modifier
                     .width(50.dp)
                     .height(50.dp)
                     .background(
-                        MaterialTheme.colorScheme.surfaceVariant,
+                        colors.backgroundSurface2,
                         MaterialTheme.shapes.small
                     )
                     .focusRequester(requesters[item.id])
@@ -164,7 +169,11 @@ fun IntakeListItem(
                 }
             )
 
-            FilledIconButton(modifier = Modifier.size(50.dp), onClick = onAddClick) {
+            val btnColors = androidx.compose.material3.IconButtonDefaults.filledIconButtonColors(
+                containerColor = colors.backgroundBrand,
+                contentColor = colors.onBackgroundBrand
+            )
+            FilledIconButton(modifier = Modifier.size(50.dp), colors = btnColors, onClick = onAddClick) {
                 Icon(
                     imageVector = Icons.Filled.Add,
                     contentDescription = "Add portion"

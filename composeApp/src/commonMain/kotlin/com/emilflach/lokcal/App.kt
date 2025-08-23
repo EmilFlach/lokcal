@@ -13,6 +13,7 @@ import com.emilflach.lokcal.viewmodel.IntakeViewModel
 import com.emilflach.lokcal.viewmodel.MainViewModel
 import com.emilflach.lokcal.viewmodel.MealDetailViewModel
 import androidx.compose.material3.*
+import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.util.SystemBackHandler
 
 private sealed class Screen {
@@ -50,36 +51,43 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
         }
     }
 
-    when (val s = screen) {
-        Screen.Main -> {
-            // Recreate VM when refreshToggle changes
-            val vm = remember(intakeRepo, refreshToggle) { MainViewModel(intakeRepo) }
-            MainScreen(
-                viewModel = vm,
-                onOpenMeal = { meal -> screen = Screen.MealDetail(meal) },
-            )
-        }
-        is Screen.MealDetail -> {
-            val vm = remember(intakeRepo, s.mealType, refreshToggle) { MealDetailViewModel(intakeRepo, s.mealType) }
-            MealDetailScreen(
-                viewModel = vm,
-                onBack = { screen = Screen.Main; refreshToggle = !refreshToggle },
-                onAdd = { meal ->
-                    screen = Screen.Intake(meal)
-                }
-            )
-        }
-        is Screen.Intake -> {
-            val intakeVm = remember(foodRepo, intakeRepo, s.mealType) { IntakeViewModel(foodRepo, intakeRepo, s.mealType) }
-            IntakeScreen(
-                viewModel = intakeVm,
-                onDone = {
-                    // Navigate back to meal detail and refresh
-                    screen = Screen.MealDetail(s.mealType)
-                    refreshToggle = !refreshToggle
-                },
-                autoFocusSearch = true
-            )
+    val recipesColors = LocalRecipesColors.current
+
+    Surface(
+        color = recipesColors.backgroundPage,
+        contentColor = recipesColors.foregroundDefault
+    ) {
+        when (val s = screen) {
+            Screen.Main -> {
+                // Recreate VM when refreshToggle changes
+                val vm = remember(intakeRepo, refreshToggle) { MainViewModel(intakeRepo) }
+                MainScreen(
+                    viewModel = vm,
+                    onOpenMeal = { meal -> screen = Screen.MealDetail(meal) },
+                )
+            }
+            is Screen.MealDetail -> {
+                val vm = remember(intakeRepo, s.mealType, refreshToggle) { MealDetailViewModel(intakeRepo, s.mealType) }
+                MealDetailScreen(
+                    viewModel = vm,
+                    onBack = { screen = Screen.Main; refreshToggle = !refreshToggle },
+                    onAdd = { meal ->
+                        screen = Screen.Intake(meal)
+                    }
+                )
+            }
+            is Screen.Intake -> {
+                val intakeVm = remember(foodRepo, intakeRepo, s.mealType) { IntakeViewModel(foodRepo, intakeRepo, s.mealType) }
+                IntakeScreen(
+                    viewModel = intakeVm,
+                    onDone = {
+                        // Navigate back to meal detail and refresh
+                        screen = Screen.MealDetail(s.mealType)
+                        refreshToggle = !refreshToggle
+                    },
+                    autoFocusSearch = true
+                )
+            }
         }
     }
 }

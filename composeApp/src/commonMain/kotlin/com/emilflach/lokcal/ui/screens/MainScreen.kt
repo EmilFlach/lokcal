@@ -47,13 +47,16 @@ fun MainScreen(
         Text("Eaten: ${eaten.toInt()} kcal", style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.height(8.dp))
         // Visualization of progress towards using up kcal
-        LinearProgressIndicator(
-        progress = { progress },
-        modifier = Modifier.fillMaxWidth(),
-        color = ProgressIndicatorDefaults.linearColor,
-        trackColor = ProgressIndicatorDefaults.linearTrackColor,
-        strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
-        )
+        run {
+            val c = com.emilflach.lokcal.theme.LocalRecipesColors.current
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth(),
+                color = c.foregroundBrand,
+                trackColor = c.backgroundSurface2,
+                strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
+            )
+        }
 
         // Push sections to the bottom
         Spacer(Modifier.weight(1f))

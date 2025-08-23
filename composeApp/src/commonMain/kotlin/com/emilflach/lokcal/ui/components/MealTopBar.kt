@@ -14,6 +14,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -29,6 +30,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.dp
+import com.emilflach.lokcal.theme.LocalRecipesColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,7 +41,16 @@ fun MealTopBar(
     query: String = "",
     onQueryChange: (String) -> Unit = {},
     autoFocusSearch: Boolean = false,
-    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
+    colors: TopAppBarColors = run {
+        val color = LocalRecipesColors.current
+        TopAppBarDefaults.topAppBarColors(
+            containerColor = color.backgroundPage,
+            scrolledContainerColor = color.backgroundSurface1,
+            titleContentColor = color.foregroundDefault,
+            navigationIconContentColor = color.foregroundDefault,
+            actionIconContentColor = color.foregroundDefault,
+        )
+    },
     scrollBehavior: TopAppBarScrollBehavior? = null,
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -71,11 +82,18 @@ fun MealTopBar(
 
         if (showSearch) {
             TopAppBarSurface(colors = colors, scrollBehavior = scrollBehavior) {
+                val color = LocalRecipesColors.current
                 OutlinedTextField(
                     value = query,
                     onValueChange = onQueryChange,
                     label = { Text("Search food") },
                     singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = color.borderFocus,
+                        focusedTextColor = color.foregroundDefault,
+                        focusedLabelColor = color.foregroundDefault,
+                        cursorColor = color.foregroundDefault,
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 32.dp, end = 32.dp, bottom = 16.dp)
