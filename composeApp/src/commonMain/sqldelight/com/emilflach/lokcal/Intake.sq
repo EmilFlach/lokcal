@@ -20,10 +20,6 @@ logFoodIntake:
 INSERT INTO Intake(timestamp, meal_type, source_type, source_food_id, quantity_g, item_name, energy_kcal_total, notes)
 VALUES (?, ?, 'FOOD', ?, ?, ?, ?, ?);
 
-logMealIntake:
-INSERT INTO Intake(timestamp, meal_type, source_type, source_meal_id, quantity_g, item_name, energy_kcal_total, notes)
-VALUES (?, ?, 'MEAL', ?, ?, ?, ?, ?);
-
 selectIntakeByDateRange:
 SELECT * FROM Intake WHERE timestamp BETWEEN ? AND ? ORDER BY timestamp DESC;
 
@@ -35,7 +31,13 @@ DELETE FROM Intake WHERE id = ?;
 
 updateIntakeQuantity:
 UPDATE Intake
-SET energy_kcal_total = energy_kcal_total * (? / quantity_g),
+SET energy_kcal_total = CASE
+    WHEN quantity_g > 0 THEN energy_kcal_total * (? / quantity_g)
+    WHEN source_type = 'FOOD' AND source_food_id IS NOT NULL THEN (
+        SELECT energy_kcal_per_100g FROM Food WHERE id = source_food_id
+    ) * (? / 100.0)
+    ELSE energy_kcal_total
+END,
     quantity_g = ?
 WHERE id = ?;
 

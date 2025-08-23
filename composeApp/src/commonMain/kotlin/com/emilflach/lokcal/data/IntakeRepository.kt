@@ -3,10 +3,15 @@ package com.emilflach.lokcal.data
 import com.emilflach.lokcal.Database
 import com.emilflach.lokcal.Intake
 
-class IntakeRepository(private val database: Database) {
+class IntakeRepository(database: Database) {
     private val foodQ = database.foodQueries
-    private val mealQ = database.mealsQueries
     private val intakeQ = database.intakeQueries
+
+    fun getFoodById(id: Long): com.emilflach.lokcal.Food? = try {
+        foodQ.selectById(id).executeAsOne()
+    } catch (_: Exception) {
+        null
+    }
 
     fun getRecentFoods(limit: Long): List<com.emilflach.lokcal.Food> {
         return intakeQ.recentFoods(limit).executeAsList()
@@ -42,49 +47,6 @@ class IntakeRepository(private val database: Database) {
         )
     }
 
-    /**
-     * Logs intake for a Meal by computing totals from its items at log time and storing a snapshot.
-     * quantityG represents grams of the meal consumed. If the meal definition totals to T grams,
-     * we compute per-gram from the meal definition and scale totals by quantityG/T.
-     * mealType must be one of: BREAKFAST, LUNCH, DINNER, SNACK
-     */
-    fun logMealIntake(
-        mealId: Long,
-        quantityG: Double,
-        timestamp: String,
-        mealType: String,
-        notes: String?
-    ) {
-        require(quantityG >= 0.0) { "quantityG must be >= 0" }
-
-        val meal = mealQ.mealSelectById(mealId).executeAsOne()
-        val items = mealQ.mealItemsForMealSimple(mealId).executeAsList()
-
-        var totalGrams = 0.0
-        var totalKcal = 0.0
-
-        for (it in items) {
-            val itemG = it.item_quantity_g
-            totalGrams += itemG
-            totalKcal += it.food_energy_kcal_per_100g * itemG / 100.0
-        }
-
-        val factor = if (totalGrams > 0.0) quantityG / totalGrams else 0.0
-        val kcal = totalKcal * factor
-
-        val itemName = meal.name
-
-        intakeQ.logMealIntake(
-            timestamp = timestamp,
-            meal_type = mealType,
-            source_meal_id = meal.id,
-            quantity_g = quantityG,
-            item_name = itemName,
-            energy_kcal_total = kcal,
-            notes = notes
-        )
-    }
-
     fun getIntakeByDateRange(startIso: String, endIso: String): List<Intake> {
         return intakeQ.selectIntakeByDateRange(startIso, endIso).executeAsList()
     }
@@ -99,7 +61,8 @@ class IntakeRepository(private val database: Database) {
 
     fun updateIntakeQuantity(id: Long, newQuantityG: Double) {
         require(newQuantityG >= 0.0) { "newQuantityG must be >= 0" }
-        // Adjust energy proportionally to the new quantity in SQL to support both FOOD and MEAL sources
-        intakeQ.updateIntakeQuantity(newQuantityG, newQuantityG, id)
+        // Adjust energy proportionally to the new quantity in SQL to support both FOOD and MEAL sources.
+        // Handles quantity_g = 0 by recomputing from Food when possible.
+        intakeQ.updateIntakeQuantity(newQuantityG, newQuantityG, newQuantityG, id)
     }
 }
