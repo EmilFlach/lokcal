@@ -1,0 +1,113 @@
+package com.emilflach.lokcal.ui.components
+
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.unit.dp
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MealTopBar(
+    title: String,
+    onBack: () -> Unit,
+    showSearch: Boolean,
+    query: String = "",
+    onQueryChange: (String) -> Unit = {},
+    autoFocusSearch: Boolean = false,
+    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
+    scrollBehavior: TopAppBarScrollBehavior? = null,
+) {
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(autoFocusSearch) {
+        if (autoFocusSearch && showSearch) focusRequester.requestFocus()
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy((-1).dp)
+    ) {
+        TopAppBar(
+            modifier = Modifier
+                .fillMaxWidth(),
+            navigationIcon = {
+                IconButton(onClick = { onBack() }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back"
+                    )
+                }
+            },
+            title = {
+                Text(title.lowercase().replaceFirstChar { it.titlecase() })
+            },
+            colors = colors,
+            scrollBehavior = scrollBehavior,
+        )
+
+        if (showSearch) {
+            TopAppBarSurface(colors = colors, scrollBehavior = scrollBehavior) {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = onQueryChange,
+                    label = { Text("Search food") },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 32.dp, end = 32.dp, bottom = 16.dp)
+                        .focusRequester(focusRequester)
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TopAppBarSurface(
+    modifier: Modifier = Modifier,
+    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
+    scrollBehavior: TopAppBarScrollBehavior? = null,
+    content: @Composable () -> Unit,
+) {
+    val colorTransitionFraction = scrollBehavior?.state?.overlappedFraction ?: 0f
+    val fraction = if (colorTransitionFraction > 0.01f) 1f else 0f
+    val appBarContainerColor by animateColorAsState(
+        targetValue = lerp(
+            colors.containerColor,
+            colors.scrolledContainerColor,
+            FastOutLinearInEasing.transform(fraction),
+        ),
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "TopBarSurfaceContainerColorAnimation",
+    )
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = appBarContainerColor,
+        content = content,
+    )
+}

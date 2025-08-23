@@ -10,8 +10,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.emilflach.lokcal.ui.components.MealTopBar
 import com.emilflach.lokcal.viewmodel.MealDetailViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MealDetailScreen(
     viewModel: MealDetailViewModel,
@@ -21,6 +23,13 @@ fun MealDetailScreen(
     val items by viewModel.items.collectAsState()
 
     Scaffold(
+        topBar = {
+            MealTopBar(
+                title = viewModel.mealType,
+                onBack = onBack,
+                showSearch = false,
+            )
+        },
         floatingActionButtonPosition = FabPosition.Start,
         floatingActionButton = {
             LargeFloatingActionButton(onClick = { onAdd(viewModel.mealType) }) {
@@ -37,15 +46,6 @@ fun MealDetailScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text(viewModel.mealType.lowercase().replaceFirstChar { it.titlecase() }, style = MaterialTheme.typography.titleLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    TextButton(onClick = onBack) { Text("Done") }
-                }
-            }
-
-            Spacer(Modifier.height(12.dp))
-
             if (items.isEmpty()) {
                 Text("No items yet.", style = MaterialTheme.typography.bodyMedium)
             } else {

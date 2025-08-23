@@ -24,6 +24,28 @@ class IntakeViewModel(
         val addedSummaryText: String = "",
     )
 
+    // --- UI helpers moved from IntakeScreen ---
+    fun defaultPortionGrams(food: Food): Double {
+        return food.serving_size?.toDoubleOrNull()?.takeIf { it > 0 } ?: 100.0
+    }
+
+    fun parseGrams(text: String): Double {
+        return text
+            .trim()
+            .replace(",", ".")
+            .toDoubleOrNull()?.coerceAtLeast(0.0) ?: 0.0
+    }
+
+    fun computeKcalFor(food: Food, totalGrams: Double): Double {
+        return (food.energy_kcal_per_100g * totalGrams / 100.0)
+    }
+
+    fun buildSubtitle(food: Food, gramsText: String): String {
+        val totalGrams = parseGrams(gramsText)
+        val kcal = computeKcalFor(food, totalGrams)
+        return "${totalGrams.toInt()} g • ${kcal.toInt()} kcal"
+    }
+
     private val _state = MutableStateFlow(UiState(selectedMealType = initialMealType, foods = emptyList()))
     val state: StateFlow<UiState> = _state.asStateFlow()
 
@@ -45,11 +67,9 @@ class IntakeViewModel(
         searchJob?.cancel()
         val qSnapshot = _state.value.query
         searchJob = scope.launch {
-            kotlinx.coroutines.delay(50)
-            // If the query changed during delay, let the newer job handle it
+            kotlinx.coroutines.delay(10)
             if (qSnapshot != _state.value.query) return@launch
             val foods = computeFoodsForQuery(qSnapshot)
-            // Only apply if still relevant
             if (qSnapshot == _state.value.query) {
                 _state.value = _state.value.copy(foods = foods)
             }
