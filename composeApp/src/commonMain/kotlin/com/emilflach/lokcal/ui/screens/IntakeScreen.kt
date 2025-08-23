@@ -128,8 +128,16 @@ fun IntakeScreen(
         val portionsById = remember { mutableStateMapOf<Long, String>() }
         val usePortionsById = remember { mutableStateMapOf<Long, Boolean>() }
 
+        // Reuse a single FocusRequesters across all rows to avoid per-item allocations
+        val requesters = rememberFocusRequesters()
+        val keyboard = LocalSoftwareKeyboardController.current
+
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(state.foods) { item ->
+            items(
+                items = state.foods,
+                key = { it.id },
+                contentType = { "food" }
+            ) { item ->
                 val defaultPortionG: Double = item.serving_size?.toDoubleOrNull()?.takeIf { it > 0 } ?: 100.0
                 val initialGrams = gramsById[item.id] ?: defaultPortionG.toInt().toString()
                 if (!gramsById.containsKey(item.id)) gramsById[item.id] = initialGrams
@@ -152,8 +160,6 @@ fun IntakeScreen(
 
                 val usePortions = usePortionsById[item.id] ?: false
 
-                val requesters = rememberFocusRequesters()
-                val keyboard = LocalSoftwareKeyboardController.current
 
 
 
