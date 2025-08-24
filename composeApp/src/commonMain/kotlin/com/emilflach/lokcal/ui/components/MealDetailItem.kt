@@ -1,6 +1,5 @@
 package com.emilflach.lokcal.ui.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -56,6 +55,9 @@ fun MealDetailItem(
     val imageLoader = rememberKtorImageLoader()
 
     var gramsText by remember(entry.id, entry.quantity_g) { mutableStateOf(entry.quantity_g.toInt().toString()) }
+    var portionsText by remember(entry.id, entry.quantity_g) {
+        mutableStateOf(viewModel.getPortionsText(entry))
+    }
 
     fun persistIfValid(text: String) {
         val g = viewModel.parseGrams(text)
@@ -113,7 +115,7 @@ fun MealDetailItem(
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "${entry.energy_kcal_total.toInt()} kcal",
+                text = "${entry.energy_kcal_total.toInt()} kcal • $portionsText",
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.foregroundSupport,
                 modifier = Modifier.padding(end = 8.dp),
@@ -143,7 +145,6 @@ fun MealDetailItem(
                         persistIfValid(newText)
                     },
                     contentPadding = PaddingValues(horizontal = 16.dp),
-                    border = BorderStroke(1.dp, colors.foregroundSupport),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.foregroundSupport),
                 ) {
                     Icon(imageVector = Icons.Filled.Add, contentDescription = "Add a portion of the food")
@@ -153,7 +154,6 @@ fun MealDetailItem(
                 Spacer(Modifier.width(8.dp))
 
                 OutlinedIconButton(
-                    border = BorderStroke(1.dp, colors.foregroundSupport),
                     colors = IconButtonDefaults.outlinedIconButtonColors(contentColor = colors.foregroundSupport),
                     onClick = {
                         val newText = viewModel.subtractPortionText(gramsText, entry)

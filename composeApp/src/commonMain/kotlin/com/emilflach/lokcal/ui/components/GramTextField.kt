@@ -25,6 +25,8 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
@@ -41,6 +43,14 @@ fun GramTextField(
 ) {
     val colors = LocalRecipesColors.current
     fun sanitizeGramsInput(text: String, maxDigits: Int = 5): String = text.filter { it.isDigit() }.take(maxDigits)
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+
+    fun handleDone() {
+        keyboard?.hide()
+        focusManager.clearFocus()
+        onDone()
+    }
 
     CompositionLocalProvider(
         LocalTextSelectionColors provides TextSelectionColors(
@@ -66,7 +76,7 @@ fun GramTextField(
                 textAlign = TextAlign.Center
             ),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            keyboardActions = KeyboardActions(onDone = { onDone() }),
+            keyboardActions = KeyboardActions(onDone = { handleDone() }),
             cursorBrush = androidx.compose.ui.graphics.SolidColor(colors.foregroundDefault),
             modifier = Modifier
                 .width(64.dp)
@@ -81,7 +91,7 @@ fun GramTextField(
                     if (event.type == KeyEventType.KeyUp &&
                         (event.key == Key.Enter || event.key == Key.NumPadEnter)
                     ) {
-                        onDone()
+                        handleDone()
                         true
                     } else {
                         false

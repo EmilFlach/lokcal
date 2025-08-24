@@ -6,6 +6,7 @@ import com.emilflach.lokcal.util.currentDateIso
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlin.math.round
 
 class MealDetailViewModel(
     private val intakeRepo: IntakeRepository,
@@ -61,6 +62,35 @@ class MealDetailViewModel(
         val newVal = (current - portion).coerceAtLeast(0.0)
         return newVal.toInt().toString()
     }
+
+    fun getPortionsText(intake: Intake): String {
+        val currentGrams = intake.quantity_g
+        val portionSize = portionForEntry(intake)
+        val portions = if (portionSize > 0) currentGrams / portionSize else 0.0
+
+        val value = when {
+            portions == 0.0 -> "0"
+            portions < 0.01 -> "< 0.01"
+            portions >= 10 -> portions.toInt().toString()
+            portions == portions.toInt().toDouble() -> portions.toInt().toString()
+            else -> {
+                val rounded = round(portions * 100) / 100
+                val str = rounded.toString()
+                if (str.contains('.')) {
+                    str.trimEnd('0').trimEnd('.')
+                } else {
+                    str
+                }
+            }
+        }
+        val label = when {
+            portions == 0.0 -> "portions"
+            portions > 1 -> "portions"
+            else -> "portion"
+        }
+        return "$value $label"
+    }
+
 
     fun imageUrlForFoodId(foodId: Long): String? = intakeRepo.getFoodById(foodId)?.image_url
 
