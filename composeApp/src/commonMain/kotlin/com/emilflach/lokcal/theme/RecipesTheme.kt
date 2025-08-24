@@ -234,7 +234,7 @@ class RecipesColors(
             foregroundDisabled = Neutral300,
 
             // Border Colors
-            borderDefault = Neutral700,
+            borderDefault = Neutral100,
             borderStrong = Neutral200,
             borderBrand = BrandDefault,
             borderInfo = InfoLight,

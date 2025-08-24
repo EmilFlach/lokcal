@@ -45,7 +45,6 @@ class MealDetailViewModel(
     }
 
     // --- UI helpers exposed to keep UI lean ---
-    fun sanitizeGramsInput(text: String, maxDigits: Int = 5): String = text.filter { it.isDigit() }.take(maxDigits)
 
     fun parseGrams(text: String): Double = text.trim().replace(",", ".").toDoubleOrNull()?.coerceAtLeast(0.0) ?: 0.0
 
@@ -53,6 +52,13 @@ class MealDetailViewModel(
         val current = parseGrams(currentText)
         val portion = portionForEntry(intake)
         val newVal = (current + portion).coerceAtLeast(0.0)
+        return newVal.toInt().toString()
+    }
+
+    fun subtractPortionText(currentText: String, intake: Intake): String {
+        val current = parseGrams(currentText)
+        val portion = portionForEntry(intake)
+        val newVal = (current - portion).coerceAtLeast(0.0)
         return newVal.toInt().toString()
     }
 

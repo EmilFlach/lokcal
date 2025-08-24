@@ -3,21 +3,12 @@ package com.emilflach.lokcal.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.selection.LocalTextSelectionColors
-import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FilledIconButton
@@ -25,7 +16,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -33,20 +23,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onPreviewKeyEvent
-import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.Food
 import com.emilflach.lokcal.theme.LocalRecipesColors
@@ -115,79 +94,17 @@ fun IntakeListItem(
                 )
             }
 
-            CompositionLocalProvider(
-                LocalTextSelectionColors provides TextSelectionColors(
-                    handleColor = colors.foregroundDefault,
-                    backgroundColor = colors.foregroundDefault.copy(alpha = 0.2f)
-                )
-            ) {
-                BasicTextField(
-                    value = tf,
-                    onValueChange = { newVal ->
-                        val cleaned = newVal.text.filter { it.isDigit() }.take(5)
-                        gramsById[item.id] = cleaned
-                        tf = newVal.copy(
-                            text = cleaned,
-                            selection = TextRange(
-                                newVal.selection.start.coerceIn(
-                                    0,
-                                    cleaned.length
-                                )
-                            )
-                        )
-                    },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    keyboardActions = KeyboardActions(
-                        onDone = {
-                            onAddClick()
-                        }
-                    ),
-
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(
-                        color = colors.foregroundDefault,
-                        textAlign = TextAlign.Center
-                    ),
-                    cursorBrush = SolidColor(colors.foregroundDefault),
-                    modifier = Modifier
-                        .width(50.dp)
-                        .height(50.dp)
-                        .background(
-                            colors.backgroundSurface2,
-                            MaterialTheme.shapes.small
-                        )
-                        .focusRequester(requesters[item.id])
-                        .onFocusChanged { state ->
-                            if (state.isFocused) {
-                                tf = tf.copy(selection = TextRange(0, tf.text.length))
-                            }
-                        }
-                        .onPreviewKeyEvent { event ->
-                            if (event.type == KeyEventType.KeyUp &&
-                                (event.key == Key.Enter || event.key == Key.NumPadEnter)
-                            ) {
-                                onAddClick()
-                                true
-                            } else {
-                                false
-                            }
-                        },
-                    decorationBox = { innerTextField ->
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            innerTextField()
-                        }
-                    }
-                )
-            }
-
-            val btnColors = androidx.compose.material3.IconButtonDefaults.filledIconButtonColors(
-                containerColor = colors.backgroundBrand,
-                contentColor = colors.onBackgroundBrand
+            GramTextField(
+                tf = tf,
+                requester = requesters[item.id],
+                onValueChange = { newTf, value ->
+                    tf = newTf
+                    gramsById[item.id] = value
+                },
+                onDone = { onAddClick() }
             )
-            FilledIconButton(modifier = Modifier.size(50.dp), colors = btnColors, onClick = onAddClick) {
+
+            FilledIconButton(modifier = Modifier.size(50.dp), onClick = onAddClick) {
                 Icon(
                     imageVector = Icons.Filled.Add,
                     contentDescription = "Add portion"

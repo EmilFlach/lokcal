@@ -1,32 +1,44 @@
 package com.emilflach.lokcal.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.emilflach.lokcal.Intake
@@ -53,6 +65,13 @@ fun MealDetailItem(
     val keyboard = LocalSoftwareKeyboardController.current
     val requester = remember(entry.id) { FocusRequester() }
 
+    var tf by rememberSaveable(entry.id, stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(text = gramsText))
+    }
+
+    val portion = viewModel.portionForEntry(entry)
+    val portionInt = portion.toInt()
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -64,7 +83,7 @@ fun MealDetailItem(
                 keyboard?.show()
             }
             .height(IntrinsicSize.Min)
-            .padding(vertical = 12.dp, horizontal = 12.dp),
+            .padding(top = 12.dp, bottom = 12.dp, start = 12.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         val imageUrl = remember(entry.source_food_id) {
@@ -89,70 +108,33 @@ fun MealDetailItem(
             Text(
                 entry.item_name,
                 style = MaterialTheme.typography.bodyLarge,
-                color = colors.foregroundDefault
+                color = colors.foregroundDefault,
+                modifier = Modifier.padding(end = 8.dp),
             )
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(4.dp))
             Text(
                 text = "${entry.energy_kcal_total.toInt()} kcal",
                 style = MaterialTheme.typography.bodySmall,
-                color = colors.foregroundSupport
+                color = colors.foregroundSupport,
+                modifier = Modifier.padding(end = 8.dp),
             )
-            Spacer(Modifier.height(8.dp))
-
-            var tf by rememberSaveable(entry.id, stateSaver = TextFieldValue.Saver) {
-                mutableStateOf(TextFieldValue(text = gramsText))
-            }
+            Spacer(Modifier.height(12.dp))
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                BasicTextField(
-                    value = tf,
-                    onValueChange = { newVal ->
-                        val cleaned = viewModel.sanitizeGramsInput(newVal.text)
-                        gramsText = cleaned
-                        tf = newVal.copy(
-                            text = cleaned,
-                            selection = TextRange(
-                                newVal.selection.start.coerceIn(0, cleaned.length)
-                            )
-                        )
-                        if (cleaned.isNotEmpty()) persistIfValid(cleaned)
-                    },
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.foregroundDefault, textAlign = TextAlign.Center),
-                    cursorBrush = androidx.compose.ui.graphics.SolidColor(colors.foregroundDefault),
-                    modifier = Modifier
-                        .width(64.dp)
-                        .height(40.dp)
-                        .background(colors.backgroundSurface2, MaterialTheme.shapes.small)
-                        .focusRequester(requester)
-                        .onFocusChanged { st ->
-                            if (st.isFocused) {
-                                tf = tf.copy(selection = TextRange(0, tf.text.length))
-                            }
-                        },
-                    decorationBox = { inner ->
-                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            // shift numeric left a bit to compensate for trailing g
-                            Box(Modifier.padding(end = 10.dp)) { inner() }
-                            Text(
-                                text = "g",
-                                color = colors.foregroundSupport,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier
-                                    .align(Alignment.CenterEnd)
-                                    .padding(end = 6.dp)
-                            )
-                        }
+                GramTextField(
+                    tf = tf,
+                    requester = requester,
+                    onValueChange = { newTf, value ->
+                        tf = newTf
+                        gramsText = value
+                        if (value.isNotEmpty()) persistIfValid(value)
                     }
                 )
+                Spacer(Modifier.weight(1f))
 
-                Spacer(Modifier.width(16.dp))
-
-                val portion = viewModel.portionForEntry(entry)
-                val portionInt = portion.toInt()
                 OutlinedButton(
                     onClick = {
                         val newText = viewModel.addPortionText(gramsText, entry)
@@ -160,22 +142,33 @@ fun MealDetailItem(
                         tf = tf.copy(text = newText, selection = TextRange(newText.length))
                         persistIfValid(newText)
                     },
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = colors.backgroundSurface1,
-                        contentColor = colors.foregroundDefault,
-                    )
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    border = BorderStroke(1.dp, colors.foregroundSupport),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.foregroundSupport),
                 ) {
-                    Icon(imageVector = Icons.Filled.Add, contentDescription = null)
+                    Icon(imageVector = Icons.Filled.Add, contentDescription = "Add a portion of the food")
                     Spacer(Modifier.width(4.dp))
                     Text(text = "${portionInt}g")
                 }
-                Spacer(Modifier.weight(1f))
+                Spacer(Modifier.width(8.dp))
+
+                OutlinedIconButton(
+                    border = BorderStroke(1.dp, colors.foregroundSupport),
+                    colors = IconButtonDefaults.outlinedIconButtonColors(contentColor = colors.foregroundSupport),
+                    onClick = {
+                        val newText = viewModel.subtractPortionText(gramsText, entry)
+                        gramsText = newText
+                        tf = tf.copy(text = newText, selection = TextRange(newText.length))
+                        persistIfValid(newText)
+                    }
+                ) {
+                    Icon(imageVector = Icons.Filled.Remove, contentDescription = "Subtract a portion of the food")
+                }
 
                 IconButton(onClick = { viewModel.deleteItem(entry.id) }) {
                     Icon(
-                        imageVector = Icons.Filled.Delete,
-                        contentDescription = "Delete",
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = "Delete item",
                         tint = colors.foregroundSupport
                     )
                 }
