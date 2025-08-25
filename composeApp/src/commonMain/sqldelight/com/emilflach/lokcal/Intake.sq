@@ -20,6 +20,10 @@ logFoodIntake:
 INSERT INTO Intake(timestamp, meal_type, source_type, source_food_id, quantity_g, item_name, energy_kcal_total, notes)
 VALUES (?, ?, 'FOOD', ?, ?, ?, ?, ?);
 
+logMealIntake:
+INSERT INTO Intake(timestamp, meal_type, source_type, source_meal_id, quantity_g, item_name, energy_kcal_total, notes)
+VALUES (?, ?, 'MEAL', ?, ?, ?, ?, ?);
+
 selectIntakeByDateRange:
 SELECT * FROM Intake WHERE timestamp BETWEEN ? AND ? ORDER BY timestamp DESC;
 
@@ -40,6 +44,14 @@ SET energy_kcal_total = CASE
 END,
     quantity_g = ?
 WHERE id = ?;
+
+-- Direct setter for cases where repository recomputes kcal/qty (e.g., MEAL when previous qty was 0)
+updateIntakeQuantityDirect:
+UPDATE Intake SET energy_kcal_total = ?, quantity_g = ? WHERE id = ?;
+
+-- Helper to fetch one intake row
+selectIntakeById:
+SELECT * FROM Intake WHERE id = ?;
 
 -- Most recently selected foods (by last intake timestamp), returns Food rows
 recentFoods:

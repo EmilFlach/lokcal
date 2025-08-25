@@ -24,6 +24,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.IntakeListItem
+import com.emilflach.lokcal.ui.components.IntakeMealListItem
 import com.emilflach.lokcal.ui.components.MealTopBar
 import com.emilflach.lokcal.viewmodel.IntakeViewModel
 
@@ -69,11 +70,23 @@ fun IntakeScreen(
                 contentPadding = PaddingValues(vertical = 16.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
+                val totalSize = state.meals.size + state.foods.size
+                itemsIndexed(items = state.meals) { index, item ->
+                    IntakeMealListItem(
+                        item = item,
+                        index = index,
+                        size = totalSize,
+                        viewModel = viewModel,
+                        gramsById = gramsById,
+                        requesters = requesters,
+                        onDone = onDone,
+                    )
+                }
                 itemsIndexed(items = state.foods) { index, item ->
                     IntakeListItem(
                         item = item,
-                        index = index,
-                        size = state.foods.size,
+                        index = state.meals.size + index,
+                        size = totalSize,
                         viewModel = viewModel,
                         gramsById = gramsById,
                         requesters = requesters,

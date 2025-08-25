@@ -1,6 +1,7 @@
 package com.emilflach.lokcal.ui.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,7 +21,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.viewmodel.MainViewModel
 
@@ -28,23 +32,52 @@ import com.emilflach.lokcal.viewmodel.MainViewModel
 fun MainScreen(
     viewModel: MainViewModel,
     onOpenMeal: (String) -> Unit,
+    onOpenExercise: () -> Unit,
 ) {
     val summaries by viewModel.summaries.collectAsState()
     val eaten by viewModel.eatenKcal.collectAsState()
     val left by viewModel.leftKcal.collectAsState()
     val progress by viewModel.progress.collectAsState()
+    val burned by viewModel.burnedKcal.collectAsState()
+    val exerciseTotal by viewModel.exerciseTotalKcal.collectAsState()
+    val exerciseSummary by viewModel.exerciseSummaryText.collectAsState()
+    val selectedDate by viewModel.selectedDate.collectAsState()
+
+    val density = LocalDensity.current
+    val thresholdPx = remember(density) { with(density) { 64.dp.toPx() } }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(16.dp)
+            .pointerInput(Unit) {
+                var accumX = 0f
+                detectHorizontalDragGestures(
+                    onDragEnd = {
+                        when {
+                            accumX > thresholdPx -> viewModel.previousDay()
+                            accumX < -thresholdPx -> viewModel.nextDay()
+                        }
+                        accumX = 0f
+                    },
+                    onHorizontalDrag = { _, dragAmount ->
+                        accumX += dragAmount
+                    }
+                )
+            }
     ) {
+        // Selected date label
+        Text(selectedDate.toString(), style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(8.dp))
+
         // Massive number up top showing kcal left for the day
         Text("${left.toInt()} kcal left", style = MaterialTheme.typography.displayLarge)
         Spacer(Modifier.height(4.dp))
         // Smaller number showing eaten so far
         Text("Eaten: ${eaten.toInt()} kcal", style = MaterialTheme.typography.bodyLarge)
+        // And burned kcal
+        Text("Burned: ${burned.toInt()} kcal", style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.height(8.dp))
         // Visualization of progress towards using up kcal
         run {
@@ -60,6 +93,25 @@ fun MainScreen(
 
         // Push sections to the bottom
         Spacer(Modifier.weight(1f))
+
+        // Exercise summary card
+        OutlinedCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp)
+                .clickable { onOpenExercise() }
+        ) {
+            Column(Modifier.padding(16.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Exercise", style = MaterialTheme.typography.titleMedium)
+                    Text("${exerciseTotal.toInt()} kcal", style = MaterialTheme.typography.bodyMedium)
+                }
+                if (exerciseSummary.isNotEmpty()) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(exerciseSummary, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
 
         // Meal sections displayed at the bottom
         summaries.forEach { s ->

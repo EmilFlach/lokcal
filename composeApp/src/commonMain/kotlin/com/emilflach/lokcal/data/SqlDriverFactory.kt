@@ -60,6 +60,57 @@ private fun ensureFoodSchemaUpgrades(driver: SqlDriver) {
     )
 }
 
+private fun ensureMealSchemaUpgrades(driver: SqlDriver) {
+    // Ensure Meal table exists (with new column) and add missing column on older DBs
+    tryExec(
+        driver,
+        """
+        CREATE TABLE IF NOT EXISTS Meal (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT,
+            image_url TEXT,
+            total_portions REAL NOT NULL DEFAULT 1.0,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+        """.trimIndent()
+    )
+
+    // Add the new columns if the table already existed without them
+    tryExec(driver, "ALTER TABLE Meal ADD COLUMN total_portions REAL NOT NULL DEFAULT 1.0")
+    tryExec(driver, "ALTER TABLE Meal ADD COLUMN image_url TEXT")
+
+    // Ensure MealItem table exists
+    tryExec(
+        driver,
+        """
+        CREATE TABLE IF NOT EXISTS MealItem (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            meal_id INTEGER NOT NULL REFERENCES Meal(id) ON DELETE CASCADE,
+            food_id INTEGER NOT NULL REFERENCES Food(id) ON DELETE RESTRICT,
+            quantity_g REAL NOT NULL CHECK (quantity_g >= 0)
+        )
+        """.trimIndent()
+    )
+}
+
+private fun ensureExerciseSchemaUpgrades(driver: SqlDriver) {
+    // Ensure Exercise table exists
+    tryExec(
+        driver,
+        """
+        CREATE TABLE IF NOT EXISTS Exercise (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT NOT NULL,
+            exercise_type TEXT NOT NULL CHECK (exercise_type IN ('WALKING','RUNNING')),
+            duration_min REAL NOT NULL CHECK (duration_min >= 0),
+            energy_kcal_total REAL NOT NULL,
+            notes TEXT
+        )
+        """.trimIndent()
+    )
+}
+
 fun createDatabase(sqlDriverFactory: SqlDriverFactory): Database {
     val driver = sqlDriverFactory.createDriver()
 
@@ -68,6 +119,8 @@ fun createDatabase(sqlDriverFactory: SqlDriverFactory): Database {
 
     // Best-effort runtime schema upgrades for existing installs without SQLDelight migrations
     ensureFoodSchemaUpgrades(driver)
+    ensureMealSchemaUpgrades(driver)
+    ensureExerciseSchemaUpgrades(driver)
 
     val database = Database(driver)
     // Seed initial data on first launch

@@ -2,6 +2,8 @@ CREATE TABLE Meal (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     description TEXT,
+    image_url TEXT,
+    total_portions REAL NOT NULL DEFAULT 1.0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -14,6 +16,15 @@ CREATE TABLE MealItem (
 
 mealInsert:
 INSERT INTO Meal(name, description) VALUES (?, ?);
+
+mealInsertWithPortions:
+INSERT INTO Meal(name, description, total_portions) VALUES (?, ?, ?);
+
+mealSelectPortionsById:
+SELECT total_portions FROM Meal WHERE id = ?;
+
+lastInsertId:
+SELECT last_insert_rowid();
 
 mealSelectAll:
 SELECT * FROM Meal ORDER BY created_at DESC;
@@ -31,6 +42,16 @@ JOIN Food f ON f.id = mi.food_id
 WHERE mi.meal_id = ?
 ORDER BY mi.id;
 
+-- Joined with explicit aliases for editor
+mealItemsForMealFull:
+SELECT mi.id AS meal_item_id,
+       mi.quantity_g AS meal_item_quantity_g,
+       f.*
+FROM MealItem mi
+JOIN Food f ON f.id = mi.food_id
+WHERE mi.meal_id = ?
+ORDER BY mi.id;
+
 -- Simplified items for kcal-only computation
 mealItemsForMealSimple:
 SELECT mi.quantity_g AS item_quantity_g,
@@ -39,3 +60,37 @@ FROM MealItem mi
 JOIN Food f ON f.id = mi.food_id
 WHERE mi.meal_id = ?
 ORDER BY mi.id;
+
+mealTotals:
+SELECT COALESCE(SUM(mi.quantity_g), 0) AS total_g,
+       COALESCE(SUM(mi.quantity_g * f.energy_kcal_per_100g / 100.0), 0) AS total_kcal
+FROM MealItem mi
+JOIN Food f ON f.id = mi.food_id
+WHERE mi.meal_id = ?;
+
+-- Search meals by name/description (case-insensitive)
+mealSearchByAny:
+SELECT * FROM Meal
+WHERE lower(name) LIKE ?
+   OR lower(description) LIKE ?
+ORDER BY name;
+
+-- Update meal meta fields
+updateMealMeta:
+UPDATE Meal SET name = ?, image_url = ?, total_portions = ? WHERE id = ?;
+
+-- Update only portions if needed
+updateMealPortions:
+UPDATE Meal SET total_portions = ? WHERE id = ?;
+
+-- Update a meal item grams
+updateMealItemQuantity:
+UPDATE MealItem SET quantity_g = ? WHERE id = ?;
+
+-- Delete a meal (cascades to items)
+deleteMealById:
+DELETE FROM Meal WHERE id = ?;
+
+-- Delete a specific meal item
+deleteMealItemById:
+DELETE FROM MealItem WHERE id = ?;

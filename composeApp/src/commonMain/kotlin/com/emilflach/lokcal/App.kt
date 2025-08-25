@@ -8,18 +8,24 @@ import com.emilflach.lokcal.data.createDatabase
 import com.emilflach.lokcal.theme.AppTheme
 import com.emilflach.lokcal.ui.screens.IntakeScreen
 import com.emilflach.lokcal.ui.screens.MainScreen
-import com.emilflach.lokcal.ui.screens.MealDetailScreen
+import com.emilflach.lokcal.ui.screens.MealTimeScreen
+import com.emilflach.lokcal.ui.screens.EditMealScreen
 import com.emilflach.lokcal.viewmodel.IntakeViewModel
 import com.emilflach.lokcal.viewmodel.MainViewModel
-import com.emilflach.lokcal.viewmodel.MealDetailViewModel
+import com.emilflach.lokcal.viewmodel.MealTimeViewModel
+import com.emilflach.lokcal.viewmodel.EditMealViewModel
 import androidx.compose.material3.*
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.util.SystemBackHandler
 
 private sealed class Screen {
     data object Main : Screen()
-    data class MealDetail(val mealType: String) : Screen()
+    data class MealTime(val mealType: String) : Screen()
     data class Intake(val mealType: String) : Screen()
+    data class EditMeal(val mealId: Long, val returnMealType: String) : Screen()
+    data object ExerciseList : Screen()
+    data object ExerciseAdd : Screen()
+    data class EditExercise(val exerciseId: Long) : Screen()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,6 +35,7 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
     val database = remember(sqlDriverFactory) { createDatabase(sqlDriverFactory) }
     val foodRepo = remember(database) { FoodRepository(database) }
     val intakeRepo = remember(database) { IntakeRepository(database) }
+    val exerciseRepo = remember(database) { com.emilflach.lokcal.data.ExerciseRepository(database) }
 
     var screen by remember { mutableStateOf<Screen>(Screen.Main) }
     var refreshToggle by remember { mutableStateOf(false) }
@@ -37,12 +44,28 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
     SystemBackHandler(enabled = true) {
         when (val s = screen) {
             is Screen.Intake -> {
-                // Go back to meal detail from intake
-                screen = Screen.MealDetail(s.mealType)
+                // Go back to meal time from intake
+                screen = Screen.MealTime(s.mealType)
                 refreshToggle = !refreshToggle
             }
-            is Screen.MealDetail -> {
+            is Screen.EditMeal -> {
+                screen = Screen.MealTime(s.returnMealType)
+                refreshToggle = !refreshToggle
+            }
+            is Screen.MealTime -> {
                 screen = Screen.Main
+                refreshToggle = !refreshToggle
+            }
+            Screen.ExerciseList -> {
+                screen = Screen.Main
+                refreshToggle = !refreshToggle
+            }
+            Screen.ExerciseAdd -> {
+                screen = Screen.ExerciseList
+                refreshToggle = !refreshToggle
+            }
+            is Screen.EditExercise -> {
+                screen = Screen.ExerciseList
                 refreshToggle = !refreshToggle
             }
             else -> {
@@ -60,19 +83,23 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
         when (val s = screen) {
             Screen.Main -> {
                 // Recreate VM when refreshToggle changes
-                val vm = remember(intakeRepo, refreshToggle) { MainViewModel(intakeRepo) }
+                val vm = remember(intakeRepo, exerciseRepo, refreshToggle) { MainViewModel(intakeRepo, exerciseRepo) }
                 MainScreen(
                     viewModel = vm,
-                    onOpenMeal = { meal -> screen = Screen.MealDetail(meal) },
+                    onOpenMeal = { meal -> screen = Screen.MealTime(meal) },
+                    onOpenExercise = { screen = Screen.ExerciseList }
                 )
             }
-            is Screen.MealDetail -> {
-                val vm = remember(intakeRepo, s.mealType, refreshToggle) { MealDetailViewModel(intakeRepo, s.mealType) }
-                MealDetailScreen(
+            is Screen.MealTime -> {
+                val vm = remember(intakeRepo, s.mealType, refreshToggle) { MealTimeViewModel(intakeRepo, s.mealType) }
+                MealTimeScreen(
                     viewModel = vm,
                     onBack = { screen = Screen.Main; refreshToggle = !refreshToggle },
                     onAdd = { meal ->
                         screen = Screen.Intake(meal)
+                    },
+                    onEditMeal = { mealId ->
+                        screen = Screen.EditMeal(mealId, s.mealType)
                     }
                 )
             }
@@ -81,11 +108,45 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                 IntakeScreen(
                     viewModel = intakeVm,
                     onDone = {
-                        // Navigate back to meal detail and refresh
-                        screen = Screen.MealDetail(s.mealType)
+                        // Navigate back to meal time and refresh
+                        screen = Screen.MealTime(s.mealType)
                         refreshToggle = !refreshToggle
                     },
                     autoFocusSearch = true
+                )
+            }
+            is Screen.EditMeal -> {
+                val editVm = remember(intakeRepo, s.mealId) { EditMealViewModel(intakeRepo, s.mealId) }
+                EditMealScreen(
+                    viewModel = editVm,
+                    onBack = { screen = Screen.MealTime(s.returnMealType); refreshToggle = !refreshToggle },
+                    onDeleted = { screen = Screen.MealTime(s.returnMealType); refreshToggle = !refreshToggle }
+                )
+            }
+            Screen.ExerciseList -> {
+                val vm = remember(exerciseRepo, refreshToggle) { com.emilflach.lokcal.viewmodel.ExerciseListViewModel(exerciseRepo) }
+                com.emilflach.lokcal.ui.screens.ExerciseListScreen(
+                    viewModel = vm,
+                    onBack = { screen = Screen.Main },
+                    onAdd = { screen = Screen.ExerciseAdd },
+                    onEdit = { id -> screen = Screen.EditExercise(id) }
+                )
+            }
+            Screen.ExerciseAdd -> {
+                val exVm = remember(exerciseRepo) { com.emilflach.lokcal.viewmodel.ExerciseViewModel(exerciseRepo) }
+                com.emilflach.lokcal.ui.screens.ExerciseScreen(
+                    viewModel = exVm,
+                    onBack = { screen = Screen.ExerciseList },
+                    onSaved = { screen = Screen.ExerciseList; refreshToggle = !refreshToggle }
+                )
+            }
+            is Screen.EditExercise -> {
+                val vm = remember(exerciseRepo, s.exerciseId, refreshToggle) { com.emilflach.lokcal.viewmodel.EditExerciseViewModel(exerciseRepo, s.exerciseId) }
+                com.emilflach.lokcal.ui.screens.EditExerciseScreen(
+                    viewModel = vm,
+                    onBack = { screen = Screen.ExerciseList },
+                    onSaved = { screen = Screen.ExerciseList; refreshToggle = !refreshToggle },
+                    onDeleted = { screen = Screen.ExerciseList; refreshToggle = !refreshToggle }
                 )
             }
         }

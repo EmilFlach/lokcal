@@ -42,6 +42,7 @@ fun MealTopBar(
     query: String = "",
     onQueryChange: (String) -> Unit = {},
     autoFocusSearch: Boolean = false,
+    trailingActions: (@Composable () -> Unit)? = null,
     colors: TopAppBarColors = run {
         val color = LocalRecipesColors.current
         TopAppBarDefaults.topAppBarColors(
@@ -76,6 +77,9 @@ fun MealTopBar(
             },
             title = {
                 Text(title.lowercase().replaceFirstChar { it.titlecase() })
+            },
+            actions = {
+                trailingActions?.invoke()
             },
             colors = colors,
             scrollBehavior = scrollBehavior,

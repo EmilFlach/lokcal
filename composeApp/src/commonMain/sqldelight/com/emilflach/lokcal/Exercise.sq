@@ -1,0 +1,24 @@
+CREATE TABLE Exercise (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL,
+    exercise_type TEXT NOT NULL CHECK (exercise_type IN ('WALKING','RUNNING')),
+    duration_min REAL NOT NULL CHECK (duration_min >= 0),
+    energy_kcal_total REAL NOT NULL,
+    notes TEXT
+);
+
+logExercise:
+INSERT INTO Exercise(timestamp, exercise_type, duration_min, energy_kcal_total, notes)
+VALUES (?, ?, ?, ?, ?);
+
+selectExerciseByDateRange:
+SELECT * FROM Exercise WHERE timestamp BETWEEN ? AND ? ORDER BY timestamp DESC;
+
+selectExerciseById:
+SELECT * FROM Exercise WHERE id = ?;
+
+updateExercise:
+UPDATE Exercise SET exercise_type = ?, duration_min = ?, energy_kcal_total = ?, notes = ? WHERE id = ?;
+
+deleteExerciseById:
+DELETE FROM Exercise WHERE id = ?;

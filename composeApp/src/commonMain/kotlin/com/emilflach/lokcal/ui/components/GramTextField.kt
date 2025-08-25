@@ -64,9 +64,7 @@ fun GramTextField(
                 val cleaned = sanitizeGramsInput(newVal.text)
                 val updatedTf = newVal.copy(
                     text = cleaned,
-                    selection = TextRange(
-                        newVal.selection.start.coerceIn(0, cleaned.length)
-                    )
+                    selection = TextRange(cleaned.length)
                 )
                 onValueChange(updatedTf, cleaned)
             },

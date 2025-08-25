@@ -23,11 +23,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.Food
+import com.emilflach.lokcal.Meal
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.screens.FocusRequesters
 import com.emilflach.lokcal.viewmodel.IntakeViewModel
@@ -115,7 +117,101 @@ fun IntakeListItem(
 }
 
 @Composable
-fun getRoundedCornerShape(index: Int, size: Int): Shape {
+fun IntakeMealListItem(
+    item: Meal,
+    index: Int,
+    size: Int,
+    viewModel: IntakeViewModel,
+    gramsById: MutableMap<Long, String>,
+    requesters: FocusRequesters,
+    onDone: () -> Unit,
+) {
+    val keyboard = LocalSoftwareKeyboardController.current
+    val colors = LocalRecipesColors.current
+    val portionG = viewModel.defaultPortionGrams(item)
+
+    // Use a distinct key space for meals to avoid collisions with food ids
+    val keyId = -item.id
+    val initialPortions = gramsById.getOrPut(keyId) { "1" }
+    var tf by rememberSaveable(keyId, stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(
+            TextFieldValue(
+                text = gramsById.getOrPut(keyId) { initialPortions }
+            )
+        )
+    }
+    val onAddClick = {
+        val portions = viewModel.parseGrams(gramsById.getOrPut(keyId) { initialPortions })
+        val gramsToAdd = portionG * portions
+        if (gramsToAdd > 0.0) {
+            viewModel.logMealPortion(item.id, gramsToAdd)
+            onDone()
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp)
+            .clip(getRoundedCornerShape(index, size))
+            .background(colors.backgroundSurface1)
+            .drawBehind {
+                // Yellow left border to distinguish meals
+                val borderWidth = 2.dp.toPx()
+                drawRect(
+                    color = androidx.compose.ui.graphics.Color(0xFFFFC107),
+                    topLeft = androidx.compose.ui.geometry.Offset(0f, 0f),
+                    size = androidx.compose.ui.geometry.Size(borderWidth, this.size.height)
+                )
+            }
+            .clickable {
+                requesters.request(keyId)
+                keyboard?.show()
+            }
+            .padding(vertical = 24.dp, horizontal = 16.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+            ) {
+                Text(text = item.name, style = MaterialTheme.typography.bodyLarge, color = colors.foregroundDefault)
+                Text(
+                    text = viewModel.buildMealSubtitle(
+                        meal = item,
+                        portionsText = gramsById.getOrPut(keyId) { initialPortions }
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.foregroundSupport
+                )
+            }
+
+            PortionsTextField(
+                tf = tf,
+                requester = requesters[keyId],
+                onValueChange = { newTf, value ->
+                    tf = newTf
+                    gramsById[keyId] = value
+                },
+                onDone = { onAddClick() }
+            )
+
+            FilledIconButton(modifier = Modifier.size(50.dp), onClick = onAddClick) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = "Add meal portion"
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun getRoundedCornerShape(index: Int, size: Int): Shape { 
     return when {
         index == 0 && size == 1 -> RoundedCornerShape(4.dp)
         index == 0 -> RoundedCornerShape(
