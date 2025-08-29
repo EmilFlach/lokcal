@@ -6,7 +6,8 @@ import com.emilflach.lokcal.util.currentDateIso
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlin.math.round
+import com.emilflach.lokcal.util.NumberUtils
+import com.emilflach.lokcal.util.PortionsCalculator
 
 class MealTimeViewModel(
     private val intakeRepo: IntakeRepository,
@@ -47,7 +48,7 @@ class MealTimeViewModel(
 
     // --- UI helpers exposed to keep UI lean ---
 
-    fun parseGrams(text: String): Double = text.trim().replace(",", ".").toDoubleOrNull()?.coerceAtLeast(0.0) ?: 0.0
+    fun parseGrams(text: String): Double = NumberUtils.parseDecimal(text)
 
     fun addPortionText(currentText: String, intake: Intake): String {
         val current = parseGrams(currentText)
@@ -66,29 +67,8 @@ class MealTimeViewModel(
     fun getPortionsText(intake: Intake): String {
         val currentGrams = intake.quantity_g
         val portionSize = portionForEntry(intake)
-        val portions = if (portionSize > 0) currentGrams / portionSize else 0.0
-
-        val value = when {
-            portions == 0.0 -> "0"
-            portions < 0.01 -> "< 0.01"
-            portions >= 10 -> portions.toInt().toString()
-            portions == portions.toInt().toDouble() -> portions.toInt().toString()
-            else -> {
-                val rounded = round(portions * 100) / 100
-                val str = rounded.toString()
-                if (str.contains('.')) {
-                    str.trimEnd('0').trimEnd('.')
-                } else {
-                    str
-                }
-            }
-        }
-        val label = when {
-            portions == 0.0 -> "portions"
-            portions > 1 -> "portions"
-            else -> "portion"
-        }
-        return "$value $label"
+        val p = PortionsCalculator.portions(currentGrams, portionSize)
+        return PortionsCalculator.portionsLabel(p)
     }
 
 
@@ -96,13 +76,13 @@ class MealTimeViewModel(
 
     fun defaultPortionGramsForFoodId(foodId: Long): Double {
         val food = intakeRepo.getFoodById(foodId)
-        return food?.serving_size?.toDoubleOrNull()?.takeIf { it > 0 } ?: 100.0
+        return PortionsCalculator.defaultPortion(food?.serving_size)
     }
 
     fun portionForEntry(intake: Intake): Double {
         return when {
-            intake.source_food_id != null -> defaultPortionGramsForFoodId(intake.source_food_id!!)
-            intake.source_meal_id != null -> intakeRepo.getMealPortionGrams(intake.source_meal_id!!)
+            intake.source_food_id != null -> defaultPortionGramsForFoodId(intake.source_food_id)
+            intake.source_meal_id != null -> intakeRepo.getMealPortionGrams(intake.source_meal_id)
             else -> 100.0
         }
     }

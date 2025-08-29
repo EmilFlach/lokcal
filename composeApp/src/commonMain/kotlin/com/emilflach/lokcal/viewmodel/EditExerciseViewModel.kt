@@ -4,6 +4,8 @@ import com.emilflach.lokcal.data.ExerciseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.emilflach.lokcal.util.NumberUtils
+import com.emilflach.lokcal.util.ExerciseMath
 
 class EditExerciseViewModel(private val repo: ExerciseRepository, private val id: Long) {
     data class UiState(
@@ -18,9 +20,9 @@ class EditExerciseViewModel(private val repo: ExerciseRepository, private val id
 
     init { load() }
 
-    private fun parseMinutes(text: String): Double = text.trim().replace(",", ".").toDoubleOrNull()?.coerceAtLeast(0.0) ?: 0.0
+    private fun parseMinutes(text: String): Double = NumberUtils.parseDecimal(text)
 
-    private fun calc(type: ExerciseRepository.Type, minutes: Double): Double = (type.kcalPerHour / 60.0) * minutes
+    private fun calc(type: ExerciseRepository.Type, minutes: Double): Double = ExerciseMath.kcal(type.kcalPerHour, minutes)
 
     fun setType(type: ExerciseRepository.Type) {
         val m = parseMinutes(_state.value.minutesText)

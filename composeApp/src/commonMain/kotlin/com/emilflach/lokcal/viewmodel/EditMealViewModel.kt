@@ -5,6 +5,8 @@ import com.emilflach.lokcal.data.IntakeRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.emilflach.lokcal.util.NumberUtils
+import com.emilflach.lokcal.util.PortionsCalculator
 
 class EditMealViewModel(
     private val repo: IntakeRepository,
@@ -80,10 +82,10 @@ class EditMealViewModel(
     }
 
     // UI helpers
-    fun parseGrams(text: String): Double = text.trim().replace(",", ".").toDoubleOrNull()?.coerceAtLeast(0.0) ?: 0.0
+    fun parseGrams(text: String): Double = NumberUtils.parseDecimal(text)
 
     fun defaultPortionGrams(food: com.emilflach.lokcal.Food): Double {
-        return food.serving_size?.toDoubleOrNull()?.takeIf { it > 0 } ?: 100.0
+        return PortionsCalculator.defaultPortion(food.serving_size)
     }
 
     fun computeKcalFor(food: com.emilflach.lokcal.Food, totalGrams: Double): Double {
@@ -91,28 +93,8 @@ class EditMealViewModel(
     }
 
     fun getPortionsTextFor(food: com.emilflach.lokcal.Food, grams: Double): String {
-        val portionSize = defaultPortionGrams(food)
-        val portions = if (portionSize > 0) grams / portionSize else 0.0
-        val value = when {
-            portions == 0.0 -> "0"
-            portions < 0.01 -> "< 0.01"
-            portions >= 10 -> portions.toInt().toString()
-            portions == portions.toInt().toDouble() -> portions.toInt().toString()
-            else -> {
-                val rounded = kotlin.math.round(portions * 100) / 100
-                val str = rounded.toString()
-                if (str.contains('.')) {
-                    str.trimEnd('0').trimEnd('.')
-                } else {
-                    str
-                }
-            }
-        }
-        val label = when {
-            portions == 0.0 -> "portions"
-            portions > 1 -> "portions"
-            else -> "portion"
-        }
-        return "$value $label"
+        val portionSize = PortionsCalculator.defaultPortion(food.serving_size)
+        val p = PortionsCalculator.portions(grams, portionSize)
+        return PortionsCalculator.portionsLabel(p)
     }
 }

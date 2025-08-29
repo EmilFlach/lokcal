@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.emilflach.lokcal.util.NumberUtils
+import com.emilflach.lokcal.util.PortionsCalculator
 
 class IntakeViewModel(
     private val foodRepo: FoodRepository,
@@ -28,7 +30,7 @@ class IntakeViewModel(
 
     // --- UI helpers moved from IntakeScreen ---
     fun defaultPortionGrams(food: Food): Double {
-        return food.serving_size?.toDoubleOrNull()?.takeIf { it > 0 } ?: 100.0
+        return PortionsCalculator.defaultPortion(food.serving_size)
     }
 
     fun defaultPortionGrams(meal: Meal): Double {
@@ -37,10 +39,7 @@ class IntakeViewModel(
     }
 
     fun parseGrams(text: String): Double {
-        return text
-            .trim()
-            .replace(",", ".")
-            .toDoubleOrNull()?.coerceAtLeast(0.0) ?: 0.0
+        return NumberUtils.parseDecimal(text)
     }
 
     fun computeKcalFor(food: Food, totalGrams: Double): Double {
