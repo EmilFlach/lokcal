@@ -28,125 +28,34 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.emilflach.lokcal.Food
-import com.emilflach.lokcal.Meal
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.screens.FocusRequesters
-import com.emilflach.lokcal.viewmodel.IntakeViewModel
 
 @Composable
 fun IntakeListItem(
-    item: Food,
+    name: String,
+    subtitle: String,
+    keyId: Long,
+    initialValue: String,
+    showBorder: Boolean = false,
+    addButtonDescription: String = "Add",
     index: Int,
     size: Int,
-    viewModel: IntakeViewModel,
-    gramsById: MutableMap<Long, String>,
     requesters: FocusRequesters,
-    onDone: () -> Unit,
-) {
-    val keyboard = LocalSoftwareKeyboardController.current
-    val initialGrams = gramsById.getOrPut(item.id) { viewModel.defaultPortionGrams(item).toInt().toString() }
-    var tf by rememberSaveable(item.id, stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(
-            TextFieldValue(
-                text = gramsById.getOrPut(item.id) { initialGrams }
-            )
-        )
-    }
-    val onAddClick = {
-        val gramsToAdd = viewModel.parseGrams(gramsById.getOrPut(item.id) { initialGrams })
-        if (gramsToAdd > 0.0) {
-            viewModel.logPortion(item.id, gramsToAdd)
-            onDone()
-        }
-    }
-
-    val colors = LocalRecipesColors.current
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 2.dp)
-            .clip(getRoundedCornerShape(index, size))
-            .background(colors.backgroundSurface1)
-            .clickable {
-                requesters.request(item.id)
-                keyboard?.show()
-            }
-            .padding(vertical = 24.dp, horizontal = 16.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-            ) {
-                Text(text = item.name, style = MaterialTheme.typography.bodyLarge, color = colors.foregroundDefault)
-                Text(
-                    text = viewModel.buildSubtitle(
-                        food = item,
-                        gramsText = gramsById.getOrPut(item.id) { initialGrams },
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colors.foregroundSupport
-                )
-            }
-
-            GramTextField(
-                tf = tf,
-                requester = requesters[item.id],
-                onValueChange = { newTf, value ->
-                    tf = newTf
-                    gramsById[item.id] = value
-                },
-                onDone = { onAddClick() }
-            )
-
-            FilledIconButton(modifier = Modifier.size(50.dp), onClick = onAddClick) {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = "Add portion"
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun IntakeMealListItem(
-    item: Meal,
-    index: Int,
-    size: Int,
-    viewModel: IntakeViewModel,
     gramsById: MutableMap<Long, String>,
-    requesters: FocusRequesters,
-    onDone: () -> Unit,
+    onAddClick: () -> Unit,
+    inputField: @Composable (
+        tf: TextFieldValue,
+        requester: androidx.compose.ui.focus.FocusRequester,
+        onValueChange: (TextFieldValue, String) -> Unit,
+        onDone: () -> Unit
+    ) -> Unit
 ) {
     val keyboard = LocalSoftwareKeyboardController.current
     val colors = LocalRecipesColors.current
-    val portionG = viewModel.defaultPortionGrams(item)
 
-    // Use a distinct key space for meals to avoid collisions with food ids
-    val keyId = -item.id
-    val initialPortions = gramsById.getOrPut(keyId) { "1" }
     var tf by rememberSaveable(keyId, stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(
-            TextFieldValue(
-                text = gramsById.getOrPut(keyId) { initialPortions }
-            )
-        )
-    }
-    val onAddClick = {
-        val portions = viewModel.parseGrams(gramsById.getOrPut(keyId) { initialPortions })
-        val gramsToAdd = portionG * portions
-        if (gramsToAdd > 0.0) {
-            viewModel.logMealPortion(item.id, gramsToAdd)
-            onDone()
-        }
+        mutableStateOf(TextFieldValue(text = initialValue))
     }
 
     Column(
@@ -155,14 +64,19 @@ fun IntakeMealListItem(
             .padding(vertical = 2.dp)
             .clip(getRoundedCornerShape(index, size))
             .background(colors.backgroundSurface1)
-            .drawBehind {
-                // Yellow left border to distinguish meals
-                val borderWidth = 2.dp.toPx()
-                drawRect(
-                    color = androidx.compose.ui.graphics.Color(0xFFFFC107),
-                    topLeft = androidx.compose.ui.geometry.Offset(0f, 0f),
-                    size = androidx.compose.ui.geometry.Size(borderWidth, this.size.height)
-                )
+            .let { modifier ->
+                if (showBorder) {
+                    modifier.drawBehind {
+                        val borderWidth = 2.dp.toPx()
+                        drawRect(
+                            color = colors.backgroundBrand,
+                            topLeft = androidx.compose.ui.geometry.Offset(0f, 0f),
+                            size = androidx.compose.ui.geometry.Size(borderWidth, this.size.height)
+                        )
+                    }
+                } else {
+                    modifier
+                }
             }
             .clickable {
                 requesters.request(keyId)
@@ -176,34 +90,37 @@ fun IntakeMealListItem(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Column(
-                modifier = Modifier
-                    .weight(1f)
+                modifier = Modifier.weight(1f)
             ) {
-                Text(text = item.name, style = MaterialTheme.typography.bodyLarge, color = colors.foregroundDefault)
                 Text(
-                    text = viewModel.buildMealSubtitle(
-                        meal = item,
-                        portionsText = gramsById.getOrPut(keyId) { initialPortions }
-                    ),
+                    text = name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = colors.foregroundDefault
+                )
+                Text(
+                    text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.foregroundSupport
                 )
             }
 
-            PortionsTextField(
-                tf = tf,
-                requester = requesters[keyId],
-                onValueChange = { newTf, value ->
+            inputField(
+                tf,
+                requesters[keyId],
+                { newTf, value ->
                     tf = newTf
                     gramsById[keyId] = value
                 },
-                onDone = { onAddClick() }
+                onAddClick
             )
 
-            FilledIconButton(modifier = Modifier.size(50.dp), onClick = onAddClick) {
+            FilledIconButton(
+                modifier = Modifier.size(50.dp),
+                onClick = onAddClick
+            ) {
                 Icon(
                     imageVector = Icons.Filled.Add,
-                    contentDescription = "Add meal portion"
+                    contentDescription = addButtonDescription
                 )
             }
         }

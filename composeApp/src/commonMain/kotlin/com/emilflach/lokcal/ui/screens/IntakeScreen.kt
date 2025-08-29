@@ -23,9 +23,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.components.GramTextField
 import com.emilflach.lokcal.ui.components.IntakeListItem
-import com.emilflach.lokcal.ui.components.IntakeMealListItem
 import com.emilflach.lokcal.ui.components.MealTopBar
+import com.emilflach.lokcal.ui.components.PortionsTextField
 import com.emilflach.lokcal.viewmodel.IntakeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,8 +36,8 @@ fun IntakeScreen(
     onDone: () -> Unit,
     autoFocusSearch: Boolean = false,
 ) {
+    val colors = LocalRecipesColors.current
     val state by viewModel.state.collectAsState()
-
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     Scaffold(
@@ -56,7 +57,7 @@ fun IntakeScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(LocalRecipesColors.current.backgroundPage)
+                .background(colors.backgroundPage)
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.Top,
@@ -64,33 +65,68 @@ fun IntakeScreen(
         ) {
 
             val gramsById = remember { mutableStateMapOf<Long, String>() }
-            val requesters = rememberFocusRequesters()
+            val requesters = remember { FocusRequesters() }
 
             LazyColumn(
                 contentPadding = PaddingValues(vertical = 16.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
                 val totalSize = state.meals.size + state.foods.size
+
                 itemsIndexed(items = state.meals) { index, item ->
-                    IntakeMealListItem(
-                        item = item,
+                    val keyId = -item.id // Negative to avoid collision with food IDs
+                    val initialPortions = gramsById.getOrPut(keyId) { "1" }
+                    val portionG = viewModel.defaultPortionGrams(item)
+
+                    IntakeListItem(
+                        name = item.name,
+                        subtitle = viewModel.buildMealSubtitle(item,initialPortions),
+                        keyId = keyId,
+                        initialValue = initialPortions,
+                        showBorder = true,
                         index = index,
                         size = totalSize,
-                        viewModel = viewModel,
-                        gramsById = gramsById,
                         requesters = requesters,
-                        onDone = onDone,
+                        gramsById = gramsById,
+                        onAddClick = {
+                            val portions = viewModel.parseGrams(initialPortions)
+                            val gramsToAdd = portionG * portions
+                            if (gramsToAdd > 0.0) {
+                                viewModel.logMealPortion(item.id, gramsToAdd)
+                                onDone()
+                            }
+                        },
+                        inputField = { tf, requester, onValueChange, onDone ->
+                            PortionsTextField(tf, requester, onValueChange, onDone)
+                        }
                     )
                 }
+
                 itemsIndexed(items = state.foods) { index, item ->
+                    val keyId = item.id
+                    val initialGrams = gramsById.getOrPut(keyId) {
+                        viewModel.defaultPortionGrams(item).toInt().toString()
+                    }
+
                     IntakeListItem(
-                        item = item,
+                        name = item.name,
+                        subtitle = viewModel.buildSubtitle(item, initialGrams),
+                        keyId = keyId,
+                        initialValue = initialGrams,
                         index = state.meals.size + index,
                         size = totalSize,
-                        viewModel = viewModel,
-                        gramsById = gramsById,
                         requesters = requesters,
-                        onDone = onDone,
+                        gramsById = gramsById,
+                        onAddClick = {
+                            val gramsToAdd = viewModel.parseGrams(initialGrams)
+                            if (gramsToAdd > 0.0) {
+                                viewModel.logPortion(item.id, gramsToAdd)
+                                onDone()
+                            }
+                        },
+                        inputField = { tf, requester, onValueChange, onDone ->
+                            GramTextField(tf, requester, onValueChange, onDone)
+                        }
                     )
                 }
             }
@@ -104,6 +140,3 @@ class FocusRequesters {
     operator fun get(key: Any): FocusRequester = map.getOrPut(key) { FocusRequester() }
     fun request(key: Any) { map[key]?.requestFocus() }
 }
-
-@Composable
-fun rememberFocusRequesters(): FocusRequesters = remember { FocusRequesters() }

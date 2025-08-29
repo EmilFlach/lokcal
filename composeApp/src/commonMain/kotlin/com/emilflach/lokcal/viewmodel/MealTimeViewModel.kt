@@ -111,18 +111,13 @@ class MealTimeViewModel(
         val mealId = intakeRepo.createMeal(name, totalPortions, items)
         // Sum grams
         val totalGrams = items.sumOf { it.second }
-        // Log meal intake snapshot and replace items
-        val date = currentDateIso()
-        val timestamp = "${date}T00:00:00"
         // Delete only the food items that were saved into the meal
         state.value.items.filter { it.source_food_id != null }.forEach { intakeRepo.deleteIntakeById(it.id) }
         // Log new meal as a single entry
-        intakeRepo.logMealIntake(
+        intakeRepo.logOrUpdateMealIntake(
             mealId = mealId,
             quantityG = totalGrams,
-            timestamp = timestamp,
             mealType = mealType,
-            notes = null
         )
         loadToday()
     }

@@ -62,20 +62,13 @@ class MainViewModel(private val intakeRepo: IntakeRepository, private val exerci
         loadFor(_selectedDate.value)
     }
 
-    fun loadToday() {
-        _selectedDate.value = LocalDate.parse(currentDateIso())
-        loadFor(_selectedDate.value)
-    }
-
     private fun loadFor(date: LocalDate) {
         val dateIso = date.toString()
         val startIso = "${dateIso}T00:00:00"
         val endIso = "${dateIso}T23:59:59"
-        val entries = intakeRepo.getIntakeByDateRange(startIso, endIso)
-        val groups = entries.groupBy { it.meal_type }
         val mealTypes = listOf("BREAKFAST", "LUNCH", "DINNER", "SNACK")
         _summaries.value = mealTypes.map { type ->
-            val list = groups[type].orEmpty()
+            val list = intakeRepo.getIntakeByMealAndDateRange(type, startIso, endIso)
             val totalKcal = list.sumOf { it.energy_kcal_total }
             MealSummary(
                 mealType = type,
@@ -119,7 +112,7 @@ class MainViewModel(private val intakeRepo: IntakeRepository, private val exerci
                 "RUNNING" -> "Running"
                 else -> type
             }
-            "$label ${min.toInt()} m"
+            "$label ${min.toInt()} min"
         }
         return parts.joinToString(", ")
     }

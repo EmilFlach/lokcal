@@ -1,22 +1,28 @@
 package com.emilflach.lokcal
 
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import com.emilflach.lokcal.data.FoodRepository
 import com.emilflach.lokcal.data.IntakeRepository
+import com.emilflach.lokcal.data.MealRepository
 import com.emilflach.lokcal.data.SqlDriverFactory
 import com.emilflach.lokcal.data.createDatabase
 import com.emilflach.lokcal.theme.AppTheme
+import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.screens.EditMealScreen
 import com.emilflach.lokcal.ui.screens.IntakeScreen
 import com.emilflach.lokcal.ui.screens.MainScreen
 import com.emilflach.lokcal.ui.screens.MealTimeScreen
-import com.emilflach.lokcal.ui.screens.EditMealScreen
+import com.emilflach.lokcal.util.SystemBackHandler
+import com.emilflach.lokcal.viewmodel.EditMealViewModel
 import com.emilflach.lokcal.viewmodel.IntakeViewModel
 import com.emilflach.lokcal.viewmodel.MainViewModel
 import com.emilflach.lokcal.viewmodel.MealTimeViewModel
-import com.emilflach.lokcal.viewmodel.EditMealViewModel
-import androidx.compose.material3.*
-import com.emilflach.lokcal.theme.LocalRecipesColors
-import com.emilflach.lokcal.util.SystemBackHandler
 
 private sealed class Screen {
     data object Main : Screen()
@@ -35,6 +41,7 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
     val database = remember(sqlDriverFactory) { createDatabase(sqlDriverFactory) }
     val foodRepo = remember(database) { FoodRepository(database) }
     val intakeRepo = remember(database) { IntakeRepository(database) }
+    val mealRepo = remember(database) { MealRepository(database) }
     val exerciseRepo = remember(database) { com.emilflach.lokcal.data.ExerciseRepository(database) }
 
     var screen by remember { mutableStateOf<Screen>(Screen.Main) }
@@ -116,7 +123,7 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                 )
             }
             is Screen.EditMeal -> {
-                val editVm = remember(intakeRepo, s.mealId) { EditMealViewModel(intakeRepo, s.mealId) }
+                val editVm = remember(intakeRepo, s.mealId) { EditMealViewModel(mealRepo, s.mealId) }
                 EditMealScreen(
                     viewModel = editVm,
                     onBack = { screen = Screen.MealTime(s.returnMealType); refreshToggle = !refreshToggle },

@@ -1,22 +1,24 @@
 package com.emilflach.lokcal.viewmodel
 
+import com.emilflach.lokcal.Food
 import com.emilflach.lokcal.Meal
-import com.emilflach.lokcal.data.IntakeRepository
+import com.emilflach.lokcal.data.MealRepository
+import com.emilflach.lokcal.util.NumberUtils
+import com.emilflach.lokcal.util.PortionsCalculator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import com.emilflach.lokcal.util.NumberUtils
-import com.emilflach.lokcal.util.PortionsCalculator
 
 class EditMealViewModel(
-    private val repo: IntakeRepository,
+    private val repo: MealRepository,
     private val mealId: Long,
 ) {
     data class ItemUi(
         val mealItemId: Long,
-        val food: com.emilflach.lokcal.Food,
+        val food: Food,
         val quantityG: Double,
     )
+
     data class UiState(
         val meal: Meal? = null,
         val name: String = "",
@@ -34,36 +36,44 @@ class EditMealViewModel(
 
     fun reload() {
         val meal = repo.getMealById(mealId)
-        val items = repo.getMealItemsWithFood(mealId).map { ItemUi(it.mealItemId, it.food, it.quantityG) }
+        val items = repo.getMealItemsWithFood(mealId).map {
+            ItemUi(it.mealItemId, it.food, it.quantityG)
+        }
         _state.value = UiState(
             meal = meal,
             name = meal?.name ?: "",
             imageUrl = meal?.image_url ?: "",
-            totalPortions = (meal?.total_portions ?: 1.0).let { if (it == it.toInt().toDouble()) it.toInt().toString() else it.toString() },
+            totalPortions = formatPortions(meal?.total_portions ?: 1.0),
             items = items,
         )
     }
 
     fun setName(value: String) {
-        _state.value = _state.value.copy(name = value)
+        updateState { copy(name = value) }
         persistMeta()
     }
 
     fun setImageUrl(value: String) {
-        _state.value = _state.value.copy(imageUrl = value)
+        updateState { copy(imageUrl = value) }
         persistMeta()
     }
 
     fun setTotalPortionsText(value: String) {
-        _state.value = _state.value.copy(totalPortions = value)
+        updateState { copy(totalPortions = value) }
         persistMeta()
+    }
+
+    private fun updateState(update: UiState.() -> UiState) {
+        _state.value = _state.value.update()
     }
 
     private fun persistMeta() {
         val st = _state.value
-        val portions = st.totalPortions.trim().replace(',', '.').toDoubleOrNull()?.takeIf { it > 0 } ?: 1.0
+        val portions = parsePortions(st.totalPortions)
         val name = st.name.ifBlank { st.meal?.name ?: "Meal" }
-        repo.updateMealMeta(mealId, name, st.imageUrl.ifBlank { null }, portions)
+        val imageUrl = st.imageUrl.ifBlank { null }
+
+        repo.updateMealMeta(mealId, name, imageUrl, portions)
         reload()
     }
 
@@ -77,24 +87,22 @@ class EditMealViewModel(
         reload()
     }
 
-    fun deleteMeal() {
-        repo.deleteMeal(mealId)
+    fun deleteMeal() = repo.deleteMeal(mealId)
+
+    // UI helpers - simplified to one-liners
+    fun parseGrams(text: String) = NumberUtils.parseDecimal(text)
+    fun defaultPortionGrams(food: Food) = PortionsCalculator.defaultPortion(food.serving_size)
+    fun computeKcalFor(food: Food, grams: Double) = food.energy_kcal_per_100g * grams / 100.0
+
+    fun getPortionsTextFor(food: Food, grams: Double): String {
+        val portionSize = defaultPortionGrams(food)
+        val portions = PortionsCalculator.portions(grams, portionSize)
+        return PortionsCalculator.portionsLabel(portions)
     }
 
-    // UI helpers
-    fun parseGrams(text: String): Double = NumberUtils.parseDecimal(text)
+    private fun parsePortions(text: String) =
+        text.trim().replace(',', '.').toDoubleOrNull()?.takeIf { it > 0 } ?: 1.0
 
-    fun defaultPortionGrams(food: com.emilflach.lokcal.Food): Double {
-        return PortionsCalculator.defaultPortion(food.serving_size)
-    }
-
-    fun computeKcalFor(food: com.emilflach.lokcal.Food, totalGrams: Double): Double {
-        return (food.energy_kcal_per_100g * totalGrams / 100.0)
-    }
-
-    fun getPortionsTextFor(food: com.emilflach.lokcal.Food, grams: Double): String {
-        val portionSize = PortionsCalculator.defaultPortion(food.serving_size)
-        val p = PortionsCalculator.portions(grams, portionSize)
-        return PortionsCalculator.portionsLabel(p)
-    }
+    private fun formatPortions(portions: Double) =
+        if (portions == portions.toInt().toDouble()) portions.toInt().toString() else portions.toString()
 }
