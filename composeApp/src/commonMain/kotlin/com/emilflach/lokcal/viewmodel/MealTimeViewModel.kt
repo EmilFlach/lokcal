@@ -2,12 +2,12 @@ package com.emilflach.lokcal.viewmodel
 
 import com.emilflach.lokcal.Intake
 import com.emilflach.lokcal.data.IntakeRepository
+import com.emilflach.lokcal.util.NumberUtils
+import com.emilflach.lokcal.util.PortionsCalculator
 import com.emilflach.lokcal.util.currentDateIso
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import com.emilflach.lokcal.util.NumberUtils
-import com.emilflach.lokcal.util.PortionsCalculator
 
 class MealTimeViewModel(
     private val intakeRepo: IntakeRepository,
@@ -48,27 +48,43 @@ class MealTimeViewModel(
 
     // --- UI helpers exposed to keep UI lean ---
 
-    fun parseGrams(text: String): Double = NumberUtils.parseDecimal(text)
-
-    fun addPortionText(currentText: String, intake: Intake): String {
-        val current = parseGrams(currentText)
-        val portion = portionForEntry(intake)
-        val newVal = (current + portion).coerceAtLeast(0.0)
-        return newVal.toInt().toString()
-    }
-
-    fun subtractPortionText(currentText: String, intake: Intake): String {
-        val current = parseGrams(currentText)
-        val portion = portionForEntry(intake)
-        val newVal = (current - portion).coerceAtLeast(0.0)
-        return newVal.toInt().toString()
-    }
-
-    fun getPortionsText(intake: Intake): String {
-        val currentGrams = intake.quantity_g
+    fun addPortion( intake: Intake): String {
+        val current = intake.quantity_g
         val portionSize = portionForEntry(intake)
-        val p = PortionsCalculator.portions(currentGrams, portionSize)
+        val newVal = (current + portionSize).coerceAtLeast(0.0)
+        return newVal.toInt().toString()
+    }
+
+    fun subtractPortion(intake: Intake): String {
+        val current = intake.quantity_g
+        val portionSize = portionForEntry(intake)
+        val newVal = (current - portionSize).coerceAtLeast(0.0)
+        return newVal.toInt().toString()
+    }
+
+    fun addMealPortion( entry: Intake): String {
+        val portion = portionForEntry(entry)
+        val newQty = entry.quantity_g + portion
+        val newPortions = if (portion > 0) newQty / portion else 0.0
+        return NumberUtils.formatDecimalTrimmed(newPortions)
+    }
+
+    fun subtractMealPortion(entry: Intake): String {
+        val portion = portionForEntry(entry)
+        val newQty = (entry.quantity_g - portion).coerceAtLeast(0.0)
+        val newPortions = if (portion > 0) newQty / portion else 0.0
+        return NumberUtils.formatDecimalTrimmed(newPortions)
+    }
+
+
+    fun getPortionsLabel(intake: Intake): String {
+        val p = PortionsCalculator.portions(intake.quantity_g, portionForEntry(intake))
         return PortionsCalculator.portionsLabel(p)
+    }
+
+    fun getPortions(intake: Intake): String {
+        val p = PortionsCalculator.portions(intake.quantity_g, portionForEntry(intake))
+        return NumberUtils.formatDecimalTrimmed(p)
     }
 
 

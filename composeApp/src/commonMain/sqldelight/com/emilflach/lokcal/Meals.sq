@@ -14,9 +14,6 @@ CREATE TABLE MealItem (
     quantity_g REAL NOT NULL CHECK (quantity_g >= 0)
 );
 
-mealInsert:
-INSERT INTO Meal(name, description) VALUES (?, ?);
-
 mealInsertWithPortions:
 INSERT INTO Meal(name, description, total_portions) VALUES (?, ?, ?);
 
@@ -26,36 +23,17 @@ SELECT total_portions FROM Meal WHERE id = ?;
 lastInsertId:
 SELECT last_insert_rowid();
 
-mealSelectAll:
-SELECT * FROM Meal ORDER BY created_at DESC;
-
 mealSelectById:
 SELECT * FROM Meal WHERE id = ?;
 
 mealItemInsert:
 INSERT INTO MealItem(meal_id, food_id, quantity_g) VALUES (?, ?, ?);
 
-mealItemsForMeal:
-SELECT mi.*, f.*
-FROM MealItem mi
-JOIN Food f ON f.id = mi.food_id
-WHERE mi.meal_id = ?
-ORDER BY mi.id;
-
 -- Joined with explicit aliases for editor
 mealItemsForMealFull:
 SELECT mi.id AS meal_item_id,
        mi.quantity_g AS meal_item_quantity_g,
        f.*
-FROM MealItem mi
-JOIN Food f ON f.id = mi.food_id
-WHERE mi.meal_id = ?
-ORDER BY mi.id;
-
--- Simplified items for kcal-only computation
-mealItemsForMealSimple:
-SELECT mi.quantity_g AS item_quantity_g,
-       f.energy_kcal_per_100g AS food_energy_kcal_per_100g
 FROM MealItem mi
 JOIN Food f ON f.id = mi.food_id
 WHERE mi.meal_id = ?
@@ -78,10 +56,6 @@ ORDER BY name;
 -- Update meal meta fields
 updateMealMeta:
 UPDATE Meal SET name = ?, image_url = ?, total_portions = ? WHERE id = ?;
-
--- Update only portions if needed
-updateMealPortions:
-UPDATE Meal SET total_portions = ? WHERE id = ?;
 
 -- Update a meal item grams
 updateMealItemQuantity:
