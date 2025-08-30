@@ -1,6 +1,7 @@
 package com.emilflach.lokcal.viewmodel
 
 import com.emilflach.lokcal.Intake
+import com.emilflach.lokcal.data.ExerciseRepository
 import com.emilflach.lokcal.data.IntakeRepository
 import com.emilflach.lokcal.util.currentDateIso
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +15,7 @@ import kotlinx.datetime.plus
  * Simple multiplatform ViewModel-like class to manage state for the Main screen.
  * It does not rely on Android-specific lifecycle components to keep it reusable across targets.
  */
-class MainViewModel(private val intakeRepo: IntakeRepository, private val exerciseRepo: com.emilflach.lokcal.data.ExerciseRepository) {
+class MainViewModel(private val intakeRepo: IntakeRepository, private val exerciseRepo: ExerciseRepository) {
     data class MealSummary(
         val mealType: String,
         val items: List<Intake>,
@@ -44,9 +45,6 @@ class MainViewModel(private val intakeRepo: IntakeRepository, private val exerci
 
     private val _burnedKcal = MutableStateFlow(0.0)
     val burnedKcal: StateFlow<Double> = _burnedKcal.asStateFlow()
-
-    private val _progress = MutableStateFlow(0f)
-    val progress: StateFlow<Float> = _progress.asStateFlow()
 
     init {
         loadFor(_selectedDate.value)
@@ -88,18 +86,16 @@ class MainViewModel(private val intakeRepo: IntakeRepository, private val exerci
         val burned = _exerciseTotalKcal.value
         val totalBudget = start + burned
         val left = totalBudget - eaten
-        val prog = if (totalBudget > 0) (eaten / totalBudget).toFloat() else 0f
         _eatenKcal.value = eaten
         _burnedKcal.value = burned
         _leftKcal.value = left
-        _progress.value = prog
     }
 
     private fun buildMealSummary(list: List<Intake>): String {
         if (list.isEmpty()) return ""
         val counts = list.groupingBy { it.item_name }.eachCount().entries
             .sortedByDescending { it.value }
-            .take(3)
+            .take(6)
         return counts.joinToString(", ") { (name, count) -> if (count > 1) "$name x$count" else name }
     }
 

@@ -1,8 +1,10 @@
 package com.emilflach.lokcal.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,19 +15,25 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.ProgressIndicatorDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.components.ParticleBackground
 import com.emilflach.lokcal.viewmodel.MainViewModel
 
 @Composable
@@ -37,98 +45,189 @@ fun MainScreen(
     val summaries by viewModel.summaries.collectAsState()
     val eaten by viewModel.eatenKcal.collectAsState()
     val left by viewModel.leftKcal.collectAsState()
-    val progress by viewModel.progress.collectAsState()
     val burned by viewModel.burnedKcal.collectAsState()
     val exerciseTotal by viewModel.exerciseTotalKcal.collectAsState()
     val exerciseSummary by viewModel.exerciseSummaryText.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
 
     val density = LocalDensity.current
+    val colors = LocalRecipesColors.current
     val thresholdPx = remember(density) { with(density) { 64.dp.toPx() } }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-            .padding(16.dp)
-            .pointerInput(Unit) {
-                var accumX = 0f
-                detectHorizontalDragGestures(
-                    onDragEnd = {
-                        when {
-                            accumX > thresholdPx -> viewModel.previousDay()
-                            accumX < -thresholdPx -> viewModel.nextDay()
-                        }
-                        accumX = 0f
-                    },
-                    onHorizontalDrag = { _, dragAmount ->
-                        accumX += dragAmount
-                    }
-                )
-            }
-    ) {
-        // Selected date label
-        Text(selectedDate.toString(), style = MaterialTheme.typography.titleMedium)
-        Spacer(Modifier.height(8.dp))
+    fun calculateParticleCount(eatenCalories: Double, maxCalories: Double = 1690.0): Int {
+        val ratio = (eatenCalories / maxCalories).coerceIn(0.0, 1.0)
+        return (ratio * 3000).toInt()
+    }
 
-        // Massive number up top showing kcal left for the day
-        Text("${left.toInt()} kcal left", style = MaterialTheme.typography.displayLarge)
-        Spacer(Modifier.height(4.dp))
-        // Smaller number showing eaten so far
-        Text("Eaten: ${eaten.toInt()} kcal", style = MaterialTheme.typography.bodyLarge)
-        // And burned kcal
-        Text("Burned: ${burned.toInt()} kcal", style = MaterialTheme.typography.bodyLarge)
-        Spacer(Modifier.height(8.dp))
-        // Visualization of progress towards using up kcal
-        run {
-            val c = com.emilflach.lokcal.theme.LocalRecipesColors.current
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier.fillMaxWidth(),
-                color = c.foregroundBrand,
-                trackColor = c.backgroundSurface2,
-                strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
-            )
-        }
+    val particleCount = remember(eaten, burned) {
+        calculateParticleCount(eaten, 1690 + burned)
+    }
 
-        // Push sections to the bottom
-        Spacer(Modifier.weight(1f))
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Particle background
+        ParticleBackground(
+            particleCount = particleCount,
+            modifier = Modifier.fillMaxSize()
+        )
 
-        // Exercise summary card
-        OutlinedCard(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 6.dp)
-                .clickable { onOpenExercise() }
-        ) {
-            Column(Modifier.padding(16.dp)) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Exercise", style = MaterialTheme.typography.titleMedium)
-                    Text("${exerciseTotal.toInt()} kcal", style = MaterialTheme.typography.bodyMedium)
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(16.dp)
+                .pointerInput(Unit) {
+                    var accumX = 0f
+                    detectHorizontalDragGestures(
+                        onDragEnd = {
+                            when {
+                                accumX > thresholdPx -> viewModel.previousDay()
+                                accumX < -thresholdPx -> viewModel.nextDay()
+                            }
+                            accumX = 0f
+                        },
+                        onHorizontalDrag = { _, dragAmount ->
+                            accumX += dragAmount
+                        }
+                    )
                 }
-                if (exerciseSummary.isNotEmpty()) {
-                    Spacer(Modifier.height(6.dp))
-                    Text(exerciseSummary, style = MaterialTheme.typography.bodySmall)
+        ) {
+            // Selected date label
+            Column (
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(colors.backgroundPage, MaterialTheme.shapes.medium)
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = selectedDate.toString(),
+                    color = colors.foregroundSupport,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    text = if (left > 0) "${left.toInt()}" else "${left.toInt() * -1}",
+                    style = MaterialTheme.typography.displayLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Text(
+                    text = if (left > 0) "kcal left" else "kcal over",
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(16.dp))
+
+                Text(
+                    text = "Eaten: ${eaten.toInt()} kcal, Burned: ${burned.toInt()} kcal",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.foregroundSupport,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(8.dp))
+
+            }
+
+            // Push sections to the bottom
+            Spacer(Modifier.weight(1f))
+
+
+
+            // Meal sections displayed at the bottom
+            summaries.forEach { s ->
+                Surface(
+                    color = Color.Transparent,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp)
+                        .background(colors.backgroundPage)
+                        .clip(MaterialTheme.shapes.large)
+                        .let { modifier ->
+                            if (s.totalKcal.toInt() > 0) {
+                                modifier.drawBehind {
+                                    val borderWidth = 2.dp.toPx()
+                                    drawRect(
+                                        color = colors.backgroundBrand,
+                                        topLeft = Offset(0f, 0f),
+                                        size = Size(borderWidth, this.size.height)
+                                    )
+                                }
+                            } else {
+                                modifier
+                            }
+                        }
+                        .clickable { onOpenMeal(s.mealType) }
+
+                ) {
+                    Column(Modifier.padding(horizontal = 16.dp, vertical = 20.dp)) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                s.mealType.lowercase().replaceFirstChar { it.titlecase() },
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                "${s.totalKcal.toInt()} kcal",
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                        }
+                        if (s.summaryText.isNotEmpty()) {
+                            Spacer(Modifier.height(6.dp))
+                            Text(
+                                text = s.summaryText,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = colors.foregroundSupport,
+                                maxLines = 2
+                            )
+                        }
+                    }
                 }
             }
-        }
 
-        // Meal sections displayed at the bottom
-        summaries.forEach { s ->
-            OutlinedCard(
+            // Exercise summary card
+            Surface(
+                color = Color.Transparent,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 6.dp)
-                    .clickable { onOpenMeal(s.mealType) }
-            ) {
-                Column(Modifier.padding(16.dp)) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(s.mealType.lowercase().replaceFirstChar { it.titlecase() }, style = MaterialTheme.typography.titleMedium)
-                        Text("${s.totalKcal.toInt()} kcal", style = MaterialTheme.typography.bodyMedium)
+                    .background(colors.backgroundPage)
+                    .clip(MaterialTheme.shapes.large)
+                    .let { modifier ->
+                        if (exerciseTotal.toInt() > 0) {
+                            modifier.drawBehind {
+                                val borderWidth = 2.dp.toPx()
+                                drawRect(
+                                    color = colors.backgroundBrand,
+                                    topLeft = Offset(0f, 0f),
+                                    size = Size(borderWidth, this.size.height)
+                                )
+                            }
+                        } else {
+                            modifier
+                        }
                     }
-                    if (s.summaryText.isNotEmpty()) {
+                    .clickable { onOpenExercise() }
+            ) {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 20.dp)) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Exercise", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "${exerciseTotal.toInt()} kcal",
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                    }
+                    if (exerciseSummary.isNotEmpty()) {
                         Spacer(Modifier.height(6.dp))
-                        Text(s.summaryText, style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            text = exerciseSummary,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.foregroundSupport
+                        )
                     }
                 }
             }
