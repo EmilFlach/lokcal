@@ -76,7 +76,6 @@ fun IntakeScreen(
                 itemsIndexed(items = state.meals) { index, item ->
                     val keyId = -item.id // Negative to avoid collision with food IDs
                     val initialPortions = gramsById.getOrPut(keyId) { "1" }
-                    val portionG = viewModel.defaultPortionGrams(item)
 
                     IntakeListItem(
                         name = item.name,
@@ -89,12 +88,7 @@ fun IntakeScreen(
                         requesters = requesters,
                         gramsById = gramsById,
                         onAddClick = {
-                            val portions = viewModel.parseGrams(initialPortions)
-                            val gramsToAdd = portionG * portions
-                            if (gramsToAdd > 0.0) {
-                                viewModel.logMealPortion(item.id, gramsToAdd)
-                                onDone()
-                            }
+                            viewModel.addMealByPortions(item.id, initialPortions) { onDone() }
                         },
                         inputField = { tf, requester, onValueChange, onDone ->
                             PortionsTextField(tf, requester, onValueChange, onDone)
@@ -118,11 +112,7 @@ fun IntakeScreen(
                         requesters = requesters,
                         gramsById = gramsById,
                         onAddClick = {
-                            val gramsToAdd = viewModel.parseGrams(initialGrams)
-                            if (gramsToAdd > 0.0) {
-                                viewModel.logPortion(item.id, gramsToAdd)
-                                onDone()
-                            }
+                            viewModel.addFoodByGrams(item.id, initialGrams) { onDone() }
                         },
                         inputField = { tf, requester, onValueChange, onDone ->
                             GramTextField(tf, requester, onValueChange, onDone)

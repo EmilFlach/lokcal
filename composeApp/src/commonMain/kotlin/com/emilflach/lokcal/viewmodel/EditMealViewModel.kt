@@ -2,8 +2,10 @@ package com.emilflach.lokcal.viewmodel
 
 import com.emilflach.lokcal.Food
 import com.emilflach.lokcal.Meal
+import com.emilflach.lokcal.data.LabelService
 import com.emilflach.lokcal.data.MealRepository
-import com.emilflach.lokcal.util.PortionsCalculator
+import com.emilflach.lokcal.data.PortionService
+import com.emilflach.lokcal.util.NumberUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,6 +14,10 @@ class EditMealViewModel(
     private val repo: MealRepository,
     private val mealId: Long,
 ) {
+    // Services for portion defaults and labels
+    private val portionService = PortionService()
+    private val labelService = LabelService(null, portionService)
+
     data class ItemUi(
         val mealItemId: Long,
         val food: Food,
@@ -42,7 +48,7 @@ class EditMealViewModel(
             meal = meal,
             name = meal?.name ?: "",
             imageUrl = meal?.image_url ?: "",
-            totalPortions = formatPortions(meal?.total_portions ?: 1.0),
+            totalPortions = NumberUtils.formatPortions(meal?.total_portions ?: 1.0),
             items = items,
         )
     }
@@ -68,7 +74,7 @@ class EditMealViewModel(
 
     private fun persistMeta() {
         val st = _state.value
-        val portions = parsePortions(st.totalPortions)
+        val portions = NumberUtils.parseDecimal(st.totalPortions, min = 0.0).takeIf { it > 0.0 } ?: 1.0
         val name = st.name.ifBlank { st.meal?.name ?: "Meal" }
         val imageUrl = st.imageUrl.ifBlank { null }
 
@@ -87,21 +93,9 @@ class EditMealViewModel(
     }
 
     fun deleteMeal() = repo.deleteMeal(mealId)
-    fun defaultPortionGrams(food: Food) = repo.defaultPortionGrams(food)
-    fun computeKcalFor(food: Food, grams: Double) = repo.computeKcal(food, grams)
+    fun defaultPortionGrams(food: Food) = portionService.defaultPortionForFood(food)
 
     fun subtitleForFood(food: Food, initialGrams: Double): String {
-        return PortionsCalculator.subtitleKcalPortions(
-            kcal = computeKcalFor(food, initialGrams),
-            grams = initialGrams,
-            portionGrams = defaultPortionGrams(food)
-        )
+        return labelService.subtitleForFood(food, initialGrams)
     }
-
-
-    private fun parsePortions(text: String) =
-        text.trim().replace(',', '.').toDoubleOrNull()?.takeIf { it > 0 } ?: 1.0
-
-    private fun formatPortions(portions: Double) =
-        if (portions == portions.toInt().toDouble()) portions.toInt().toString() else portions.toString()
 }

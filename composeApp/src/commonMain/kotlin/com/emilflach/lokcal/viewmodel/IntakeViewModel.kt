@@ -4,8 +4,9 @@ import com.emilflach.lokcal.Food
 import com.emilflach.lokcal.Meal
 import com.emilflach.lokcal.data.FoodRepository
 import com.emilflach.lokcal.data.IntakeRepository
+import com.emilflach.lokcal.data.LabelService
+import com.emilflach.lokcal.data.PortionService
 import com.emilflach.lokcal.util.NumberUtils
-import com.emilflach.lokcal.util.PortionsCalculator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -32,6 +33,10 @@ class IntakeViewModel(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var searchJob: Job? = null
+
+    // Centralized services
+    private val portionService = PortionService(intakeRepo)
+    private val labelService = LabelService(intakeRepo, portionService)
 
     init {
         performSearch()
@@ -69,43 +74,47 @@ class IntakeViewModel(
     }
 
     // UI helpers
-    fun defaultPortionGrams(food: Food) = PortionsCalculator.defaultPortion(food.serving_size)
-    fun defaultPortionGrams(meal: Meal) = intakeRepo.getMealPortionGrams(meal.id)
+    fun defaultPortionGrams(food: Food) = portionService.defaultPortionForFood(food)
+    fun defaultPortionGrams(meal: Meal) = portionService.defaultPortionForMeal(meal.id)
     fun parseGrams(text: String) = NumberUtils.parseDecimal(text)
-
-    fun computeFoodKcal(food: Food, grams: Double): Double = food.energy_kcal_per_100g * grams / 100.0
-
-    fun computeMealKcal(mealId: Long, grams: Double): Double {
-        val (totalG, totalKcal) = intakeRepo.computeMealTotals(mealId)
-        return if (totalG > 0.0 && grams > 0.0) totalKcal * (grams / totalG) else 0.0
-    }
 
     fun subtitleForMeal(meal: Meal, initialPortions: String): String {
         val portionG = defaultPortionGrams(meal)
         val portions = parseGrams(initialPortions)
         val grams = (portionG * portions).coerceAtLeast(0.0)
-        val kcal = computeMealKcal(meal.id, grams)
-        return PortionsCalculator.subtitleKcalPortions(
-            kcal = kcal,
-            grams = grams,
-            portionGrams = portionG
-        )
+        return labelService.subtitleForMeal(meal.id, grams)
     }
 
     fun subtitleForFood(food: Food, initialGrams: String): String {
         val grams = parseGrams(initialGrams).coerceAtLeast(0.0)
-        return PortionsCalculator.subtitleKcalPortions(
-            kcal = computeFoodKcal(food, grams),
-            grams = grams,
-            portionGrams = defaultPortionGrams(food)
-        )
+        return labelService.subtitleForFood(food, grams)
     }
+
     fun logPortion(foodId: Long, portionG: Double) {
         intakeRepo.logOrUpdateFoodIntake(foodId, portionG, mealType())
     }
 
     fun logMealPortion(mealId: Long, portionG: Double) {
         intakeRepo.logOrUpdateMealIntake(mealId, portionG, mealType())
+    }
+
+    // Moved UI business logic here
+    fun addMealByPortions(mealId: Long, portionsText: String, onSuccess: () -> Unit) {
+        val portionG = portionService.defaultPortionForMeal(mealId)
+        val portions = NumberUtils.parseDecimal(portionsText, min = 0.0)
+        val grams = (portionG * portions).coerceAtLeast(0.0)
+        if (grams > 0.0) {
+            logMealPortion(mealId, grams)
+            onSuccess()
+        }
+    }
+
+    fun addFoodByGrams(foodId: Long, gramsText: String, onSuccess: () -> Unit) {
+        val grams = NumberUtils.parseDecimal(gramsText, min = 0.0).coerceAtLeast(0.0)
+        if (grams > 0.0) {
+            logPortion(foodId, grams)
+            onSuccess()
+        }
     }
 
     private fun mealType() = _state.value.selectedMealType

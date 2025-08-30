@@ -102,6 +102,20 @@ class IntakeRepository(database: Database) {
         return if (portions > 0) totalG / portions else totalG
     }
 
+    fun saveCurrentMealFromIntakes(mealType: String, name: String, totalPortions: Double): Long {
+        val today = todayRange()
+        val list = getIntakeByMealAndDateRange(mealType, today.first, today.second)
+        val items = list.filter { it.source_food_id != null }.map { it.source_food_id!! to it.quantity_g }
+        if (items.isEmpty()) return 0L
+        val mealId = createMeal(name, totalPortions, items)
+        val totalGrams = items.sumOf { it.second }
+        // Delete only the food items that were saved into the meal
+        list.filter { it.source_food_id != null }.forEach { deleteIntakeById(it.id) }
+        // Log new meal as a single entry
+        logOrUpdateMealIntake(mealId, totalGrams, mealType)
+        return mealId
+    }
+
     private fun logMealIntake(mealId: Long, quantityG: Double, timestamp: String, mealType: String) {
         val meal = tryExecute { mealQ.mealSelectById(mealId).executeAsOne() }
         val (totalG, totalKcal) = computeMealTotals(mealId)
@@ -132,6 +146,4 @@ class IntakeRepository(database: Database) {
         val date = currentDateIso()
         return "${date}T00:00:00" to "${date}T23:59:59"
     }
-
-    // ... rest of the meal editing methods remain the same
 }

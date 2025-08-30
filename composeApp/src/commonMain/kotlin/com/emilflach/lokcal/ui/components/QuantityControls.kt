@@ -21,10 +21,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import com.emilflach.lokcal.data.PortionService
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.util.NumberUtils.formatDecimalTrimmed
 import com.emilflach.lokcal.util.NumberUtils.parseDecimal
-import com.emilflach.lokcal.util.PortionsCalculator
 
 @Composable
 fun GramQuantityControls(
@@ -35,6 +35,7 @@ fun GramQuantityControls(
     onCommitGrams: (Double) -> Unit,
     onDelete: () -> Unit,
 ) {
+    val portionService = PortionService()
     val colors = LocalRecipesColors.current
     var text by rememberSaveable(stateKey) { mutableStateOf(initialGrams.toInt().toString()) }
     var tf by rememberSaveable(stateKey, stateSaver = TextFieldValue.Saver) {
@@ -60,7 +61,7 @@ fun GramQuantityControls(
         Spacer(Modifier.weight(1f))
         OutlinedButton(
             onClick = {
-                val (newText, commitVal) = PortionsCalculator.addPortionGrams(text, portionGrams)
+                val (newText, commitVal) = portionService.addPortionGrams(text, portionGrams)
                 tf = tf.copy(text = newText)
                 text = newText
                 onCommitGrams(commitVal)
@@ -73,7 +74,7 @@ fun GramQuantityControls(
         Spacer(Modifier.width(8.dp))
         OutlinedIconButton(
             onClick = {
-                val (newText, commitVal) = PortionsCalculator.subtractPortionGrams(text, portionGrams)
+                val (newText, commitVal) = portionService.subtractPortionGrams(text, portionGrams)
                 tf = tf.copy(text = newText)
                 text = newText
                 onCommitGrams(commitVal)
@@ -101,7 +102,8 @@ fun PortionQuantityControls(
     onDelete: () -> Unit,
 ) {
     val colors = LocalRecipesColors.current
-    val initialPortions = PortionsCalculator.portions(initialGrams, portionGrams)
+    val portionService = PortionService()
+    val initialPortions = portionService.portions(initialGrams, portionGrams)
     var text by rememberSaveable(stateKey) { mutableStateOf(formatDecimalTrimmed(initialPortions)) }
     var tf by rememberSaveable(stateKey, stateSaver = TextFieldValue.Saver) {
         mutableStateOf(TextFieldValue(text = text))
@@ -131,7 +133,7 @@ fun PortionQuantityControls(
 
         OutlinedButton(
             onClick = {
-                val (newText, commitVal) = PortionsCalculator.addPortionCount(text)
+                val (newText, commitVal) = portionService.addPortionCount(text)
                 tf = tf.copy(text = newText)
                 text = newText
                 onCommitPortions(commitVal)
@@ -146,7 +148,7 @@ fun PortionQuantityControls(
 
         OutlinedIconButton(
             onClick = {
-                val (newText, commitVal) = PortionsCalculator.subtractPortionCount(text)
+                val (newText, commitVal) = portionService.subtractPortionCount(text)
                 tf = tf.copy(text = newText)
                 text = newText
                 onCommitPortions(commitVal)
