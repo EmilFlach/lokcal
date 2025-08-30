@@ -1,6 +1,7 @@
 package com.emilflach.lokcal.util
 
 import kotlin.math.round
+import kotlin.math.roundToInt
 
 object PortionsCalculator {
     fun defaultPortion(foodServingSize: String?): Double {
@@ -63,9 +64,12 @@ object PortionsCalculator {
         portionsLabel(portionsFromGrams(grams, portionGrams))
 
     fun subtitleKcalPortions(kcal: Double, grams: Double, portionGrams: Double): String {
-        val label = portionsLabelFromGrams(grams, portionGrams)
-        return "${kcal.toInt()} kcal • $label"
+        val portions = portionsLabelFromGrams(grams, portionGrams)
+        val kcal = formatKcalLabel(kcal)
+        return "$kcal • $portions"
     }
+
+    fun formatKcalLabel(value: Double): String = "${value.roundToInt()} kcal"
 
     private fun formatPortions(value: Double): String =
         if (value % 1.0 == 0.0) value.toInt().toString() else value.toString()

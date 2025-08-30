@@ -38,6 +38,7 @@ import com.emilflach.lokcal.ui.components.GramQuantityControls
 import com.emilflach.lokcal.ui.components.MealTimeItem
 import com.emilflach.lokcal.ui.components.MealTopBar
 import com.emilflach.lokcal.ui.components.PortionQuantityControls
+import com.emilflach.lokcal.util.NumberUtils.sanitizeDecimalInput
 import com.emilflach.lokcal.viewmodel.MealTimeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,16 +68,14 @@ fun SaveMealAction(viewModel: MealTimeViewModel) {
                     Text(text = "Total portions")
                     OutlinedTextField(
                         value = portions,
-                        onValueChange = { portions = it.filter { ch -> ch.isDigit() || ch == '.' || ch == ',' } },
+                        onValueChange = { portions = sanitizeDecimalInput(it) },
                         singleLine = true,
                     )
                 }
             },
             confirmButton = {
                 TextButton(onClick = {
-                    val p = portions.replace(',', '.').toDoubleOrNull()?.takeIf { it > 0 } ?: 1.0
-                    val displayName = if (name.isBlank()) "Meal" else name.trim()
-                    viewModel.saveAsMeal(displayName, p)
+                    viewModel.saveAsMealFromInputs(name, portions)
                     show = false
                 }) { Text("Save") }
             },
@@ -140,7 +139,7 @@ fun MealTimeScreen(
                     item {
                         Spacer(Modifier.height(16.dp))
                         Text(
-                            text = "${state.totalKcal.toInt()} kcal",
+                            text = state.totalKcalLabel,
                             style = MaterialTheme.typography.headlineLarge,
                             fontSize = 60.sp,
                             textAlign = TextAlign.Center,
@@ -168,9 +167,7 @@ fun MealTimeScreen(
                                         initialGrams = entry.quantity_g,
                                         portionGrams = viewModel.portionForEntry(entry),
                                         onCommitPortions = { portions ->
-                                            val portionGrams = viewModel.portionForEntry(entry)
-                                            val grams = (portions * portionGrams).coerceAtLeast(0.0)
-                                            viewModel.updateQuantity(entry.id, grams)
+                                            viewModel.updateQuantityByPortions(entry.id, portions)
                                         },
                                         onDelete = { viewModel.deleteItem(entry.id) }
                                     )
