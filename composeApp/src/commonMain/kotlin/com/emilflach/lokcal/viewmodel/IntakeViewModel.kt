@@ -73,21 +73,33 @@ class IntakeViewModel(
     fun defaultPortionGrams(meal: Meal) = intakeRepo.getMealPortionGrams(meal.id)
     fun parseGrams(text: String) = NumberUtils.parseDecimal(text)
 
-    fun buildSubtitle(food: Food, gramsText: String): String {
-        val grams = parseGrams(gramsText)
-        val kcal = food.energy_kcal_per_100g * grams / 100.0
-        return "${grams.toInt()} g • ${kcal.toInt()} kcal"
+    fun computeFoodKcal(food: Food, grams: Double): Double = food.energy_kcal_per_100g * grams / 100.0
+
+    fun computeMealKcal(mealId: Long, grams: Double): Double {
+        val (totalG, totalKcal) = intakeRepo.computeMealTotals(mealId)
+        return if (totalG > 0.0 && grams > 0.0) totalKcal * (grams / totalG) else 0.0
     }
 
-    fun buildMealSubtitle(meal: Meal, portionsText: String): String {
+    fun subtitleForMeal(meal: Meal, initialPortions: String): String {
         val portionG = defaultPortionGrams(meal)
-        val portions = parseGrams(portionsText)
+        val portions = parseGrams(initialPortions)
         val grams = (portionG * portions).coerceAtLeast(0.0)
-        val (totalG, totalKcal) = intakeRepo.computeMealTotals(meal.id)
-        val kcal = if (totalG > 0.0 && grams > 0.0) totalKcal * (grams / totalG) else 0.0
-        return "${grams.toInt()} g • ${kcal.toInt()} kcal"
+        val kcal = computeMealKcal(meal.id, grams)
+        return PortionsCalculator.subtitleKcalPortions(
+            kcal = kcal,
+            grams = grams,
+            portionGrams = portionG
+        )
     }
 
+    fun subtitleForFood(food: Food, initialGrams: String): String {
+        val grams = parseGrams(initialGrams).coerceAtLeast(0.0)
+        return PortionsCalculator.subtitleKcalPortions(
+            kcal = computeFoodKcal(food, grams),
+            grams = grams,
+            portionGrams = defaultPortionGrams(food)
+        )
+    }
     fun logPortion(foodId: Long, portionG: Double) {
         intakeRepo.logOrUpdateFoodIntake(foodId, portionG, mealType())
     }

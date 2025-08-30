@@ -1,6 +1,8 @@
 package com.emilflach.lokcal.data
 
 import com.emilflach.lokcal.Database
+import com.emilflach.lokcal.Food
+import com.emilflach.lokcal.util.PortionsCalculator
 
 class MealRepository(database: Database) {
     private val mealQ = database.mealsQueries
@@ -11,7 +13,7 @@ class MealRepository(database: Database) {
     // Meal editing
     data class MealEditorItem(
         val mealItemId: Long,
-        val food: com.emilflach.lokcal.Food,
+        val food: Food,
         val quantityG: Double,
     )
 
@@ -19,7 +21,7 @@ class MealRepository(database: Database) {
         return mealQ.mealItemsForMealFull(mealId).executeAsList().map { row ->
             MealEditorItem(
                 mealItemId = row.meal_item_id,
-                food = com.emilflach.lokcal.Food(
+                food = Food(
                     id = row.id,
                     name = row.name,
                     description = row.description,
@@ -59,6 +61,11 @@ class MealRepository(database: Database) {
 
     fun deleteMeal(mealId: Long) = mealQ.deleteMealById(mealId)
     fun deleteMealItem(itemId: Long) = mealQ.deleteMealItemById(itemId)
+
+    // --- Shared calculation helpers (available to any ViewModel) ---
+    fun defaultPortionGrams(food: Food): Double = PortionsCalculator.defaultPortion(food.serving_size)
+
+    fun computeKcal(food: Food, grams: Double): Double = food.energy_kcal_per_100g * grams / 100.0
 
     private fun <T> tryExecute(block: () -> T): T? = try { block() } catch (_: Exception) { null }
 }

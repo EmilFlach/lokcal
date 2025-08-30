@@ -2,7 +2,6 @@ package com.emilflach.lokcal.viewmodel
 
 import com.emilflach.lokcal.Intake
 import com.emilflach.lokcal.data.IntakeRepository
-import com.emilflach.lokcal.util.NumberUtils
 import com.emilflach.lokcal.util.PortionsCalculator
 import com.emilflach.lokcal.util.currentDateIso
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,47 +45,6 @@ class MealTimeViewModel(
         loadToday()
     }
 
-    // --- UI helpers exposed to keep UI lean ---
-
-    fun addPortion( intake: Intake): String {
-        val current = intake.quantity_g
-        val portionSize = portionForEntry(intake)
-        val newVal = (current + portionSize).coerceAtLeast(0.0)
-        return newVal.toInt().toString()
-    }
-
-    fun subtractPortion(intake: Intake): String {
-        val current = intake.quantity_g
-        val portionSize = portionForEntry(intake)
-        val newVal = (current - portionSize).coerceAtLeast(0.0)
-        return newVal.toInt().toString()
-    }
-
-    fun addMealPortion( entry: Intake): String {
-        val portion = portionForEntry(entry)
-        val newQty = entry.quantity_g + portion
-        val newPortions = if (portion > 0) newQty / portion else 0.0
-        return NumberUtils.formatDecimalTrimmed(newPortions)
-    }
-
-    fun subtractMealPortion(entry: Intake): String {
-        val portion = portionForEntry(entry)
-        val newQty = (entry.quantity_g - portion).coerceAtLeast(0.0)
-        val newPortions = if (portion > 0) newQty / portion else 0.0
-        return NumberUtils.formatDecimalTrimmed(newPortions)
-    }
-
-
-    fun getPortionsLabel(intake: Intake): String {
-        val p = PortionsCalculator.portions(intake.quantity_g, portionForEntry(intake))
-        return PortionsCalculator.portionsLabel(p)
-    }
-
-    fun getPortions(intake: Intake): String {
-        val p = PortionsCalculator.portions(intake.quantity_g, portionForEntry(intake))
-        return NumberUtils.formatDecimalTrimmed(p)
-    }
-
 
     fun imageUrlForFoodId(foodId: Long): String? = intakeRepo.getFoodById(foodId)?.image_url
 
@@ -101,6 +59,14 @@ class MealTimeViewModel(
             intake.source_meal_id != null -> intakeRepo.getMealPortionGrams(intake.source_meal_id)
             else -> 100.0
         }
+    }
+
+    fun subtitleForIntake(intake: Intake): String {
+        return PortionsCalculator.subtitleKcalPortions(
+            kcal = intake.energy_kcal_total,
+            grams = intake.quantity_g,
+            portionGrams = portionForEntry(intake)
+        )
     }
 
     fun saveAsMeal(name: String, totalPortions: Double) {

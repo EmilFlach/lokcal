@@ -80,7 +80,7 @@ fun IntakeScreen(
 
                     IntakeListItem(
                         name = item.name,
-                        subtitle = viewModel.buildMealSubtitle(item,initialPortions),
+                        subtitle = viewModel.subtitleForMeal(item, initialPortions),
                         keyId = keyId,
                         initialValue = initialPortions,
                         showBorder = true,
@@ -110,7 +110,7 @@ fun IntakeScreen(
 
                     IntakeListItem(
                         name = item.name,
-                        subtitle = viewModel.buildSubtitle(item, initialGrams),
+                        subtitle = viewModel.subtitleForFood(item, initialGrams),
                         keyId = keyId,
                         initialValue = initialGrams,
                         index = state.meals.size + index,

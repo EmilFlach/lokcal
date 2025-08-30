@@ -30,4 +30,43 @@ object PortionsCalculator {
         }
         return "$valueStr $label"
     }
+
+    // Merged from QuantityLogic
+    fun addPortionGrams(currentGramsText: String, portionGrams: Double): Pair<String, Double> {
+        val newGrams = (NumberUtils.parseDecimal(currentGramsText) + portionGrams).coerceAtLeast(0.0)
+        val newText = newGrams.toInt().toString()
+        return newText to NumberUtils.parseDecimal(newText)
+    }
+
+    fun subtractPortionGrams(currentGramsText: String, portionGrams: Double): Pair<String, Double> {
+        val newGrams = (NumberUtils.parseDecimal(currentGramsText) - portionGrams).coerceAtLeast(0.0)
+        val newText = newGrams.toInt().toString()
+        return newText to NumberUtils.parseDecimal(newText)
+    }
+
+    fun addPortionCount(currentPortionsText: String): Pair<String, Double> {
+        val newP = (NumberUtils.parseDecimal(currentPortionsText) + 1.0).coerceAtLeast(0.0)
+        val newText = formatPortions(newP)
+        return newText to NumberUtils.parseDecimal(newText)
+    }
+
+    fun subtractPortionCount(currentPortionsText: String): Pair<String, Double> {
+        val newP = (NumberUtils.parseDecimal(currentPortionsText) - 1.0).coerceAtLeast(0.0)
+        val newText = formatPortions(newP)
+        return newText to NumberUtils.parseDecimal(newText)
+    }
+
+    fun portionsFromGrams(grams: Double, portionGrams: Double): Double =
+        if (portionGrams > 0) grams / portionGrams else 0.0
+
+    fun portionsLabelFromGrams(grams: Double, portionGrams: Double): String =
+        portionsLabel(portionsFromGrams(grams, portionGrams))
+
+    fun subtitleKcalPortions(kcal: Double, grams: Double, portionGrams: Double): String {
+        val label = portionsLabelFromGrams(grams, portionGrams)
+        return "${kcal.toInt()} kcal • $label"
+    }
+
+    private fun formatPortions(value: Double): String =
+        if (value % 1.0 == 0.0) value.toInt().toString() else value.toString()
 }

@@ -3,7 +3,6 @@ package com.emilflach.lokcal.viewmodel
 import com.emilflach.lokcal.Food
 import com.emilflach.lokcal.Meal
 import com.emilflach.lokcal.data.MealRepository
-import com.emilflach.lokcal.util.NumberUtils
 import com.emilflach.lokcal.util.PortionsCalculator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -88,17 +87,17 @@ class EditMealViewModel(
     }
 
     fun deleteMeal() = repo.deleteMeal(mealId)
+    fun defaultPortionGrams(food: Food) = repo.defaultPortionGrams(food)
+    fun computeKcalFor(food: Food, grams: Double) = repo.computeKcal(food, grams)
 
-    // UI helpers - simplified to one-liners
-    fun parseGrams(text: String) = NumberUtils.parseDecimal(text)
-    fun defaultPortionGrams(food: Food) = PortionsCalculator.defaultPortion(food.serving_size)
-    fun computeKcalFor(food: Food, grams: Double) = food.energy_kcal_per_100g * grams / 100.0
-
-    fun getPortionsTextFor(food: Food, grams: Double): String {
-        val portionSize = defaultPortionGrams(food)
-        val portions = PortionsCalculator.portions(grams, portionSize)
-        return PortionsCalculator.portionsLabel(portions)
+    fun subtitleForFood(food: Food, initialGrams: Double): String {
+        return PortionsCalculator.subtitleKcalPortions(
+            kcal = computeKcalFor(food, initialGrams),
+            grams = initialGrams,
+            portionGrams = defaultPortionGrams(food)
+        )
     }
+
 
     private fun parsePortions(text: String) =
         text.trim().replace(',', '.').toDoubleOrNull()?.takeIf { it > 0 } ?: 1.0

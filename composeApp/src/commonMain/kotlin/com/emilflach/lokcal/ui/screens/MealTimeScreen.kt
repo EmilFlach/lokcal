@@ -34,8 +34,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.components.GramQuantityControls
 import com.emilflach.lokcal.ui.components.MealTimeItem
 import com.emilflach.lokcal.ui.components.MealTopBar
+import com.emilflach.lokcal.ui.components.PortionQuantityControls
 import com.emilflach.lokcal.viewmodel.MealTimeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -148,11 +150,40 @@ fun MealTimeScreen(
                         Spacer(Modifier.height(32.dp))
                     }
                     items(state.items, key = { it.id }) { entry ->
+                        val subtitle = viewModel.subtitleForIntake(entry)
+                        val isMeal = entry.source_meal_id != null
                         MealTimeItem(
-                            entry = entry,
-                            viewModel = viewModel,
-                            onLongPress = { e ->
-                                e.source_meal_id?.let { onEditMeal(it) }
+                            title = entry.item_name,
+                            subtitle = subtitle,
+                            imageUrl = entry.source_food_id?.let { viewModel.imageUrlForFoodId(it) },
+                            isMeal = isMeal,
+                            onLongPress = {
+                                entry.source_meal_id?.let { onEditMeal(it) }
+                            },
+                            quantityControls = { requester ->
+                                if (isMeal) {
+                                    PortionQuantityControls(
+                                        requester = requester,
+                                        stateKey = entry.id,
+                                        initialGrams = entry.quantity_g,
+                                        portionGrams = viewModel.portionForEntry(entry),
+                                        onCommitPortions = { portions ->
+                                            val portionGrams = viewModel.portionForEntry(entry)
+                                            val grams = (portions * portionGrams).coerceAtLeast(0.0)
+                                            viewModel.updateQuantity(entry.id, grams)
+                                        },
+                                        onDelete = { viewModel.deleteItem(entry.id) }
+                                    )
+                                } else {
+                                    GramQuantityControls(
+                                        requester = requester,
+                                        stateKey = entry.id,
+                                        initialGrams = entry.quantity_g,
+                                        portionGrams = viewModel.portionForEntry(entry),
+                                        onCommitGrams = { g -> viewModel.updateQuantity(entry.id, g) },
+                                        onDelete = { viewModel.deleteItem(entry.id) }
+                                    )
+                                }
                             }
                         )
                         Spacer(Modifier.height(4.dp))

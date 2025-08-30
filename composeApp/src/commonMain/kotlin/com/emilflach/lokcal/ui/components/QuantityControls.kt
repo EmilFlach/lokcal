@@ -21,25 +21,95 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.emilflach.lokcal.Intake
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.util.NumberUtils.formatDecimalTrimmed
 import com.emilflach.lokcal.util.NumberUtils.parseDecimal
-import com.emilflach.lokcal.viewmodel.MealTimeViewModel
+import com.emilflach.lokcal.util.PortionsCalculator
 
 @Composable
-fun MealQuantityControls(requester: FocusRequester = FocusRequester(), viewModel: MealTimeViewModel, entry: Intake) {
+fun GramQuantityControls(
+    requester: FocusRequester,
+    stateKey: Any,
+    initialGrams: Double,
+    portionGrams: Double,
+    onCommitGrams: (Double) -> Unit,
+    onDelete: () -> Unit,
+) {
     val colors = LocalRecipesColors.current
-    val portion = viewModel.portionForEntry(entry)
-    var tf by rememberSaveable(entry.id, stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(TextFieldValue(text = viewModel.getPortions(entry)))
+    var text by rememberSaveable(stateKey) { mutableStateOf(initialGrams.toInt().toString()) }
+    var tf by rememberSaveable(stateKey, stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(text = text))
     }
 
-    fun updatePortions(newTf: TextFieldValue, text: String) {
-        tf = newTf
-        if(text.isEmpty()) return
-        val p = parseDecimal(text)
-        val grams = p * portion
-        viewModel.updateQuantity(entry.id, grams)
+    fun commitFromText(text: String) {
+        val g = parseDecimal(text)
+        onCommitGrams(g)
+    }
+
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+        GramTextField(
+            tf = tf,
+            requester = requester,
+            onValueChange = { newTf, value ->
+                tf = newTf
+                text = value
+                commitFromText(value)
+            },
+            onDone = { commitFromText(tf.text) }
+        )
+        Spacer(Modifier.weight(1f))
+        OutlinedButton(
+            onClick = {
+                val (newText, commitVal) = PortionsCalculator.addPortionGrams(text, portionGrams)
+                tf = tf.copy(text = newText)
+                text = newText
+                onCommitGrams(commitVal)
+            },
+        ) {
+            Icon(imageVector = Icons.Filled.Add, contentDescription = "Add a portion")
+            Spacer(Modifier.width(4.dp))
+            Text(text = "${portionGrams.toInt()}g")
+        }
+        Spacer(Modifier.width(8.dp))
+        OutlinedIconButton(
+            onClick = {
+                val (newText, commitVal) = PortionsCalculator.subtractPortionGrams(text, portionGrams)
+                tf = tf.copy(text = newText)
+                text = newText
+                onCommitGrams(commitVal)
+            }
+        ) {
+            Icon(imageVector = Icons.Filled.Remove, contentDescription = "Subtract a portion")
+        }
+        IconButton(onClick = onDelete) {
+            Icon(
+                imageVector = Icons.Outlined.Delete,
+                contentDescription = "Delete item",
+                tint = colors.foregroundSupport
+            )
+        }
+    }
+}
+
+@Composable
+fun PortionQuantityControls(
+    requester: FocusRequester,
+    stateKey: Any,
+    initialGrams: Double,
+    portionGrams: Double,
+    onCommitPortions: (Double) -> Unit,
+    onDelete: () -> Unit,
+) {
+    val colors = LocalRecipesColors.current
+    val initialPortions = PortionsCalculator.portions(initialGrams, portionGrams)
+    var text by rememberSaveable(stateKey) { mutableStateOf(formatDecimalTrimmed(initialPortions)) }
+    var tf by rememberSaveable(stateKey, stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(text = text))
+    }
+
+    fun commitFromText(text: String) {
+        val portions = parseDecimal(text)
+        onCommitPortions(portions)
     }
 
     Row(
@@ -50,16 +120,21 @@ fun MealQuantityControls(requester: FocusRequester = FocusRequester(), viewModel
             tf = tf,
             requester = requester,
             onValueChange = { newTf, value ->
-                updatePortions(newTf,value)
-            }
+                tf = newTf
+                text = value
+                commitFromText(value)
+            },
+            onDone = { commitFromText(tf.text) }
         )
 
         Spacer(Modifier.weight(1f))
 
         OutlinedButton(
             onClick = {
-                val newText = viewModel.addMealPortion(entry)
-                updatePortions(tf.copy(text = newText), newText)
+                val (newText, commitVal) = PortionsCalculator.addPortionCount(text)
+                tf = tf.copy(text = newText)
+                text = newText
+                onCommitPortions(commitVal)
             },
         ) {
             Icon(imageVector = Icons.Filled.Add, contentDescription = "Add a portion")
@@ -71,74 +146,16 @@ fun MealQuantityControls(requester: FocusRequester = FocusRequester(), viewModel
 
         OutlinedIconButton(
             onClick = {
-                val newText = viewModel.subtractMealPortion(entry)
-                updatePortions(tf.copy(text = newText), newText)
+                val (newText, commitVal) = PortionsCalculator.subtractPortionCount(text)
+                tf = tf.copy(text = newText)
+                text = newText
+                onCommitPortions(commitVal)
             }
         ) {
             Icon(imageVector = Icons.Filled.Remove, contentDescription = "Subtract a portion")
         }
 
-        IconButton(onClick = { viewModel.deleteItem(entry.id) }) {
-            Icon(
-                imageVector = Icons.Outlined.Delete,
-                contentDescription = "Delete item",
-                tint = colors.foregroundSupport
-            )
-        }
-    }
-}
-
-@Composable
-fun FoodQuantityControls(requester: FocusRequester = FocusRequester(), viewModel: MealTimeViewModel, entry: Intake) {
-    val colors = LocalRecipesColors.current
-    val portion = viewModel.portionForEntry(entry)
-    var tf by rememberSaveable(entry.id, stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(TextFieldValue(text = entry.quantity_g.toInt().toString()))
-    }
-
-    fun updateGrams(newTf: TextFieldValue, text: String) {
-        tf = newTf
-        if(text.isEmpty()) return
-        val g = parseDecimal(text)
-        viewModel.updateQuantity(entry.id, g)
-    }
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        GramTextField(
-            tf = tf,
-            requester = requester,
-            onValueChange = { newTf, value ->
-                updateGrams(newTf, value)
-            }
-        )
-        Spacer(Modifier.weight(1f))
-
-        OutlinedButton(
-            onClick = {
-                val newText = viewModel.addPortion(entry)
-                updateGrams(tf.copy(text = newText), newText)
-            },
-        ) {
-            Icon(imageVector = Icons.Filled.Add, contentDescription = "Add a portion")
-            Spacer(Modifier.width(4.dp))
-            Text(text = "${portion.toInt()}g")
-        }
-
-        Spacer(Modifier.width(8.dp))
-
-        OutlinedIconButton(
-            onClick = {
-                val newText = viewModel.subtractPortion(entry)
-                updateGrams(tf.copy(text = newText), newText)
-            }
-        ) {
-            Icon(imageVector = Icons.Filled.Remove, contentDescription = "Subtract a portion")
-        }
-
-        IconButton(onClick = { viewModel.deleteItem(entry.id) }) {
+        IconButton(onClick = onDelete) {
             Icon(
                 imageVector = Icons.Outlined.Delete,
                 contentDescription = "Delete item",
