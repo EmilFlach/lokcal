@@ -20,6 +20,7 @@ class IntakeViewModel(
     private val foodRepo: FoodRepository,
     private val intakeRepo: IntakeRepository,
     initialMealType: String,
+    private val dateIso: String,
 ) {
     data class UiState(
         val query: String = "",
@@ -91,11 +92,11 @@ class IntakeViewModel(
     }
 
     fun logPortion(foodId: Long, portionG: Double) {
-        intakeRepo.logOrUpdateFoodIntake(foodId, portionG, mealType())
+        intakeRepo.logOrUpdateFoodIntake(foodId, portionG, mealType(), dateIso)
     }
 
     fun logMealPortion(mealId: Long, portionG: Double) {
-        intakeRepo.logOrUpdateMealIntake(mealId, portionG, mealType())
+        intakeRepo.logOrUpdateMealIntake(mealId, portionG, mealType(), dateIso)
     }
 
     // Moved UI business logic here

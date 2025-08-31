@@ -4,7 +4,6 @@ import com.emilflach.lokcal.Intake
 import com.emilflach.lokcal.data.IntakeRepository
 import com.emilflach.lokcal.data.LabelService
 import com.emilflach.lokcal.data.PortionService
-import com.emilflach.lokcal.util.currentDateIso
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 class MealTimeViewModel(
     private val intakeRepo: IntakeRepository,
     val mealType: String,
+    private val dateIso: String,
 ) {
     data class UiState(
         val items: List<Intake> = emptyList(),
@@ -27,13 +27,12 @@ class MealTimeViewModel(
     private val labelService = LabelService(intakeRepo, portionService)
 
     init {
-        loadToday()
+        loadForSelectedDate()
     }
 
-    fun loadToday() {
-        val date = currentDateIso()
-        val startIso = "${date}T00:00:00"
-        val endIso = "${date}T23:59:59"
+    private fun loadForSelectedDate() {
+        val startIso = "${dateIso}T00:00:00"
+        val endIso = "${dateIso}T23:59:59"
         val list = intakeRepo.getIntakeByMealAndDateRange(mealType, startIso, endIso)
         val total = list.sumOf { it.energy_kcal_total }
         _state.value = UiState(
@@ -45,23 +44,24 @@ class MealTimeViewModel(
 
     fun deleteItem(id: Long) {
         intakeRepo.deleteIntakeById(id)
-        loadToday()
+        loadForSelectedDate()
     }
 
     fun updateQuantity(id: Long, newQuantityG: Double) {
         intakeRepo.updateIntakeQuantity(id, newQuantityG)
-        loadToday()
+        loadForSelectedDate()
     }
 
     fun imageUrlForFoodId(foodId: Long): String? = intakeRepo.getFoodById(foodId)?.image_url
+    fun imageUrlForMealId(mealId: Long): String? = intakeRepo.getMealById(mealId)?.image_url
 
     fun portionForEntry(intake: Intake): Double = portionService.defaultPortionForIntake(intake)
 
     fun subtitleForIntake(intake: Intake): String = labelService.subtitleForIntake(intake)
 
     fun saveAsMeal(name: String, totalPortions: Double) {
-        intakeRepo.saveCurrentMealFromIntakes(mealType, name, totalPortions)
-        loadToday()
+        intakeRepo.saveCurrentMealFromIntakes(mealType, name, totalPortions, dateIso)
+        loadForSelectedDate()
     }
 
     fun saveAsMealFromInputs(nameText: String, portionsText: String) {
@@ -72,8 +72,8 @@ class MealTimeViewModel(
     }
 
     fun copyMealItemsIntoMealTime(mealId: Long) {
-        intakeRepo.copyMealItemsIntoMealTime(mealId, mealType)
-        loadToday()
+        intakeRepo.copyMealItemsIntoMealTime(mealId, mealType, dateIso)
+        loadForSelectedDate()
     }
 
     fun updateQuantityByPortions(entryId: Long, portions: Double) {

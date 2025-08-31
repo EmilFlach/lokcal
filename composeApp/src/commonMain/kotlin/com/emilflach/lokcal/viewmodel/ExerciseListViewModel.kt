@@ -2,12 +2,11 @@ package com.emilflach.lokcal.viewmodel
 
 import com.emilflach.lokcal.Exercise
 import com.emilflach.lokcal.data.ExerciseRepository
-import com.emilflach.lokcal.util.currentDateIso
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class ExerciseListViewModel(private val repo: ExerciseRepository) {
+class ExerciseListViewModel(private val repo: ExerciseRepository, private val dateIso: String) {
     data class UiState(
         val items: List<Exercise> = emptyList(),
         val totalKcal: Double = 0.0,
@@ -17,15 +16,14 @@ class ExerciseListViewModel(private val repo: ExerciseRepository) {
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state.asStateFlow()
 
-    init { loadToday() }
+    init { loadForSelectedDate() }
 
-    private fun todayRange(): Pair<String, String> {
-        val date = currentDateIso()
+    private fun rangeFor(date: String): Pair<String, String> {
         return "${date}T00:00:00" to "${date}T23:59:59"
     }
 
-    fun loadToday() {
-        val (start, end) = todayRange()
+    private fun loadForSelectedDate() {
+        val (start, end) = rangeFor(dateIso)
         val list = repo.getByDateRange(start, end)
         val total = list.sumOf { it.energy_kcal_total }
         _state.value = UiState(items = list, totalKcal = total, summaryText = buildSummary(list))
@@ -33,7 +31,7 @@ class ExerciseListViewModel(private val repo: ExerciseRepository) {
 
     fun delete(id: Long) {
         repo.deleteById(id)
-        loadToday()
+        loadForSelectedDate()
     }
 
     private fun buildSummary(list: List<Exercise>): String {

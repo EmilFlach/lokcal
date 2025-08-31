@@ -3,7 +3,6 @@ package com.emilflach.lokcal.viewmodel
 import com.emilflach.lokcal.Intake
 import com.emilflach.lokcal.data.ExerciseRepository
 import com.emilflach.lokcal.data.IntakeRepository
-import com.emilflach.lokcal.util.currentDateIso
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +14,7 @@ import kotlinx.datetime.plus
  * Simple multiplatform ViewModel-like class to manage state for the Main screen.
  * It does not rely on Android-specific lifecycle components to keep it reusable across targets.
  */
-class MainViewModel(private val intakeRepo: IntakeRepository, private val exerciseRepo: ExerciseRepository) {
+class MainViewModel(private val intakeRepo: IntakeRepository, private val exerciseRepo: ExerciseRepository, initialDateIso: String) {
     data class MealSummary(
         val mealType: String,
         val items: List<Intake>,
@@ -27,7 +26,7 @@ class MainViewModel(private val intakeRepo: IntakeRepository, private val exerci
     val summaries: StateFlow<List<MealSummary>> = _summaries.asStateFlow()
 
     // Selected date for which data is displayed
-    private val _selectedDate = MutableStateFlow(LocalDate.parse(currentDateIso()))
+    private val _selectedDate = MutableStateFlow(LocalDate.parse(initialDateIso))
     val selectedDate: StateFlow<LocalDate> = _selectedDate.asStateFlow()
 
     // Exercise card info for main screen

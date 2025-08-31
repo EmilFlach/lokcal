@@ -91,8 +91,7 @@ fun SaveMealAction(viewModel: MealTimeViewModel) {
 fun MealTimeScreen(
     viewModel: MealTimeViewModel,
     onBack: () -> Unit,
-    onAdd: (String) -> Unit,
-    onEditMeal: (Long) -> Unit,
+    onAdd: (String) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -154,7 +153,11 @@ fun MealTimeScreen(
                         MealTimeItem(
                             title = entry.item_name,
                             subtitle = subtitle,
-                            imageUrl = entry.source_food_id?.let { viewModel.imageUrlForFoodId(it) },
+                            imageUrl = when {
+                                entry.source_food_id != null -> viewModel.imageUrlForFoodId(entry.source_food_id)
+                                entry.source_meal_id != null -> viewModel.imageUrlForMealId(entry.source_meal_id)
+                                else -> null
+                            },
                             isMeal = isMeal,
                             onLongPress = {
                                 entry.source_meal_id?.let { viewModel.copyMealItemsIntoMealTime(it) }

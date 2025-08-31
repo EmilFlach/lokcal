@@ -46,8 +46,8 @@ import com.emilflach.lokcal.viewmodel.MainViewModel
 @Composable
 fun MainScreen(
     viewModel: MainViewModel,
-    onOpenMeal: (String) -> Unit,
-    onOpenExercise: () -> Unit,
+    onOpenMeal: (String, String) -> Unit,
+    onOpenExercise: (String) -> Unit,
     onOpenSettings: () -> Unit,
 ) {
     val summaries by viewModel.summaries.collectAsState()
@@ -173,7 +173,7 @@ fun MainScreen(
                                 modifier
                             }
                         }
-                        .clickable { onOpenMeal(s.mealType) }
+                        .clickable { onOpenMeal(s.mealType, selectedDate.toString()) }
 
                 ) {
                     Column(Modifier.padding(horizontal = 16.dp, vertical = 20.dp)) {
@@ -225,7 +225,7 @@ fun MainScreen(
                             modifier
                         }
                     }
-                    .clickable { onOpenExercise() }
+                    .clickable { onOpenExercise(selectedDate.toString()) }
             ) {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 20.dp)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {

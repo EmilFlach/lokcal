@@ -1,12 +1,11 @@
 package com.emilflach.lokcal.viewmodel
 
 import com.emilflach.lokcal.data.ExerciseRepository
-import com.emilflach.lokcal.util.currentDateIso
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class ExerciseViewModel(private val repo: ExerciseRepository) {
+class ExerciseViewModel(private val repo: ExerciseRepository, private val dateIso: String) {
     data class UiState(
         val type: ExerciseRepository.Type = ExerciseRepository.Type.WALKING,
         val minutesText: String = "30",
@@ -32,10 +31,10 @@ class ExerciseViewModel(private val repo: ExerciseRepository) {
 
     private fun calc(type: ExerciseRepository.Type, minutes: Double): Double = (type.kcalPerHour / 60.0) * minutes
 
-    private fun nowIso(): String = currentDateIso() + "T12:00:00"
+    private fun timestampForDate(): String = dateIso + "T12:00:00"
 
     fun save() {
         val minutes = parseMinutes(_state.value.minutesText)
-        repo.logExercise(_state.value.type, minutes, timestamp = nowIso(), notes = null)
+        repo.logExercise(_state.value.type, minutes, timestamp = timestampForDate(), notes = null)
     }
 }

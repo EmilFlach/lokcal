@@ -4,13 +4,14 @@ import com.emilflach.lokcal.Database
 import com.emilflach.lokcal.Meal
 import com.emilflach.lokcal.util.currentDateIso
 
-class IntakeRepository(database: Database) {
+class IntakeRepository(database: Database) { 
     private val foodQ = database.foodQueries
     private val mealQ = database.mealsQueries
     private val intakeQ = database.intakeQueries
 
     // Basic queries
     fun getFoodById(id: Long) = tryExecute { foodQ.selectById(id).executeAsOne() }
+    fun getMealById(id: Long) = tryExecute { mealQ.mealSelectById(id).executeAsOne() }
     fun getRecentFoods(limit: Long) = intakeQ.recentFoods(limit).executeAsList()
 
     fun getIntakeByMealAndDateRange(mealType: String, startIso: String, endIso: String) =
@@ -19,29 +20,29 @@ class IntakeRepository(database: Database) {
     fun deleteIntakeById(id: Long) = intakeQ.deleteIntakeById(id)
 
     // Simplified logging with automatic merging
-    fun logOrUpdateFoodIntake(foodId: Long, quantityG: Double, mealType: String) {
+    fun logOrUpdateFoodIntake(foodId: Long, quantityG: Double, mealType: String, dateIso: String? = null) {
         require(quantityG >= 0.0) { "quantityG must be >= 0" }
         
-        val today = todayRange()
+        val today = todayRange(dateIso)
         val existing = getIntakeByMealAndDateRange(mealType, today.first, today.second)
             .firstOrNull { it.source_type == "FOOD" && it.source_food_id == foodId }
             
         if (existing == null) {
-            logFoodIntake(foodId, quantityG, nowIso(), mealType)
+            logFoodIntake(foodId, quantityG, nowIso(dateIso), mealType)
         } else {
             updateIntakeQuantity(existing.id, existing.quantity_g + quantityG)
         }
     }
 
-    fun logOrUpdateMealIntake(mealId: Long, quantityG: Double, mealType: String) {
+    fun logOrUpdateMealIntake(mealId: Long, quantityG: Double, mealType: String, dateIso: String? = null) {
         require(quantityG >= 0.0) { "quantityG must be >= 0" }
         
-        val today = todayRange()
+        val today = todayRange(dateIso)
         val existing = getIntakeByMealAndDateRange(mealType, today.first, today.second)
             .firstOrNull { it.source_type == "MEAL" && it.source_meal_id == mealId }
             
         if (existing == null) {
-            logMealIntake(mealId, quantityG, nowIso(), mealType)
+            logMealIntake(mealId, quantityG, nowIso(dateIso), mealType)
         } else {
             updateIntakeQuantity(existing.id, existing.quantity_g + quantityG)
         }
@@ -107,8 +108,8 @@ class IntakeRepository(database: Database) {
         return tryExecute { mealQ.mealSelectPortionsById(mealId).executeAsOne() } ?: 1.0
     }
 
-    fun saveCurrentMealFromIntakes(mealType: String, name: String, totalPortions: Double): Long {
-        val today = todayRange()
+    fun saveCurrentMealFromIntakes(mealType: String, name: String, totalPortions: Double, dateIso: String? = null): Long {
+        val today = todayRange(dateIso)
         val list = getIntakeByMealAndDateRange(mealType, today.first, today.second)
         val items = list.filter { it.source_food_id != null }.map { it.source_food_id!! to it.quantity_g }
         if (items.isEmpty()) return 0L
@@ -150,8 +151,8 @@ class IntakeRepository(database: Database) {
     }
 
     // Expand a logged meal into separate food intakes and remove the original meal entry
-    fun copyMealItemsIntoMealTime(mealId: Long, mealType: String) {
-        val (start, end) = todayRange()
+    fun copyMealItemsIntoMealTime(mealId: Long, mealType: String, dateIso: String? = null) {
+        val (start, end) = todayRange(dateIso)
         // 1) Find the specific intake entry for this mealId in the given mealType today
         val entries = getIntakeByMealAndDateRange(mealType, start, end)
         val intake = entries.firstOrNull { it.source_type == "MEAL" && it.source_meal_id == mealId } ?: return
@@ -177,9 +178,9 @@ class IntakeRepository(database: Database) {
 
     // Utilities
     private fun <T> tryExecute(block: () -> T): T? = try { block() } catch (_: Exception) { null }
-    private fun nowIso() = currentDateIso() + "T12:00:00"
-    private fun todayRange(): Pair<String, String> {
-        val date = currentDateIso()
+    private fun nowIso(dateIso: String? = null) = (dateIso ?: currentDateIso()) + "T12:00:00"
+    private fun todayRange(dateIso: String? = null): Pair<String, String> {
+        val date = dateIso ?: currentDateIso()
         return "${date}T00:00:00" to "${date}T23:59:59"
     }
 }
