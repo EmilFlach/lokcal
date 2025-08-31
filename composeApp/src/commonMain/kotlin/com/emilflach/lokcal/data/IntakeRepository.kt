@@ -1,6 +1,7 @@
 package com.emilflach.lokcal.data
 
 import com.emilflach.lokcal.Database
+import com.emilflach.lokcal.Meal
 import com.emilflach.lokcal.util.currentDateIso
 
 class IntakeRepository(database: Database) {
@@ -102,6 +103,10 @@ class IntakeRepository(database: Database) {
         return if (portions > 0) totalG / portions else totalG
     }
 
+    fun getMealPortions(mealId: Long): Double {
+        return tryExecute { mealQ.mealSelectPortionsById(mealId).executeAsOne() } ?: 1.0
+    }
+
     fun saveCurrentMealFromIntakes(mealType: String, name: String, totalPortions: Double): Long {
         val today = todayRange()
         val list = getIntakeByMealAndDateRange(mealType, today.first, today.second)
@@ -133,10 +138,15 @@ class IntakeRepository(database: Database) {
     }
 
     // Search
-    fun searchMeals(query: String): List<com.emilflach.lokcal.Meal> {
+    fun searchMeals(query: String): List<Meal> {
         if (query.trim().isEmpty()) return emptyList()
         val like = "%${query.trim().lowercase()}%"
         return mealQ.mealSearchByAny(like, like).executeAsList()
+    }
+
+    fun listAllMeals(): List<Meal> {
+        // Using LIKE with wildcards to return all meals ordered by name
+        return mealQ.mealSearchByAny("%%", "%%").executeAsList()
     }
 
     // Expand a logged meal into separate food intakes and remove the original meal entry
@@ -149,6 +159,7 @@ class IntakeRepository(database: Database) {
         // 2) Portion amount = intake.quantity_g / portionGramsPerMeal
         val portionGrams = getMealPortionGrams(mealId)
         val portionAmount = if (portionGrams > 0.0) intake.quantity_g / portionGrams else 0.0
+        val totalPortions = getMealPortions(mealId)
 
         // 3) Fetch meal items with their base grams
         val items = mealQ.mealItemsForMealFull(mealId).executeAsList()
@@ -156,7 +167,7 @@ class IntakeRepository(database: Database) {
         // 4) Add each as a FOOD intake with grams scaled by portionAmount (merge with existing if present)
         items.forEach { row ->
             val foodId = row.id // Food id from joined row
-            val scaledGrams = (row.meal_item_quantity_g * portionAmount).coerceAtLeast(0.0)
+            val scaledGrams = ((row.meal_item_quantity_g * portionAmount) / totalPortions).coerceAtLeast(0.0)
             logOrUpdateFoodIntake(foodId, scaledGrams, mealType)
         }
 

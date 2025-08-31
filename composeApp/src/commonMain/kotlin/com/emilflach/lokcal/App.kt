@@ -18,6 +18,8 @@ import com.emilflach.lokcal.ui.screens.EditMealScreen
 import com.emilflach.lokcal.ui.screens.IntakeScreen
 import com.emilflach.lokcal.ui.screens.MainScreen
 import com.emilflach.lokcal.ui.screens.MealTimeScreen
+import com.emilflach.lokcal.ui.screens.MealsListScreen
+import com.emilflach.lokcal.ui.screens.SettingsScreen
 import com.emilflach.lokcal.util.SystemBackHandler
 import com.emilflach.lokcal.viewmodel.EditMealViewModel
 import com.emilflach.lokcal.viewmodel.IntakeViewModel
@@ -29,6 +31,11 @@ private sealed class Screen {
     data class MealTime(val mealType: String) : Screen()
     data class Intake(val mealType: String) : Screen()
     data class EditMeal(val mealId: Long, val returnMealType: String) : Screen()
+    // Settings flow
+    data object Settings : Screen()
+    data object MealsList : Screen()
+    data class EditMealFromList(val mealId: Long) : Screen()
+    // Exercise flow
     data object ExerciseList : Screen()
     data object ExerciseAdd : Screen()
     data class EditExercise(val exerciseId: Long) : Screen()
@@ -75,6 +82,18 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                 screen = Screen.ExerciseList
                 refreshToggle = !refreshToggle
             }
+            Screen.Settings -> {
+                screen = Screen.Main
+                refreshToggle = !refreshToggle
+            }
+            Screen.MealsList -> {
+                screen = Screen.Settings
+                refreshToggle = !refreshToggle
+            }
+            is Screen.EditMealFromList -> {
+                screen = Screen.MealsList
+                refreshToggle = !refreshToggle
+            }
             else -> {
                 // On Main screen: allow default behavior (app can close). No-op here.
             }
@@ -94,7 +113,8 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                 MainScreen(
                     viewModel = vm,
                     onOpenMeal = { meal -> screen = Screen.MealTime(meal) },
-                    onOpenExercise = { screen = Screen.ExerciseList }
+                    onOpenExercise = { screen = Screen.ExerciseList },
+                    onOpenSettings = { screen = Screen.Settings }
                 )
             }
             is Screen.MealTime -> {
@@ -128,6 +148,27 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                     viewModel = editVm,
                     onBack = { screen = Screen.MealTime(s.returnMealType); refreshToggle = !refreshToggle },
                     onDeleted = { screen = Screen.MealTime(s.returnMealType); refreshToggle = !refreshToggle }
+                )
+            }
+            Screen.Settings -> {
+                SettingsScreen(
+                    onBack = { screen = Screen.Main },
+                    onOpenMealsList = { screen = Screen.MealsList }
+                )
+            }
+            Screen.MealsList -> {
+                MealsListScreen(
+                    repo = intakeRepo,
+                    onBack = { screen = Screen.Settings },
+                    onOpenMeal = { id -> screen = Screen.EditMealFromList(id) }
+                )
+            }
+            is Screen.EditMealFromList -> {
+                val editVm = remember(intakeRepo, s.mealId) { EditMealViewModel(mealRepo, s.mealId) }
+                EditMealScreen(
+                    viewModel = editVm,
+                    onBack = { screen = Screen.MealsList; refreshToggle = !refreshToggle },
+                    onDeleted = { screen = Screen.MealsList; refreshToggle = !refreshToggle }
                 )
             }
             Screen.ExerciseList -> {

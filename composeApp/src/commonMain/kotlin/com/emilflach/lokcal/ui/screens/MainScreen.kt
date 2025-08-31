@@ -14,7 +14,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -22,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -41,6 +48,7 @@ fun MainScreen(
     viewModel: MainViewModel,
     onOpenMeal: (String) -> Unit,
     onOpenExercise: () -> Unit,
+    onOpenSettings: () -> Unit,
 ) {
     val summaries by viewModel.summaries.collectAsState()
     val eaten by viewModel.eatenKcal.collectAsState()
@@ -88,14 +96,30 @@ fun MainScreen(
                     .background(colors.backgroundPage, MaterialTheme.shapes.medium)
                     .padding(16.dp)
             ) {
-                Text(
-                    text = selectedDate.toString(),
-                    color = colors.foregroundSupport,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(Modifier.height(12.dp))
+                Row (
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Spacer(Modifier.width(40.dp))
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        text = selectedDate.toString(),
+                        color = colors.foregroundSupport,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Spacer(Modifier.weight(1f))
+                    IconButton(
+                        onClick = onOpenSettings,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Settings,
+                            contentDescription = "Settings",
+                            tint = colors.foregroundSupport,
+                        )
+                    }
+                }
+
                 Text(
                     text = if (left > 0) "${left.toInt()}" else "${left.toInt() * -1}",
                     style = MaterialTheme.typography.displayLarge,
