@@ -71,6 +71,11 @@ class MealTimeViewModel(
         saveAsMeal(displayName, portions)
     }
 
+    fun copyMealItemsIntoMealTime(mealId: Long) {
+        intakeRepo.copyMealItemsIntoMealTime(mealId, mealType)
+        loadToday()
+    }
+
     fun updateQuantityByPortions(entryId: Long, portions: Double) {
         val intake = state.value.items.firstOrNull { it.id == entryId } ?: return
         val portionGrams = portionForEntry(intake)

@@ -157,7 +157,7 @@ fun MealTimeScreen(
                             imageUrl = entry.source_food_id?.let { viewModel.imageUrlForFoodId(it) },
                             isMeal = isMeal,
                             onLongPress = {
-                                entry.source_meal_id?.let { onEditMeal(it) }
+                                entry.source_meal_id?.let { viewModel.copyMealItemsIntoMealTime(it) }
                             },
                             quantityControls = { requester ->
                                 if (isMeal) {

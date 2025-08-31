@@ -139,6 +139,31 @@ class IntakeRepository(database: Database) {
         return mealQ.mealSearchByAny(like, like).executeAsList()
     }
 
+    // Expand a logged meal into separate food intakes and remove the original meal entry
+    fun copyMealItemsIntoMealTime(mealId: Long, mealType: String) {
+        val (start, end) = todayRange()
+        // 1) Find the specific intake entry for this mealId in the given mealType today
+        val entries = getIntakeByMealAndDateRange(mealType, start, end)
+        val intake = entries.firstOrNull { it.source_type == "MEAL" && it.source_meal_id == mealId } ?: return
+
+        // 2) Portion amount = intake.quantity_g / portionGramsPerMeal
+        val portionGrams = getMealPortionGrams(mealId)
+        val portionAmount = if (portionGrams > 0.0) intake.quantity_g / portionGrams else 0.0
+
+        // 3) Fetch meal items with their base grams
+        val items = mealQ.mealItemsForMealFull(mealId).executeAsList()
+
+        // 4) Add each as a FOOD intake with grams scaled by portionAmount (merge with existing if present)
+        items.forEach { row ->
+            val foodId = row.id // Food id from joined row
+            val scaledGrams = (row.meal_item_quantity_g * portionAmount).coerceAtLeast(0.0)
+            logOrUpdateFoodIntake(foodId, scaledGrams, mealType)
+        }
+
+        // 5) Remove the original meal intake entry
+        deleteIntakeById(intake.id)
+    }
+
     // Utilities
     private fun <T> tryExecute(block: () -> T): T? = try { block() } catch (_: Exception) { null }
     private fun nowIso() = currentDateIso() + "T12:00:00"
