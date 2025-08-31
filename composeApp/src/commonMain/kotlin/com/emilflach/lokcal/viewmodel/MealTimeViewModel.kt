@@ -7,6 +7,9 @@ import com.emilflach.lokcal.data.PortionService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
 
 class MealTimeViewModel(
     private val intakeRepo: IntakeRepository,
@@ -17,6 +20,7 @@ class MealTimeViewModel(
         val items: List<Intake> = emptyList(),
         val totalKcal: Double = 0.0,
         val totalKcalLabel: String = LabelService().kcalLabel(0.0),
+        val yesterdayItems: List<Intake> = emptyList(),
     )
 
     private val _state = MutableStateFlow(UiState())
@@ -35,10 +39,32 @@ class MealTimeViewModel(
         val endIso = "${dateIso}T23:59:59"
         val list = intakeRepo.getIntakeByMealAndDateRange(mealType, startIso, endIso)
         val total = list.sumOf { it.energy_kcal_total }
+
+        // Yesterday range for same meal type
+        val yesterdayDate = LocalDate.parse(dateIso).plus(-1, DateTimeUnit.DAY).toString()
+        val yStartIso = "${yesterdayDate}T00:00:00"
+        val yEndIso = "${yesterdayDate}T23:59:59"
+        val yesterdayList = intakeRepo.getIntakeByMealAndDateRange(mealType, yStartIso, yEndIso)
+            .let { yList ->
+                // Exclude items already logged today in the same meal time
+                val todayFoodIds = list.mapNotNull { it.source_food_id }.toSet()
+                val todayMealIds = list.mapNotNull { it.source_meal_id }.toSet()
+                yList.filter { y ->
+                    when {
+                        y.source_food_id != null -> y.source_food_id !in todayFoodIds
+                        y.source_meal_id != null -> y.source_meal_id !in todayMealIds
+                        else -> true
+                    }
+                }
+                // Also collapse duplicates from yesterday by source id to avoid multiple suggestion rows
+                .distinctBy { y -> y.source_food_id?.let { "F:$it" } ?: y.source_meal_id?.let { "M:$it" } }
+            }
+
         _state.value = UiState(
             items = list,
             totalKcal = total,
-            totalKcalLabel = LabelService().kcalLabel(total)
+            totalKcalLabel = LabelService().kcalLabel(total),
+            yesterdayItems = yesterdayList
         )
     }
 
@@ -56,8 +82,14 @@ class MealTimeViewModel(
     fun imageUrlForMealId(mealId: Long): String? = intakeRepo.getMealById(mealId)?.image_url
 
     fun portionForEntry(intake: Intake): Double = portionService.defaultPortionForIntake(intake)
+    fun portionForMeal(mealId: Long): Double = portionService.defaultPortionForMeal(mealId)
 
     fun subtitleForIntake(intake: Intake): String = labelService.subtitleForIntake(intake)
+    fun subtitleForFoodSuggestion(foodId: Long, grams: Double): String {
+        val food = intakeRepo.getFoodById(foodId) ?: return ""
+        return labelService.subtitleForFood(food, grams)
+    }
+    fun subtitleForMealSuggestion(mealId: Long, grams: Double): String = labelService.subtitleForMeal(mealId, grams)
 
     fun saveAsMeal(name: String, totalPortions: Double) {
         intakeRepo.saveCurrentMealFromIntakes(mealType, name, totalPortions, dateIso)
@@ -81,5 +113,19 @@ class MealTimeViewModel(
         val portionGrams = portionForEntry(intake)
         val grams = (portions * portionGrams).coerceAtLeast(0.0)
         updateQuantity(entryId, grams)
+    }
+
+    fun addFoodSuggestion(foodId: Long, gramsText: String) {
+        val grams = com.emilflach.lokcal.util.NumberUtils.parseDecimal(gramsText, min = 0.0)
+        intakeRepo.logOrUpdateFoodIntake(foodId, grams, mealType, dateIso)
+        loadForSelectedDate()
+    }
+
+    fun addMealSuggestion(mealId: Long, portionsText: String) {
+        val portions = com.emilflach.lokcal.util.NumberUtils.parseDecimal(portionsText, min = 0.0)
+        val portionG = portionForMeal(mealId)
+        val grams = (portions * portionG).coerceAtLeast(0.0)
+        intakeRepo.logOrUpdateMealIntake(mealId, grams, mealType, dateIso)
+        loadForSelectedDate()
     }
 }

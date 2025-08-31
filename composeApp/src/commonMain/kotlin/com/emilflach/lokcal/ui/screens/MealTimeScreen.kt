@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
@@ -25,6 +26,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -35,9 +37,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.GramQuantityControls
+import com.emilflach.lokcal.ui.components.GramTextField
+import com.emilflach.lokcal.ui.components.IntakeListItem
 import com.emilflach.lokcal.ui.components.MealTimeItem
 import com.emilflach.lokcal.ui.components.MealTopBar
 import com.emilflach.lokcal.ui.components.PortionQuantityControls
+import com.emilflach.lokcal.ui.components.PortionsTextField
+import com.emilflach.lokcal.util.NumberUtils
 import com.emilflach.lokcal.util.NumberUtils.sanitizeDecimalInput
 import com.emilflach.lokcal.viewmodel.MealTimeViewModel
 
@@ -94,8 +100,9 @@ fun MealTimeScreen(
     onAdd: (String) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
-
     val c = LocalRecipesColors.current
+    val gramsById = remember { mutableStateMapOf<Long, String>() }
+    val requesters = remember { FocusRequesters() }
 
     Scaffold(
         topBar = {
@@ -128,9 +135,6 @@ fun MealTimeScreen(
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp)
         ) {
-            if (state.items.isEmpty()) {
-                Text("No items yet.", style = MaterialTheme.typography.bodyMedium)
-            } else {
                 LazyColumn(
                     Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 80.dp)
@@ -166,7 +170,7 @@ fun MealTimeScreen(
                                 if (isMeal) {
                                     PortionQuantityControls(
                                         requester = requester,
-                                        stateKey = entry.id,
+                                        stateKey = Pair(entry.id, entry.quantity_g),
                                         initialGrams = entry.quantity_g,
                                         portionGrams = viewModel.portionForEntry(entry),
                                         onCommitPortions = { portions ->
@@ -177,7 +181,7 @@ fun MealTimeScreen(
                                 } else {
                                     GramQuantityControls(
                                         requester = requester,
-                                        stateKey = entry.id,
+                                        stateKey = Pair(entry.id, entry.quantity_g),
                                         initialGrams = entry.quantity_g,
                                         portionGrams = viewModel.portionForEntry(entry),
                                         onCommitGrams = { g -> viewModel.updateQuantity(entry.id, g) },
@@ -188,8 +192,81 @@ fun MealTimeScreen(
                         )
                         Spacer(Modifier.height(4.dp))
                     }
+
+                    val items = state.yesterdayItems
+                    val totalSize = items.size
+                    item {
+                        if(!items.isEmpty()) {
+                            Spacer(Modifier.height(32.dp))
+                            Text(
+                                text = "Same as yesterday",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = c.foregroundDefault
+                            )
+                            Spacer(Modifier.height(8.dp))
+                        }
+
+                    }
+                    itemsIndexed(items = items) { index, intake ->
+                        if (intake.source_meal_id != null) {
+                            val mealId = intake.source_meal_id
+                            val keyId = -mealId
+                            val portionG = viewModel.portionForMeal(mealId)
+                            val portions = if (portionG > 0.0) intake.quantity_g / portionG else 0.0
+                            val initialPortions = gramsById.getOrPut(keyId) { NumberUtils.formatPortions(portions) }
+                            // Live subtitle based on current portions text
+                            val portionsText = gramsById[keyId] ?: NumberUtils.formatPortions(portions)
+                            val portionsVal = NumberUtils.parseDecimal(portionsText)
+                            val liveGrams = (portionsVal * portionG).coerceAtLeast(0.0)
+                            val subtitle = viewModel.subtitleForMealSuggestion(mealId, liveGrams)
+                            IntakeListItem(
+                                name = intake.item_name,
+                                subtitle = subtitle,
+                                keyId = keyId,
+                                initialValue = initialPortions,
+                                showBorder = true,
+                                addButtonDescription = "Add",
+                                index = index,
+                                size = totalSize,
+                                requesters = requesters,
+                                gramsById = gramsById,
+                                onAddClick = {
+                                    val portionsText = gramsById[keyId] ?: initialPortions
+                                    viewModel.addMealSuggestion(mealId, portionsText)
+                                },
+                                inputField = { tf, requester, onValueChange, onDone ->
+                                    PortionsTextField(tf, requester, onValueChange, onDone)
+                                }
+                            )
+                        } else if (intake.source_food_id != null) {
+                            val foodId = intake.source_food_id
+                            val keyId = foodId
+                            val initialGrams = gramsById.getOrPut(keyId) { intake.quantity_g.toInt().toString() }
+                            val gramsText = gramsById[keyId] ?: intake.quantity_g.toInt().toString()
+                            val gramsVal = NumberUtils.parseDecimal(gramsText)
+                            val subtitle = viewModel.subtitleForFoodSuggestion(foodId, gramsVal)
+                            IntakeListItem(
+                                name = intake.item_name,
+                                subtitle = subtitle,
+                                keyId = keyId,
+                                initialValue = initialGrams,
+                                addButtonDescription = "Add",
+                                index = index,
+                                size = totalSize,
+                                requesters = requesters,
+                                gramsById = gramsById,
+                                onAddClick = {
+                                    val gramsText = gramsById[keyId] ?: initialGrams
+                                    viewModel.addFoodSuggestion(foodId, gramsText)
+                                },
+                                inputField = { tf, requester, onValueChange, onDone ->
+                                    GramTextField(tf, requester, onValueChange, onDone)
+                                }
+                            )
+                        }
+                        Spacer(Modifier.height(4.dp))
+                    }
                 }
             }
         }
     }
-}
