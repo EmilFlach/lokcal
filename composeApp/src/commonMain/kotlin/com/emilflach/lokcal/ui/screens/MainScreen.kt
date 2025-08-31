@@ -53,23 +53,13 @@ fun MainScreen(
     val density = LocalDensity.current
     val colors = LocalRecipesColors.current
     val thresholdPx = remember(density) { with(density) { 64.dp.toPx() } }
-
-    fun calculateParticleCount(eatenCalories: Double, maxCalories: Double = 1690.0): Int {
-        val ratio = (eatenCalories / maxCalories).coerceIn(0.0, 1.0)
-        return (ratio * 3000).toInt()
-    }
-
-    val particleCount = remember(eaten, burned) {
-        calculateParticleCount(eaten, 1690 + burned)
-    }
+    val particleCount = remember(eaten) { eaten.toInt() }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Particle background
         ParticleBackground(
             particleCount = particleCount,
             modifier = Modifier.fillMaxSize()
         )
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
