@@ -169,7 +169,7 @@ class IntakeRepository(database: Database) {
         items.forEach { row ->
             val foodId = row.id // Food id from joined row
             val scaledGrams = ((row.meal_item_quantity_g * portionAmount) / totalPortions).coerceAtLeast(0.0)
-            logOrUpdateFoodIntake(foodId, scaledGrams, mealType)
+            logOrUpdateFoodIntake(foodId, scaledGrams, mealType, dateIso)
         }
 
         // 5) Remove the original meal intake entry

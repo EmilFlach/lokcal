@@ -170,7 +170,7 @@ fun MealTimeScreen(
                                 if (isMeal) {
                                     PortionQuantityControls(
                                         requester = requester,
-                                        stateKey = Pair(entry.id, entry.quantity_g),
+                                        stateKey = entry.id,
                                         initialGrams = entry.quantity_g,
                                         portionGrams = viewModel.portionForEntry(entry),
                                         onCommitPortions = { portions ->
@@ -181,7 +181,7 @@ fun MealTimeScreen(
                                 } else {
                                     GramQuantityControls(
                                         requester = requester,
-                                        stateKey = Pair(entry.id, entry.quantity_g),
+                                        stateKey = entry.id,
                                         initialGrams = entry.quantity_g,
                                         portionGrams = viewModel.portionForEntry(entry),
                                         onCommitGrams = { g -> viewModel.updateQuantity(entry.id, g) },
