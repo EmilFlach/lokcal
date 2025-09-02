@@ -4,6 +4,7 @@ import com.emilflach.lokcal.Intake
 import com.emilflach.lokcal.data.IntakeRepository
 import com.emilflach.lokcal.data.LabelService
 import com.emilflach.lokcal.data.PortionService
+import com.emilflach.lokcal.util.NumberUtils.parseDecimal
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -91,16 +92,11 @@ class MealTimeViewModel(
     }
     fun subtitleForMealSuggestion(mealId: Long, grams: Double): String = labelService.subtitleForMeal(mealId, grams)
 
-    fun saveAsMeal(name: String, totalPortions: Double) {
-        intakeRepo.saveCurrentMealFromIntakes(mealType, name, totalPortions, dateIso)
-        loadForSelectedDate()
-    }
-
     fun saveAsMealFromInputs(nameText: String, portionsText: String) {
-        val displayName = nameText.trim().ifBlank { "Meal" }
-        val portions = com.emilflach.lokcal.util.NumberUtils.parseDecimal(portionsText, min = 0.0)
-            .takeIf { it > 0.0 } ?: 1.0
-        saveAsMeal(displayName, portions)
+        val name = nameText.trim().ifBlank { "Meal" }
+        val portions = parseDecimal(portionsText, min = 0.0).takeIf { it > 0.0 } ?: 1.0
+        intakeRepo.saveCurrentMealFromIntakes(mealType, name, portions, dateIso)
+        loadForSelectedDate()
     }
 
     fun copyMealItemsIntoMealTime(mealId: Long) {
@@ -116,13 +112,13 @@ class MealTimeViewModel(
     }
 
     fun addFoodSuggestion(foodId: Long, gramsText: String) {
-        val grams = com.emilflach.lokcal.util.NumberUtils.parseDecimal(gramsText, min = 0.0)
+        val grams = parseDecimal(gramsText, min = 0.0)
         intakeRepo.logOrUpdateFoodIntake(foodId, grams, mealType, dateIso)
         loadForSelectedDate()
     }
 
     fun addMealSuggestion(mealId: Long, portionsText: String) {
-        val portions = com.emilflach.lokcal.util.NumberUtils.parseDecimal(portionsText, min = 0.0)
+        val portions = parseDecimal(portionsText, min = 0.0)
         val portionG = portionForMeal(mealId)
         val grams = (portions * portionG).coerceAtLeast(0.0)
         intakeRepo.logOrUpdateMealIntake(mealId, grams, mealType, dateIso)

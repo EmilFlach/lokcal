@@ -20,7 +20,7 @@ class IntakeRepository(database: Database) {
     fun deleteIntakeById(id: Long) = intakeQ.deleteIntakeById(id)
 
     // Simplified logging with automatic merging
-    fun logOrUpdateFoodIntake(foodId: Long, quantityG: Double, mealType: String, dateIso: String? = null) {
+    fun logOrUpdateFoodIntake(foodId: Long, quantityG: Double, mealType: String, dateIso: String) {
         require(quantityG >= 0.0) { "quantityG must be >= 0" }
         
         val today = todayRange(dateIso)
@@ -34,7 +34,7 @@ class IntakeRepository(database: Database) {
         }
     }
 
-    fun logOrUpdateMealIntake(mealId: Long, quantityG: Double, mealType: String, dateIso: String? = null) {
+    fun logOrUpdateMealIntake(mealId: Long, quantityG: Double, mealType: String, dateIso: String) {
         require(quantityG >= 0.0) { "quantityG must be >= 0" }
         
         val today = todayRange(dateIso)
@@ -108,7 +108,7 @@ class IntakeRepository(database: Database) {
         return tryExecute { mealQ.mealSelectPortionsById(mealId).executeAsOne() } ?: 1.0
     }
 
-    fun saveCurrentMealFromIntakes(mealType: String, name: String, totalPortions: Double, dateIso: String? = null): Long {
+    fun saveCurrentMealFromIntakes(mealType: String, name: String, totalPortions: Double, dateIso: String): Long {
         val today = todayRange(dateIso)
         val list = getIntakeByMealAndDateRange(mealType, today.first, today.second)
         val items = list.filter { it.source_food_id != null }.map { it.source_food_id!! to it.quantity_g }
@@ -118,7 +118,7 @@ class IntakeRepository(database: Database) {
         // Delete only the food items that were saved into the meal
         list.filter { it.source_food_id != null }.forEach { deleteIntakeById(it.id) }
         // Log new meal as a single entry
-        logOrUpdateMealIntake(mealId, totalGrams, mealType)
+        logOrUpdateMealIntake(mealId, totalGrams, mealType, dateIso)
         return mealId
     }
 
@@ -151,7 +151,7 @@ class IntakeRepository(database: Database) {
     }
 
     // Expand a logged meal into separate food intakes and remove the original meal entry
-    fun copyMealItemsIntoMealTime(mealId: Long, mealType: String, dateIso: String? = null) {
+    fun copyMealItemsIntoMealTime(mealId: Long, mealType: String, dateIso: String) {
         val (start, end) = todayRange(dateIso)
         // 1) Find the specific intake entry for this mealId in the given mealType today
         val entries = getIntakeByMealAndDateRange(mealType, start, end)

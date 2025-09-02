@@ -18,6 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -54,7 +55,7 @@ fun SaveMealAction(viewModel: MealTimeViewModel) {
     var name by remember { mutableStateOf("") }
     var portions by remember { mutableStateOf("1") }
 
-    androidx.compose.material3.IconButton(onClick = { show = true }) {
+    IconButton(onClick = { show = true }) {
         Icon(imageVector = Icons.Filled.Add, contentDescription = "Save as meal")
     }
 
