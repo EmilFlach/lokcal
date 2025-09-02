@@ -66,8 +66,10 @@ kotlin {
             implementation(libs.coil)
             implementation(libs.coil.network.ktor)
             implementation(libs.kotlinx.datetime)
-            // SQLDelight primitive adapters to match sample configuration
             implementation(libs.sqlDelight.primitive.adapters)
+            implementation(libs.filekit.core)
+            implementation(libs.filekit.dialogs)
+            implementation(libs.filekit.dialogs.compose)
         }
 
         commonTest.dependencies {

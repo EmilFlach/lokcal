@@ -15,8 +15,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.emilflach.lokcal.backup.BackupManager
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,6 +33,7 @@ fun SettingsScreen(
     onOpenMealsList: () -> Unit,
 ) {
     val colors = LocalRecipesColors.current
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -52,6 +61,52 @@ fun SettingsScreen(
             ListItem(
                 headlineContent = { Text("Manage meals") },
                 modifier = Modifier.clickable { onOpenMealsList() }
+            )
+
+//            ListItem(
+//                headlineContent = { Text("Enable nightly backup") },
+//                trailingContent = {
+//                    Switch(checked = enabled, onCheckedChange = { value ->
+//                        scope.launch { BackupManager().setEnabled(value) }
+//                    })
+//                }
+//            )
+            var exportResult by remember { mutableStateOf<Boolean?>(null) }
+            var exportText by remember { mutableStateOf("Save backup") }
+            LaunchedEffect(exportResult) {
+                exportText = when (exportResult) {
+                    null -> "Save backup"
+                    true -> "✅ Backup saved successfully "
+                    false -> "❌ Backup save failed"
+                }
+            }
+            ListItem(
+                headlineContent = { Text(exportText) },
+                modifier = Modifier.clickable {
+                    scope.launch {
+                        exportResult = null
+                        exportResult = BackupManager().exportDatabase()
+                    }
+                }
+            )
+
+            var importResult by remember { mutableStateOf<Boolean?>(null) }
+            var importText by remember { mutableStateOf("Restore from backup") }
+            LaunchedEffect(importResult) {
+                importText = when (importResult) {
+                    null -> "Restore from backup"
+                    true -> "✅ Backup restored successfully "
+                    false -> "❌ Backup restore failed"
+                }
+            }
+            ListItem(
+                headlineContent = { Text(importText) },
+                modifier = Modifier.clickable {
+                    scope.launch {
+                        importResult = null
+                        importResult = BackupManager().importDatabase()
+                    }
+                }
             )
         }
     }

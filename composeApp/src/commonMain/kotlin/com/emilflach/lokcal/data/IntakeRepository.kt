@@ -12,7 +12,7 @@ class IntakeRepository(database: Database) {
     // Basic queries
     fun getFoodById(id: Long) = tryExecute { foodQ.selectById(id).executeAsOne() }
     fun getMealById(id: Long) = tryExecute { mealQ.mealSelectById(id).executeAsOne() }
-    fun getRecentFoods(limit: Long) = intakeQ.recentFoods(limit).executeAsList()
+    fun getFrequentFoods(mealType: String, limit: Long) = intakeQ.frequentFoods(mealType, limit).executeAsList()
 
     fun getIntakeByMealAndDateRange(mealType: String, startIso: String, endIso: String) =
         intakeQ.selectIntakeByMealAndDateRange(mealType, startIso, endIso).executeAsList()
