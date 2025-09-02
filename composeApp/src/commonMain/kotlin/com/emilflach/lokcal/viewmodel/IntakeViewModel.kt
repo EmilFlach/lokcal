@@ -40,19 +40,19 @@ class IntakeViewModel(
     private val labelService = LabelService(intakeRepo, portionService)
 
     init {
-        performSearch()
+        performSearch(state.value.selectedMealType)
     }
 
     fun setQuery(value: String) {
         _state.value = _state.value.copy(query = value)
-        performSearch()
+        performSearch(state.value.selectedMealType)
     }
 
-    private fun performSearch() {
+    private fun performSearch(mealType: String) {
         searchJob?.cancel()
         searchJob = scope.launch {
             val (meals, foods) = if (_state.value.query.isBlank()) {
-                getDefaultFoods()
+                getDefaultFoods(mealType)
             } else {
                 intakeRepo.searchMeals(_state.value.query) to foodRepo.search(_state.value.query)
             }
@@ -60,16 +60,16 @@ class IntakeViewModel(
         }
     }
 
-    private fun getDefaultFoods(): Pair<List<Meal>, List<Food>> {
-        val recent = intakeRepo.getRecentFoods(20)
-        val foods = if (recent.size < 20) {
-            val recentIds = recent.map { it.id }.toSet()
-            recent + foodRepo.getAll()
+    private fun getDefaultFoods(mealType: String): Pair<List<Meal>, List<Food>> {
+        val frequent = intakeRepo.getFrequentFoods(mealType, 20)
+        val foods = if (frequent.size < 20) {
+            val recentIds = frequent.map { it.id }.toSet()
+            frequent + foodRepo.getAll()
                 .filter { it.id !in recentIds }
                 .sortedBy { it.name.lowercase() }
-                .take(20 - recent.size)
+                .take(20 - frequent.size)
         } else {
-            recent
+            frequent
         }
         return emptyList<Meal>() to foods
     }
