@@ -5,37 +5,35 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.openFilePicker
 
-class BackupManager {
+object BackupManager {
+    suspend fun exportDatabase() = copyDatabase()
 
-    // Runs a backup immediately. Returns true if a backup file was written.
-    suspend fun exportDatabase(): Boolean {
-        return copyDatabase()
-    }
-
-    // Restores from the latest available backup file in the fixed folder. Returns true if restored.
     suspend fun importDatabase(): Boolean {
         val file = FileKit.openFilePicker(
             type = FileKitType.File(extensions = listOf("db"))
-        )
-        return if (file != null) {
-            replaceDatabase(file)
-        } else {
-            false
-        }
+        ) ?: return false
+
+        return replaceDatabase(file)
     }
 
-    // Ensure background scheduling is aligned with current settings (call on app start on supported platforms).
-    fun getNightlyBackup() {
+    suspend fun setBackupDirectory() = chooseBackupDirectory()
+    suspend fun getBackupDirectory() = retrieveBackupDirectory()
+    suspend fun exportToBackupDirectory() = exportDatabaseToBackupDirectory()
 
-    }
-
-    // Enables/disables nightly backups and (re)schedules as needed on supported platforms.
-    fun setNightlyBackup(value: Boolean) {
-
-    }
-
+    fun showNightlyBackupSettings() = allowNightlyBackup()
+    fun getNightlyBackup() { }
+    fun setNightlyBackup(value: Boolean) = enableNightlyBackup(value)
 }
+
+expect suspend fun chooseBackupDirectory(): PlatformFile?
+
+expect suspend fun retrieveBackupDirectory(): String
 
 expect suspend fun replaceDatabase(file: PlatformFile): Boolean
 
 expect suspend fun copyDatabase(): Boolean
+expect suspend fun exportDatabaseToBackupDirectory(): Boolean
+
+expect fun allowNightlyBackup(): Boolean
+
+expect fun enableNightlyBackup(value: Boolean): Boolean

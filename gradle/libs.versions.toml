@@ -15,6 +15,7 @@ kotlinx-datetime = "0.7.1"
 sqlDelight = "2.1.0"
 slf4j = "2.0.17"
 filekit = "0.10.0"
+documentfile = "1.1.0"
 
 [libraries]
 
@@ -47,6 +48,7 @@ slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekit" }
 filekit-dialogs = { module = "io.github.vinceglb:filekit-dialogs", version.ref = "filekit" }
 filekit-dialogs-compose = { module = "io.github.vinceglb:filekit-dialogs-compose", version.ref = "filekit" }
+androidx-documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "documentfile" }
 
 [plugins]
 

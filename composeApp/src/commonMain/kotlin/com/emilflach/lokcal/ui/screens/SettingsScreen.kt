@@ -11,6 +11,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -34,6 +35,7 @@ fun SettingsScreen(
 ) {
     val colors = LocalRecipesColors.current
     val scope = rememberCoroutineScope()
+
 
     Scaffold(
         topBar = {
@@ -62,22 +64,13 @@ fun SettingsScreen(
                 headlineContent = { Text("Manage meals") },
                 modifier = Modifier.clickable { onOpenMealsList() }
             )
-
-//            ListItem(
-//                headlineContent = { Text("Enable nightly backup") },
-//                trailingContent = {
-//                    Switch(checked = enabled, onCheckedChange = { value ->
-//                        scope.launch { BackupManager().setEnabled(value) }
-//                    })
-//                }
-//            )
             var exportResult by remember { mutableStateOf<Boolean?>(null) }
-            var exportText by remember { mutableStateOf("Save backup") }
+            var exportText by remember { mutableStateOf("Export database") }
             LaunchedEffect(exportResult) {
                 exportText = when (exportResult) {
-                    null -> "Save backup"
-                    true -> "✅ Backup saved successfully "
-                    false -> "❌ Backup save failed"
+                    null -> "Export database"
+                    true -> "✅ Database export successful"
+                    false -> "❌ Database export failed"
                 }
             }
             ListItem(
@@ -85,18 +78,18 @@ fun SettingsScreen(
                 modifier = Modifier.clickable {
                     scope.launch {
                         exportResult = null
-                        exportResult = BackupManager().exportDatabase()
+                        exportResult = BackupManager.exportDatabase()
                     }
                 }
             )
 
             var importResult by remember { mutableStateOf<Boolean?>(null) }
-            var importText by remember { mutableStateOf("Restore from backup") }
+            var importText by remember { mutableStateOf("Import database") }
             LaunchedEffect(importResult) {
                 importText = when (importResult) {
-                    null -> "Restore from backup"
-                    true -> "✅ Backup restored successfully "
-                    false -> "❌ Backup restore failed"
+                    null -> "Import database"
+                    true -> "✅ Database import successful"
+                    false -> "❌ Database import failed"
                 }
             }
             ListItem(
@@ -104,10 +97,44 @@ fun SettingsScreen(
                 modifier = Modifier.clickable {
                     scope.launch {
                         importResult = null
-                        importResult = BackupManager().importDatabase()
+                        importResult = BackupManager.importDatabase()
                     }
                 }
             )
+
+            if(BackupManager.showNightlyBackupSettings()) {
+                var enabled by remember { mutableStateOf(false) }
+                var backupLocation by remember { mutableStateOf("No directory set") }
+                scope.launch {
+                    backupLocation = BackupManager.getBackupDirectory()
+                }
+                ListItem(
+                    headlineContent = { Text("Nightly backup directory") },
+                    supportingContent = { Text(backupLocation) },
+                    modifier = Modifier.clickable {
+                        scope.launch {
+                            BackupManager.setBackupDirectory()
+                            backupLocation = BackupManager.getBackupDirectory()
+                        }
+                    }
+                )
+                ListItem(
+                    headlineContent = { Text("Save to nightly backup directory") },
+                    modifier = Modifier.clickable {
+                        scope.launch {
+                            BackupManager.exportToBackupDirectory()
+                        }
+                    }
+                )
+                ListItem(
+                    headlineContent = { Text("Enable nightly backup") },
+                    trailingContent = {
+                        Switch(checked = enabled, onCheckedChange = { value ->
+                            enabled = value
+                        })
+                    }
+                )
+            }
         }
     }
 }

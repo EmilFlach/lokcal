@@ -30,3 +30,23 @@ actual suspend fun copyDatabase(): Boolean {
         return false
     }
 }
+
+actual fun allowNightlyBackup(): Boolean {
+    return false
+}
+
+actual suspend fun chooseBackupDirectory(): PlatformFile? {
+    TODO("Not yet implemented")
+}
+
+actual suspend fun retrieveBackupDirectory(): String {
+    TODO("Not yet implemented")
+}
+
+actual suspend fun exportDatabaseToBackupDirectory(): Boolean {
+    TODO("Not yet implemented")
+}
+
+actual fun enableNightlyBackup(value: Boolean): Boolean {
+    TODO("Not yet implemented")
+}

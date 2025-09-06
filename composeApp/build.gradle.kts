@@ -87,6 +87,7 @@ kotlin {
             implementation(libs.sqlDelight.driver.android)
             implementation(libs.slf4j.api)
             implementation(libs.slf4j.simple)
+            implementation(libs.androidx.documentfile)
         }
 
         jvmMain.dependencies {
