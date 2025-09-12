@@ -18,16 +18,15 @@ object BackupManager {
 
     suspend fun setBackupDirectory() = chooseBackupDirectory()
     suspend fun getBackupDirectory() = retrieveBackupDirectory()
-    suspend fun exportToBackupDirectory() = exportDatabaseToBackupDirectory()
 
     fun showNightlyBackupSettings() = allowNightlyBackup()
-    fun getNightlyBackup() { }
+    fun getNightlyBackup() = isNightlyBackupEnabled()
     fun setNightlyBackup(value: Boolean) = enableNightlyBackup(value)
 }
 
 expect suspend fun chooseBackupDirectory(): PlatformFile?
 
-expect suspend fun retrieveBackupDirectory(): String
+expect suspend fun retrieveBackupDirectory(): String?
 
 expect suspend fun replaceDatabase(file: PlatformFile): Boolean
 
@@ -37,3 +36,5 @@ expect suspend fun exportDatabaseToBackupDirectory(): Boolean
 expect fun allowNightlyBackup(): Boolean
 
 expect fun enableNightlyBackup(value: Boolean): Boolean
+
+expect fun isNightlyBackupEnabled(): Boolean

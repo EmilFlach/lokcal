@@ -2,7 +2,9 @@ package com.emilflach.lokcal.ui.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -23,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.backup.BackupManager
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import kotlinx.coroutines.launch
@@ -73,6 +76,7 @@ fun SettingsScreen(
                     false -> "❌ Database export failed"
                 }
             }
+            Spacer(modifier = Modifier.height(16.dp))
             ListItem(
                 headlineContent = { Text(exportText) },
                 modifier = Modifier.clickable {
@@ -103,10 +107,13 @@ fun SettingsScreen(
             )
 
             if(BackupManager.showNightlyBackupSettings()) {
-                var enabled by remember { mutableStateOf(false) }
-                var backupLocation by remember { mutableStateOf("No directory set") }
-                scope.launch {
-                    backupLocation = BackupManager.getBackupDirectory()
+                Spacer(modifier = Modifier.height(16.dp))
+                var enabled by remember { mutableStateOf(BackupManager.getNightlyBackup()) }
+                var backupLocation by remember { mutableStateOf("Loading...") }
+                var hasBackupLocation by remember { mutableStateOf(false) }
+                LaunchedEffect(Unit) {
+                    hasBackupLocation = BackupManager.getBackupDirectory() != null
+                    backupLocation = BackupManager.getBackupDirectory() ?: "No directory set"
                 }
                 ListItem(
                     headlineContent = { Text("Nightly backup directory") },
@@ -114,26 +121,23 @@ fun SettingsScreen(
                     modifier = Modifier.clickable {
                         scope.launch {
                             BackupManager.setBackupDirectory()
-                            backupLocation = BackupManager.getBackupDirectory()
+                            hasBackupLocation = BackupManager.getBackupDirectory() != null
+                            backupLocation = BackupManager.getBackupDirectory() ?: "No directory set"
                         }
                     }
                 )
-                ListItem(
-                    headlineContent = { Text("Save to nightly backup directory") },
-                    modifier = Modifier.clickable {
-                        scope.launch {
-                            BackupManager.exportToBackupDirectory()
+                if(hasBackupLocation) {
+                    ListItem(
+                        headlineContent = { Text("Enable nightly backup") },
+                        trailingContent = {
+                            Switch(checked = enabled, onCheckedChange = { value ->
+                                BackupManager.setNightlyBackup(value)
+                                enabled = BackupManager.getNightlyBackup()
+                            })
                         }
-                    }
-                )
-                ListItem(
-                    headlineContent = { Text("Enable nightly backup") },
-                    trailingContent = {
-                        Switch(checked = enabled, onCheckedChange = { value ->
-                            enabled = value
-                        })
-                    }
-                )
+                    )
+                }
+
             }
         }
     }

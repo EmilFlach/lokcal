@@ -88,6 +88,7 @@ kotlin {
             implementation(libs.slf4j.api)
             implementation(libs.slf4j.simple)
             implementation(libs.androidx.documentfile)
+            implementation(libs.androidx.work.runtime)
         }
 
         jvmMain.dependencies {
