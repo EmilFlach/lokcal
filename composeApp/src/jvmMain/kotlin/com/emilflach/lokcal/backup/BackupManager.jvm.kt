@@ -39,7 +39,7 @@ actual suspend fun chooseBackupDirectory(): PlatformFile? {
     TODO("Not yet implemented")
 }
 
-actual suspend fun retrieveBackupDirectory(): String {
+actual suspend fun retrieveBackupDirectory(): String? {
     TODO("Not yet implemented")
 }
 
@@ -48,5 +48,9 @@ actual suspend fun exportDatabaseToBackupDirectory(): Boolean {
 }
 
 actual fun enableNightlyBackup(value: Boolean): Boolean {
+    TODO("Not yet implemented")
+}
+
+actual fun isNightlyBackupEnabled(): Boolean {
     TODO("Not yet implemented")
 }

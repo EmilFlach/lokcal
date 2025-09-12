@@ -117,7 +117,7 @@ kotlin {
 android {
     namespace = "com.emilflach.lokcal"
     //noinspection GradleDependency
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 21
