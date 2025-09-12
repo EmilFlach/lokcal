@@ -3,6 +3,7 @@ package com.emilflach.lokcal.viewmodel
 import com.emilflach.lokcal.Intake
 import com.emilflach.lokcal.data.ExerciseRepository
 import com.emilflach.lokcal.data.IntakeRepository
+import com.emilflach.lokcal.data.WeightRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,7 +15,12 @@ import kotlinx.datetime.plus
  * Simple multiplatform ViewModel-like class to manage state for the Main screen.
  * It does not rely on Android-specific lifecycle components to keep it reusable across targets.
  */
-class MainViewModel(private val intakeRepo: IntakeRepository, private val exerciseRepo: ExerciseRepository, initialDateIso: String) {
+class MainViewModel(
+    private val intakeRepo: IntakeRepository,
+    private val exerciseRepo: ExerciseRepository,
+    private val weightRepo: WeightRepository,
+    initialDateIso: String
+) {
     data class MealSummary(
         val mealType: String,
         val items: List<Intake>,
@@ -44,6 +50,10 @@ class MainViewModel(private val intakeRepo: IntakeRepository, private val exerci
 
     private val _burnedKcal = MutableStateFlow(0.0)
     val burnedKcal: StateFlow<Double> = _burnedKcal.asStateFlow()
+
+    // Thursday weight prompt visibility
+    private val _showWeightPrompt = MutableStateFlow(false)
+    val showWeightPrompt: StateFlow<Boolean> = _showWeightPrompt.asStateFlow()
 
     init {
         loadFor(_selectedDate.value)
@@ -88,6 +98,11 @@ class MainViewModel(private val intakeRepo: IntakeRepository, private val exerci
         _eatenKcal.value = eaten
         _burnedKcal.value = burned
         _leftKcal.value = left
+
+        // Update Thursday weight prompt visibility
+        val isThursday = date.dayOfWeek.name == "THURSDAY"
+        val hasWeight = weightRepo.getForDate(dateIso) != null
+        _showWeightPrompt.value = isThursday && !hasWeight
     }
 
     private fun buildMealSummary(list: List<Intake>): String {

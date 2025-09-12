@@ -35,6 +35,7 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     onBack: () -> Unit,
     onOpenMealsList: () -> Unit,
+    onOpenWeightList: () -> Unit,
 ) {
     val colors = LocalRecipesColors.current
     val scope = rememberCoroutineScope()
@@ -66,6 +67,11 @@ fun SettingsScreen(
             ListItem(
                 headlineContent = { Text("Manage meals") },
                 modifier = Modifier.clickable { onOpenMealsList() }
+            )
+            ListItem(
+                headlineContent = { Text("Weight") },
+                supportingContent = { Text("View and log your weight") },
+                modifier = Modifier.clickable { onOpenWeightList() }
             )
             var exportResult by remember { mutableStateOf<Boolean?>(null) }
             var exportText by remember { mutableStateOf("Export database") }
@@ -128,7 +134,8 @@ fun SettingsScreen(
                 )
                 if(hasBackupLocation) {
                     ListItem(
-                        headlineContent = { Text("Enable nightly backup") },
+                        headlineContent = { Text("Nightly backup") },
+                        supportingContent = { Text(if(enabled) "Enabled" else "Disabled") },
                         trailingContent = {
                             Switch(checked = enabled, onCheckedChange = { value ->
                                 BackupManager.setNightlyBackup(value)

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedCard
@@ -20,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.data.ExerciseRepository
 import com.emilflach.lokcal.viewmodel.ExerciseViewModel
@@ -66,6 +68,7 @@ fun ExerciseScreen(
             OutlinedTextField(
                 value = state.minutesText,
                 onValueChange = viewModel::setMinutesText,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 label = { Text("Minutes") },
                 modifier = Modifier.fillMaxWidth()
             )

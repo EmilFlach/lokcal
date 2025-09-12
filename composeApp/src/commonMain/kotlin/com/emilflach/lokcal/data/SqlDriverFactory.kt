@@ -111,6 +111,19 @@ private fun ensureExerciseSchemaUpgrades(driver: SqlDriver) {
     )
 }
 
+private fun ensureWeightSchemaUpgrades(driver: SqlDriver) {
+    tryExec(
+        driver,
+        """
+        CREATE TABLE IF NOT EXISTS WeightLog (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT NOT NULL UNIQUE,
+            weight_kg REAL NOT NULL CHECK (weight_kg > 0)
+        )
+        """.trimIndent()
+    )
+}
+
 fun createDatabase(sqlDriverFactory: SqlDriverFactory): Database {
     val driver = sqlDriverFactory.createDriver()
 
@@ -121,6 +134,7 @@ fun createDatabase(sqlDriverFactory: SqlDriverFactory): Database {
     ensureFoodSchemaUpgrades(driver)
     ensureMealSchemaUpgrades(driver)
     ensureExerciseSchemaUpgrades(driver)
+        ensureWeightSchemaUpgrades(driver)
 
     val database = Database(driver)
     // Seed initial data on first launch

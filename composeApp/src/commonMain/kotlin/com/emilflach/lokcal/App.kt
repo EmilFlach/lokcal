@@ -14,18 +14,26 @@ import com.emilflach.lokcal.data.SqlDriverFactory
 import com.emilflach.lokcal.data.createDatabase
 import com.emilflach.lokcal.theme.AppTheme
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.screens.EditExerciseScreen
 import com.emilflach.lokcal.ui.screens.EditMealScreen
+import com.emilflach.lokcal.ui.screens.ExerciseListScreen
+import com.emilflach.lokcal.ui.screens.ExerciseScreen
 import com.emilflach.lokcal.ui.screens.IntakeScreen
 import com.emilflach.lokcal.ui.screens.MainScreen
 import com.emilflach.lokcal.ui.screens.MealTimeScreen
 import com.emilflach.lokcal.ui.screens.MealsListScreen
 import com.emilflach.lokcal.ui.screens.SettingsScreen
+import com.emilflach.lokcal.ui.screens.WeightListScreen
 import com.emilflach.lokcal.util.SystemBackHandler
 import com.emilflach.lokcal.util.currentDateIso
+import com.emilflach.lokcal.viewmodel.EditExerciseViewModel
 import com.emilflach.lokcal.viewmodel.EditMealViewModel
+import com.emilflach.lokcal.viewmodel.ExerciseListViewModel
+import com.emilflach.lokcal.viewmodel.ExerciseViewModel
 import com.emilflach.lokcal.viewmodel.IntakeViewModel
 import com.emilflach.lokcal.viewmodel.MainViewModel
 import com.emilflach.lokcal.viewmodel.MealTimeViewModel
+import com.emilflach.lokcal.viewmodel.WeightListViewModel
 
 private sealed class Screen {
     data class Main(val dateIso: String) : Screen()
@@ -40,6 +48,12 @@ private sealed class Screen {
     data class ExerciseList(val dateIso: String) : Screen()
     data class ExerciseAdd(val dateIso: String) : Screen()
     data class EditExercise(val exerciseId: Long, val dateIso: String) : Screen()
+    // Weight flow
+    sealed class ReturnTo {
+        data object Settings : ReturnTo()
+        data class Main(val dateIso: String) : ReturnTo()
+    }
+    data class WeightList(val openAdd: Boolean = false, val returnTo: ReturnTo) : Screen()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,6 +65,7 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
     val intakeRepo = remember(database) { IntakeRepository(database) }
     val mealRepo = remember(database) { MealRepository(database) }
     val exerciseRepo = remember(database) { com.emilflach.lokcal.data.ExerciseRepository(database) }
+    val weightRepo = remember(database) { com.emilflach.lokcal.data.WeightRepository(database) }
 
     var screen by remember { mutableStateOf<Screen>(Screen.Main(currentDateIso())) }
     var refreshToggle by remember { mutableStateOf(false) }
@@ -95,6 +110,18 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                 screen = Screen.MealsList
                 refreshToggle = !refreshToggle
             }
+            is Screen.WeightList -> {
+                when (val r = s.returnTo) {
+                    is Screen.ReturnTo.Settings -> {
+                        screen = Screen.Settings
+                    }
+                    is Screen.ReturnTo.Main -> {
+                        screen = Screen.Main(r.dateIso)
+                        // Refresh to update Thursday banner based on potential new weight
+                        refreshToggle = !refreshToggle
+                    }
+                }
+            }
             else -> {
                 // On Main screen: allow default behavior (app can close). No-op here.
             }
@@ -110,12 +137,13 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
         when (val s = screen) {
             is Screen.Main -> {
                 // Recreate VM when refreshToggle changes
-                val vm = remember(intakeRepo, exerciseRepo, s.dateIso, refreshToggle) { MainViewModel(intakeRepo, exerciseRepo, s.dateIso) }
+                val vm = remember(intakeRepo, exerciseRepo, weightRepo, s.dateIso, refreshToggle) { MainViewModel(intakeRepo, exerciseRepo, weightRepo, s.dateIso) }
                 MainScreen(
                     viewModel = vm,
                     onOpenMeal = { meal, dateIso -> screen = Screen.MealTime(meal, dateIso) },
                     onOpenExercise = { dateIso -> screen = Screen.ExerciseList(dateIso) },
-                    onOpenSettings = { screen = Screen.Settings }
+                    onOpenSettings = { screen = Screen.Settings },
+                    onOpenWeightToday = { screen = Screen.WeightList(openAdd = true, returnTo = Screen.ReturnTo.Main(s.dateIso)) }
                 )
             }
             is Screen.MealTime -> {
@@ -151,7 +179,8 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
             Screen.Settings -> {
                 SettingsScreen(
                     onBack = { screen = Screen.Main(currentDateIso()) },
-                    onOpenMealsList = { screen = Screen.MealsList }
+                    onOpenMealsList = { screen = Screen.MealsList },
+                    onOpenWeightList = { screen = Screen.WeightList(returnTo = Screen.ReturnTo.Settings) }
                 )
             }
             Screen.MealsList -> {
@@ -170,8 +199,13 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                 )
             }
             is Screen.ExerciseList -> {
-                val vm = remember(exerciseRepo, s.dateIso, refreshToggle) { com.emilflach.lokcal.viewmodel.ExerciseListViewModel(exerciseRepo, s.dateIso) }
-                com.emilflach.lokcal.ui.screens.ExerciseListScreen(
+                val vm = remember(exerciseRepo, s.dateIso, refreshToggle) {
+                    ExerciseListViewModel(
+                        exerciseRepo,
+                        s.dateIso
+                    )
+                }
+                ExerciseListScreen(
                     viewModel = vm,
                     onBack = { screen = Screen.Main(s.dateIso) },
                     onAdd = { screen = Screen.ExerciseAdd(s.dateIso) },
@@ -179,20 +213,50 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                 )
             }
             is Screen.ExerciseAdd -> {
-                val exVm = remember(exerciseRepo, s.dateIso) { com.emilflach.lokcal.viewmodel.ExerciseViewModel(exerciseRepo, s.dateIso) }
-                com.emilflach.lokcal.ui.screens.ExerciseScreen(
+                val exVm = remember(exerciseRepo, s.dateIso) {
+                    ExerciseViewModel(
+                        exerciseRepo,
+                        s.dateIso
+                    )
+                }
+                ExerciseScreen(
                     viewModel = exVm,
                     onBack = { screen = Screen.ExerciseList(s.dateIso) },
                     onSaved = { screen = Screen.ExerciseList(s.dateIso); refreshToggle = !refreshToggle }
                 )
             }
             is Screen.EditExercise -> {
-                val vm = remember(exerciseRepo, s.exerciseId, refreshToggle) { com.emilflach.lokcal.viewmodel.EditExerciseViewModel(exerciseRepo, s.exerciseId) }
-                com.emilflach.lokcal.ui.screens.EditExerciseScreen(
+                val vm = remember(exerciseRepo, s.exerciseId, refreshToggle) {
+                    EditExerciseViewModel(
+                        exerciseRepo,
+                        s.exerciseId
+                    )
+                }
+                EditExerciseScreen(
                     viewModel = vm,
                     onBack = { screen = Screen.ExerciseList(s.dateIso) },
                     onSaved = { screen = Screen.ExerciseList(s.dateIso); refreshToggle = !refreshToggle },
                     onDeleted = { screen = Screen.ExerciseList(s.dateIso); refreshToggle = !refreshToggle }
+                )
+            }
+            is Screen.WeightList -> {
+                val vm = remember(weightRepo, s.openAdd, refreshToggle) {
+                    WeightListViewModel(
+                        weightRepo
+                    )
+                }
+                val onBackAction: () -> Unit = when (val r = s.returnTo) {
+                    is Screen.ReturnTo.Settings -> {
+                        { screen = Screen.Settings }
+                    }
+                    is Screen.ReturnTo.Main -> {
+                        { screen = Screen.Main(r.dateIso); refreshToggle = !refreshToggle }
+                    }
+                }
+                WeightListScreen(
+                    viewModel = vm,
+                    onBack = onBackAction,
+                    openAdd = s.openAdd
                 )
             }
         }

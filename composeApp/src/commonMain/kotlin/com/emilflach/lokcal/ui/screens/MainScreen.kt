@@ -49,6 +49,7 @@ fun MainScreen(
     onOpenMeal: (String, String) -> Unit,
     onOpenExercise: (String) -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenWeightToday: () -> Unit,
 ) {
     val summaries by viewModel.summaries.collectAsState()
     val eaten by viewModel.eatenKcal.collectAsState()
@@ -57,6 +58,7 @@ fun MainScreen(
     val exerciseTotal by viewModel.exerciseTotalKcal.collectAsState()
     val exerciseSummary by viewModel.exerciseSummaryText.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
+    val showWeightPrompt by viewModel.showWeightPrompt.collectAsState()
 
     val density = LocalDensity.current
     val colors = LocalRecipesColors.current
@@ -142,6 +144,23 @@ fun MainScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(8.dp))
+
+                // Thursday prompt to log weight (from view model)
+                if (showWeightPrompt) {
+                    Spacer(Modifier.height(8.dp))
+                    Surface(
+                        color = colors.backgroundSurface1,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(colors.backgroundPage)
+                            .clip(MaterialTheme.shapes.large)
+                            .clickable { onOpenWeightToday() }
+                    ) {
+                        Column(Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
+                            Text("It's Thursday, log your weight!", style = MaterialTheme.typography.titleMedium)
+                        }
+                    }
+                }
 
             }
 

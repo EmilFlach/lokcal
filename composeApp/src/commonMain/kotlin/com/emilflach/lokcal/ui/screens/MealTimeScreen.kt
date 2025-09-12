@@ -51,6 +51,7 @@ import com.emilflach.lokcal.viewmodel.MealTimeViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SaveMealAction(viewModel: MealTimeViewModel) {
+    val c = LocalRecipesColors.current
     var show by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
     var portions by remember { mutableStateOf("1") }
@@ -61,6 +62,7 @@ fun SaveMealAction(viewModel: MealTimeViewModel) {
 
     if (show) {
         AlertDialog(
+            containerColor = c.backgroundSurface1,
             onDismissRequest = { show = false },
             title = { Text("Save as meal") },
             text = {
@@ -71,7 +73,7 @@ fun SaveMealAction(viewModel: MealTimeViewModel) {
                         onValueChange = { name = it },
                         singleLine = true,
                     )
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(32.dp))
                     Text(text = "Total portions")
                     OutlinedTextField(
                         value = portions,
