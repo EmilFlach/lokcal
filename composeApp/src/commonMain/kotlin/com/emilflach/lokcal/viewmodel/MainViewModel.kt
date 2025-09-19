@@ -19,6 +19,7 @@ class MainViewModel(
     private val intakeRepo: IntakeRepository,
     private val exerciseRepo: ExerciseRepository,
     private val weightRepo: WeightRepository,
+    private val settingsRepo: com.emilflach.lokcal.data.SettingsRepository,
     initialDateIso: String
 ) {
     data class MealSummary(
@@ -91,7 +92,7 @@ class MainViewModel(
 
         // Update derived totals
         val eaten = _summaries.value.sumOf { it.totalKcal }.coerceAtLeast(0.0)
-        val start = 1690.0
+        val start = settingsRepo.getStartingKcal()
         val burned = _exerciseTotalKcal.value
         val totalBudget = start + burned
         val left = totalBudget - eaten

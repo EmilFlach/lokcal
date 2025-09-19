@@ -2,38 +2,14 @@ package com.emilflach.lokcal
 
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import com.emilflach.lokcal.data.FoodRepository
-import com.emilflach.lokcal.data.IntakeRepository
-import com.emilflach.lokcal.data.MealRepository
-import com.emilflach.lokcal.data.SqlDriverFactory
-import com.emilflach.lokcal.data.createDatabase
+import androidx.compose.runtime.*
+import com.emilflach.lokcal.data.*
 import com.emilflach.lokcal.theme.AppTheme
 import com.emilflach.lokcal.theme.LocalRecipesColors
-import com.emilflach.lokcal.ui.screens.EditExerciseScreen
-import com.emilflach.lokcal.ui.screens.EditMealScreen
-import com.emilflach.lokcal.ui.screens.ExerciseListScreen
-import com.emilflach.lokcal.ui.screens.ExerciseScreen
-import com.emilflach.lokcal.ui.screens.IntakeScreen
-import com.emilflach.lokcal.ui.screens.MainScreen
-import com.emilflach.lokcal.ui.screens.MealTimeScreen
-import com.emilflach.lokcal.ui.screens.MealsListScreen
-import com.emilflach.lokcal.ui.screens.SettingsScreen
-import com.emilflach.lokcal.ui.screens.WeightListScreen
+import com.emilflach.lokcal.ui.screens.*
 import com.emilflach.lokcal.util.SystemBackHandler
 import com.emilflach.lokcal.util.currentDateIso
-import com.emilflach.lokcal.viewmodel.EditExerciseViewModel
-import com.emilflach.lokcal.viewmodel.EditMealViewModel
-import com.emilflach.lokcal.viewmodel.ExerciseListViewModel
-import com.emilflach.lokcal.viewmodel.ExerciseViewModel
-import com.emilflach.lokcal.viewmodel.IntakeViewModel
-import com.emilflach.lokcal.viewmodel.MainViewModel
-import com.emilflach.lokcal.viewmodel.MealTimeViewModel
-import com.emilflach.lokcal.viewmodel.WeightListViewModel
+import com.emilflach.lokcal.viewmodel.*
 
 private sealed class Screen {
     data class Main(val dateIso: String) : Screen()
@@ -64,8 +40,9 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
     val foodRepo = remember(database) { FoodRepository(database) }
     val intakeRepo = remember(database) { IntakeRepository(database) }
     val mealRepo = remember(database) { MealRepository(database) }
-    val exerciseRepo = remember(database) { com.emilflach.lokcal.data.ExerciseRepository(database) }
-    val weightRepo = remember(database) { com.emilflach.lokcal.data.WeightRepository(database) }
+    val exerciseRepo = remember(database) { ExerciseRepository(database) }
+    val weightRepo = remember(database) { WeightRepository(database) }
+    val settingsRepo = remember(database) { SettingsRepository(database) }
 
     var screen by remember { mutableStateOf<Screen>(Screen.Main(currentDateIso())) }
     var refreshToggle by remember { mutableStateOf(false) }
@@ -137,7 +114,7 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
         when (val s = screen) {
             is Screen.Main -> {
                 // Recreate VM when refreshToggle changes
-                val vm = remember(intakeRepo, exerciseRepo, weightRepo, s.dateIso, refreshToggle) { MainViewModel(intakeRepo, exerciseRepo, weightRepo, s.dateIso) }
+                val vm = remember(intakeRepo, exerciseRepo, weightRepo, settingsRepo, s.dateIso, refreshToggle) { MainViewModel(intakeRepo, exerciseRepo, weightRepo, settingsRepo, s.dateIso) }
                 MainScreen(
                     viewModel = vm,
                     onOpenMeal = { meal, dateIso -> screen = Screen.MealTime(meal, dateIso) },
@@ -180,7 +157,8 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                 SettingsScreen(
                     onBack = { screen = Screen.Main(currentDateIso()) },
                     onOpenMealsList = { screen = Screen.MealsList },
-                    onOpenWeightList = { screen = Screen.WeightList(returnTo = Screen.ReturnTo.Settings) }
+                    onOpenWeightList = { screen = Screen.WeightList(returnTo = Screen.ReturnTo.Settings) },
+                    settingsRepo = settingsRepo
                 )
             }
             Screen.MealsList -> {
