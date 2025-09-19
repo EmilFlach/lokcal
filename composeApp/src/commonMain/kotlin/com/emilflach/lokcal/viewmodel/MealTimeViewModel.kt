@@ -22,6 +22,8 @@ class MealTimeViewModel(
         val totalKcal: Double = 0.0,
         val totalKcalLabel: String = LabelService().kcalLabel(0.0),
         val yesterdayItems: List<Intake> = emptyList(),
+        val leftoversItems: List<Intake> = emptyList(),
+        val isMarkedLeftover: Boolean = false,
     )
 
     private val _state = MutableStateFlow(UiState())
@@ -45,11 +47,11 @@ class MealTimeViewModel(
         val yesterdayDate = LocalDate.parse(dateIso).plus(-1, DateTimeUnit.DAY).toString()
         val yStartIso = "${yesterdayDate}T00:00:00"
         val yEndIso = "${yesterdayDate}T23:59:59"
+
+        val todayFoodIds = list.mapNotNull { it.source_food_id }.toSet()
+        val todayMealIds = list.mapNotNull { it.source_meal_id }.toSet()
         val yesterdayList = intakeRepo.getIntakeByMealAndDateRange(mealType, yStartIso, yEndIso)
             .let { yList ->
-                // Exclude items already logged today in the same meal time
-                val todayFoodIds = list.mapNotNull { it.source_food_id }.toSet()
-                val todayMealIds = list.mapNotNull { it.source_meal_id }.toSet()
                 yList.filter { y ->
                     when {
                         y.source_food_id != null -> y.source_food_id !in todayFoodIds
@@ -61,11 +63,28 @@ class MealTimeViewModel(
                 .distinctBy { y -> y.source_food_id?.let { "F:$it" } ?: y.source_meal_id?.let { "M:$it" } }
             }
 
+        val leftoversRaw = intakeRepo.getAllLeftoverIntakesExcludingDate()
+        val yesterdayFoodIds = yesterdayList.mapNotNull { it.source_food_id }.toSet()
+        val yesterdayMealIds = yesterdayList.mapNotNull { it.source_meal_id }.toSet()
+        val leftoversList = leftoversRaw
+            .filter { y ->
+                when {
+                    y.source_food_id != null -> y.source_food_id !in todayFoodIds && y.source_food_id !in yesterdayFoodIds
+                    y.source_meal_id != null -> y.source_meal_id !in todayMealIds && y.source_meal_id !in yesterdayMealIds
+                    else -> true
+                }
+            }
+            .distinctBy { y -> y.source_food_id?.let { "F:$it" } ?: y.source_meal_id?.let { "M:$it" } }
+
+        val isMarked = intakeRepo.isLeftoversMarkedForMealTypeOnDate(mealType, dateIso)
+
         _state.value = UiState(
             items = list,
             totalKcal = total,
             totalKcalLabel = LabelService().kcalLabel(total),
-            yesterdayItems = yesterdayList
+            yesterdayItems = yesterdayList,
+            leftoversItems = leftoversList,
+            isMarkedLeftover = isMarked,
         )
     }
 
@@ -117,11 +136,35 @@ class MealTimeViewModel(
         loadForSelectedDate()
     }
 
+    fun addFoodSuggestionFromLeftover(foodId: Long, gramsText: String, source: Intake) {
+        val grams = parseDecimal(gramsText, min = 0.0)
+        intakeRepo.logOrUpdateFoodIntake(foodId, grams, mealType, dateIso)
+        // Clear leftover flag only for the selected leftover item
+        intakeRepo.setLeftoverFlagById(source.id, false)
+        loadForSelectedDate()
+    }
+
     fun addMealSuggestion(mealId: Long, portionsText: String) {
         val portions = parseDecimal(portionsText, min = 0.0)
         val portionG = portionForMeal(mealId)
         val grams = (portions * portionG).coerceAtLeast(0.0)
         intakeRepo.logOrUpdateMealIntake(mealId, grams, mealType, dateIso)
+        loadForSelectedDate()
+    }
+
+    fun addMealSuggestionFromLeftover(mealId: Long, portionsText: String, source: Intake) {
+        val portions = parseDecimal(portionsText, min = 0.0)
+        val portionG = portionForMeal(mealId)
+        val grams = (portions * portionG).coerceAtLeast(0.0)
+        intakeRepo.logOrUpdateMealIntake(mealId, grams, mealType, dateIso)
+        // Clear leftover flag only for the selected leftover item
+        intakeRepo.setLeftoverFlagById(source.id, false)
+        loadForSelectedDate()
+    }
+
+    fun toggleLeftovers() {
+        val current = state.value.isMarkedLeftover
+        if (current) intakeRepo.setLeftoversForMealTypeOnDate(mealType, dateIso, false) else intakeRepo.setLeftoversForMealTypeOnDate(mealType, dateIso, true)
         loadForSelectedDate()
     }
 }

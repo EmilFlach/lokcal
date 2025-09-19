@@ -10,6 +10,7 @@ CREATE TABLE Intake (
     item_name TEXT NOT NULL,
     energy_kcal_total REAL NOT NULL,
     notes TEXT,
+    leftover INTEGER NOT NULL DEFAULT 0,
     CHECK (
         (source_type = 'FOOD' AND source_food_id IS NOT NULL AND source_meal_id IS NULL) OR
         (source_type = 'MEAL' AND source_meal_id IS NOT NULL AND source_food_id IS NULL)
@@ -62,4 +63,12 @@ JOIN (
 ) r ON r.food_id = f.id
 ORDER BY r.frequency DESC
 LIMIT ?;
+
+-- Update leftover flag for a specific intake row
+updateLeftoverById:
+UPDATE Intake SET leftover = ? WHERE id = ?;
+
+-- Select all leftover intakes
+selectAllLeftovers:
+SELECT * FROM Intake WHERE leftover = 1 ORDER BY timestamp DESC;
 

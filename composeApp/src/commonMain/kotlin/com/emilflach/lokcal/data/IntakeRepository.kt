@@ -1,6 +1,7 @@
 package com.emilflach.lokcal.data
 
 import com.emilflach.lokcal.Database
+import com.emilflach.lokcal.Intake
 import com.emilflach.lokcal.Meal
 import com.emilflach.lokcal.util.currentDateIso
 
@@ -18,6 +19,27 @@ class IntakeRepository(database: Database) {
         intakeQ.selectIntakeByMealAndDateRange(mealType, startIso, endIso).executeAsList()
 
     fun deleteIntakeById(id: Long) = intakeQ.deleteIntakeById(id)
+
+    fun setLeftoversForMealTypeOnDate(mealType: String, dateIso: String, enabled: Boolean) {
+        val (start, end) = todayRange(dateIso)
+        val todays = getIntakeByMealAndDateRange(mealType, start, end)
+        todays.forEach { row ->
+            intakeQ.updateLeftoverById(if (enabled) 1 else 0, row.id)
+        }
+    }
+
+    fun isLeftoversMarkedForMealTypeOnDate(mealType: String, dateIso: String): Boolean {
+        val (start, end) = todayRange(dateIso)
+        val todays = getIntakeByMealAndDateRange(mealType, start, end)
+        return todays.any { it.leftover != 0L }
+    }
+
+    fun getAllLeftoverIntakesExcludingDate(dateIso: String? = null): List<Intake> {
+        val all = intakeQ.selectAllLeftovers().executeAsList()
+        if(dateIso == null) return all
+        return all.filterNot { it.timestamp.startsWith(dateIso) }
+    }
+
 
     // Simplified logging with automatic merging
     fun logOrUpdateFoodIntake(foodId: Long, quantityG: Double, mealType: String, dateIso: String) {
@@ -182,5 +204,10 @@ class IntakeRepository(database: Database) {
     private fun todayRange(dateIso: String? = null): Pair<String, String> {
         val date = dateIso ?: currentDateIso()
         return "${date}T00:00:00" to "${date}T23:59:59"
+    }
+
+    // Flip leftover for a specific intake row
+    fun setLeftoverFlagById(id: Long, enabled: Boolean) {
+        intakeQ.updateLeftoverById(if (enabled) 1 else 0, id)
     }
 }

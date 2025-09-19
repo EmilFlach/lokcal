@@ -124,6 +124,10 @@ private fun ensureWeightSchemaUpgrades(driver: SqlDriver) {
     )
 }
 
+private fun ensureIntakeSchemaUpgrades(driver: SqlDriver) {
+    tryExec(driver, "ALTER TABLE Intake ADD COLUMN leftover INTEGER NOT NULL DEFAULT 0")
+}
+
 fun createDatabase(sqlDriverFactory: SqlDriverFactory): Database {
     val driver = sqlDriverFactory.createDriver()
 
@@ -134,7 +138,11 @@ fun createDatabase(sqlDriverFactory: SqlDriverFactory): Database {
     ensureFoodSchemaUpgrades(driver)
     ensureMealSchemaUpgrades(driver)
     ensureExerciseSchemaUpgrades(driver)
-        ensureWeightSchemaUpgrades(driver)
+    ensureWeightSchemaUpgrades(driver)
+    ensureIntakeSchemaUpgrades(driver)
+
+    // Ensure Intake leftover column exists for older databases (best-effort)
+
 
     val database = Database(driver)
     // Seed initial data on first launch

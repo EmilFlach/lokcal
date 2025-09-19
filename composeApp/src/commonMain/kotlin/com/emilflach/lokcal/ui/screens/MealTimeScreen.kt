@@ -1,49 +1,24 @@
 package com.emilflach.lokcal.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FabPosition
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.BookmarkRemove
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.outlined.BookmarkAdd
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emilflach.lokcal.theme.LocalRecipesColors
-import com.emilflach.lokcal.ui.components.GramQuantityControls
-import com.emilflach.lokcal.ui.components.GramTextField
-import com.emilflach.lokcal.ui.components.IntakeListItem
-import com.emilflach.lokcal.ui.components.MealTimeItem
-import com.emilflach.lokcal.ui.components.MealTopBar
-import com.emilflach.lokcal.ui.components.PortionQuantityControls
-import com.emilflach.lokcal.ui.components.PortionsTextField
+import com.emilflach.lokcal.ui.components.*
 import com.emilflach.lokcal.util.NumberUtils
 import com.emilflach.lokcal.util.NumberUtils.sanitizeDecimalInput
 import com.emilflach.lokcal.viewmodel.MealTimeViewModel
@@ -57,7 +32,7 @@ fun SaveMealAction(viewModel: MealTimeViewModel) {
     var portions by remember { mutableStateOf("1") }
 
     IconButton(onClick = { show = true }) {
-        Icon(imageVector = Icons.Filled.Add, contentDescription = "Save as meal")
+        Icon(imageVector = Icons.Filled.Save, contentDescription = "Save as meal")
     }
 
     if (show) {
@@ -114,6 +89,13 @@ fun MealTimeScreen(
                 onBack = onBack,
                 showSearch = false,
                 trailingActions = {
+                    // Toggle leftovers marker for this meal/date
+                    val isLeftover = state.isMarkedLeftover
+                    IconToggleButton(checked = isLeftover, onCheckedChange = { viewModel.toggleLeftovers() }) {
+                        Icon(
+                            imageVector = if(isLeftover) Icons.Filled.BookmarkRemove else Icons.Outlined.BookmarkAdd,
+                            contentDescription = "Toggle leftovers")
+                    }
                     SaveMealAction(viewModel)
                 }
             )
@@ -261,6 +243,78 @@ fun MealTimeScreen(
                                 onAddClick = {
                                     val gramsText = gramsById[keyId] ?: initialGrams
                                     viewModel.addFoodSuggestion(foodId, gramsText)
+                                },
+                                inputField = { tf, requester, onValueChange, onDone ->
+                                    GramTextField(tf, requester, onValueChange, onDone)
+                                }
+                            )
+                        }
+                        Spacer(Modifier.height(4.dp))
+                    }
+
+                    val leftovers = state.leftoversItems
+                    val leftoversSize = leftovers.size
+                    item {
+                        if (!leftovers.isEmpty()) {
+                            Spacer(Modifier.height(32.dp))
+                            Text(
+                                text = "Leftovers",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = c.foregroundDefault
+                            )
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    }
+                    itemsIndexed(items = leftovers) { index, intake ->
+                        if (intake.source_meal_id != null) {
+                            val mealId = intake.source_meal_id
+                            val keyId = -mealId - 10_000 // ensure unique from yesterday section
+                            val portionG = viewModel.portionForMeal(mealId)
+                            val portions = if (portionG > 0.0) intake.quantity_g / portionG else 0.0
+                            val initialPortions = gramsById.getOrPut(keyId) { NumberUtils.formatPortions(portions) }
+                            val portionsText = gramsById[keyId] ?: NumberUtils.formatPortions(portions)
+                            val portionsVal = NumberUtils.parseDecimal(portionsText)
+                            val liveGrams = (portionsVal * portionG).coerceAtLeast(0.0)
+                            val subtitle = viewModel.subtitleForMealSuggestion(mealId, liveGrams)
+                            IntakeListItem(
+                                name = intake.item_name,
+                                subtitle = subtitle,
+                                keyId = keyId,
+                                initialValue = initialPortions,
+                                showBorder = true,
+                                addButtonDescription = "Add",
+                                index = index,
+                                size = leftoversSize,
+                                requesters = requesters,
+                                gramsById = gramsById,
+                                onAddClick = {
+                                    val portionsText2 = gramsById[keyId] ?: initialPortions
+                                    viewModel.addMealSuggestionFromLeftover(mealId, portionsText2, intake)
+                                },
+                                inputField = { tf, requester, onValueChange, onDone ->
+                                    PortionsTextField(tf, requester, onValueChange, onDone)
+                                }
+                            )
+                        } else if (intake.source_food_id != null) {
+                            val foodId = intake.source_food_id
+                            val keyId = foodId + 10_000 // ensure unique
+                            val initialGrams = gramsById.getOrPut(keyId) { intake.quantity_g.toInt().toString() }
+                            val gramsText = gramsById[keyId] ?: intake.quantity_g.toInt().toString()
+                            val gramsVal = NumberUtils.parseDecimal(gramsText)
+                            val subtitle = viewModel.subtitleForFoodSuggestion(foodId, gramsVal)
+                            IntakeListItem(
+                                name = intake.item_name,
+                                subtitle = subtitle,
+                                keyId = keyId,
+                                initialValue = initialGrams,
+                                addButtonDescription = "Add",
+                                index = index,
+                                size = leftoversSize,
+                                requesters = requesters,
+                                gramsById = gramsById,
+                                onAddClick = {
+                                    val gramsText2 = gramsById[keyId] ?: initialGrams
+                                    viewModel.addFoodSuggestionFromLeftover(foodId, gramsText2, intake)
                                 },
                                 inputField = { tf, requester, onValueChange, onDone ->
                                     GramTextField(tf, requester, onValueChange, onDone)
