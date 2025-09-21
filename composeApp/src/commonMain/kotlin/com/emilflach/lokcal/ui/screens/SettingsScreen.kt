@@ -19,6 +19,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onOpenMealsList: () -> Unit,
     onOpenWeightList: () -> Unit,
+    onOpenFoodManage: () -> Unit,
     settingsRepo: SettingsRepository,
 ) {
     val colors = LocalRecipesColors.current
@@ -51,6 +52,10 @@ fun SettingsScreen(
             ListItem(
                 headlineContent = { Text("Manage meals") },
                 modifier = Modifier.clickable { onOpenMealsList() }
+            )
+            ListItem(
+                headlineContent = { Text("Manage foods") },
+                modifier = Modifier.clickable { onOpenFoodManage() }
             )
             ListItem(
                 headlineContent = { Text("Weight log") },

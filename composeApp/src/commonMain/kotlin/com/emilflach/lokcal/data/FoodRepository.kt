@@ -9,6 +9,67 @@ class FoodRepository(database: Database) {
 
     fun getAll(): List<Food> = queries.selectAll().executeAsList()
 
+    fun getById(id: Long): Food? = queries.selectById(id).executeAsOneOrNull()
+
+    fun updateDetails(
+        id: Long,
+        name: String,
+        brandName: String?,
+        energyKcalPer100g: Double,
+        productUrl: String?,
+        imageUrl: String?,
+        gtin13: String?,
+        servingSize: String?,
+        englishName: String?,
+        dutchName: String?,
+        source: String?,
+    ) {
+        queries.updateDetails(
+            name = name,
+            brand_name = brandName,
+            energy_kcal_per_100g = energyKcalPer100g,
+            product_url = productUrl,
+            image_url = imageUrl,
+            gtin13 = gtin13,
+            serving_size = servingSize,
+            english_name = englishName,
+            dutch_name = dutchName,
+            source = source,
+            id = id
+        )
+    }
+
+    fun insertManual(
+        name: String,
+        brandName: String?,
+        energyKcalPer100g: Double,
+        productUrl: String?,
+        imageUrl: String?,
+        gtin13: String?,
+        servingSize: String?,
+        englishName: String?,
+        dutchName: String?,
+        source: String?,
+    ): Long {
+        queries.insertManual(
+            name = name,
+            brand_name = brandName,
+            energy_kcal_per_100g = energyKcalPer100g,
+            product_url = productUrl,
+            image_url = imageUrl,
+            gtin13 = gtin13,
+            serving_size = servingSize,
+            english_name = englishName,
+            dutch_name = dutchName,
+            source = source
+        )
+        return queries.selectLastInsertRowId().executeAsOne()
+    }
+
+    fun delete(id: Long) {
+        queries.deleteById(id)
+    }
+
     fun search(query: String): List<Food> {
         val q = query.trim()
         if (q.isEmpty()) return emptyList()

@@ -38,9 +38,6 @@ SELECT * FROM Food;
 insert:
 INSERT INTO Food(name, description) VALUES (?, ?);
 
-insertFull:
-INSERT INTO Food(name, description, energy_kcal_per_100g) VALUES (?, ?, ?);
-
 -- Seed-time insert setting structured fields as available
 insertFromSeed:
 INSERT INTO Food(
@@ -59,6 +56,19 @@ INSERT INTO FoodAlias(food_id, alias) VALUES (?, ?);
 
 selectById:
 SELECT * FROM Food WHERE id = ?;
+
+deleteById:
+DELETE FROM Food WHERE id = ?;
+
+updateDetails:
+UPDATE Food SET name = ?, brand_name = ?, energy_kcal_per_100g = ?, product_url = ?, image_url = ?, gtin13 = ?, serving_size = ?, english_name = ?, dutch_name = ?, source = ? WHERE id = ?;
+
+insertManual:
+INSERT INTO Food(name, brand_name, energy_kcal_per_100g, product_url, image_url, gtin13, serving_size, english_name, dutch_name, source)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+selectLastInsertRowId:
+SELECT last_insert_rowid();
 
 -- Multi-field, case-insensitive search across key name/brand fields
 searchByAny:

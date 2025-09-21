@@ -19,6 +19,8 @@ private sealed class Screen {
     // Settings flow
     data object Settings : Screen()
     data object MealsList : Screen()
+    data object FoodManage : Screen()
+    data class FoodEdit(val foodId: Long?) : Screen()
     data class EditMealFromList(val mealId: Long) : Screen()
     // Exercise flow
     data class ExerciseList(val dateIso: String) : Screen()
@@ -81,6 +83,14 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
             }
             Screen.MealsList -> {
                 screen = Screen.Settings
+                refreshToggle = !refreshToggle
+            }
+            Screen.FoodManage -> {
+                screen = Screen.Settings
+                refreshToggle = !refreshToggle
+            }
+            is Screen.FoodEdit -> {
+                screen = Screen.FoodManage
                 refreshToggle = !refreshToggle
             }
             is Screen.EditMealFromList -> {
@@ -153,11 +163,30 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                     onDeleted = { screen = Screen.MealTime(s.returnMealType, s.dateIso); refreshToggle = !refreshToggle }
                 )
             }
+            Screen.FoodManage -> {
+                val foodVm = remember(foodRepo, refreshToggle) { FoodEditViewModel(foodRepo) }
+                FoodManageScreen(
+                    viewModel = foodVm,
+                    onBack = { screen = Screen.Settings },
+                    onOpenEdit = { id -> screen = Screen.FoodEdit(id) }
+                )
+            }
+            is Screen.FoodEdit -> {
+                val foodVm = remember(foodRepo, refreshToggle) { FoodEditViewModel(foodRepo) }
+                FoodEditScreen(
+                    viewModel = foodVm,
+                    foodId = s.foodId,
+                    onBack = { screen = Screen.FoodManage },
+                    onSaved = { screen = Screen.FoodManage; refreshToggle = !refreshToggle },
+                    onDeleted = { screen = Screen.FoodManage; refreshToggle = !refreshToggle }
+                )
+            }
             Screen.Settings -> {
                 SettingsScreen(
                     onBack = { screen = Screen.Main(currentDateIso()) },
                     onOpenMealsList = { screen = Screen.MealsList },
                     onOpenWeightList = { screen = Screen.WeightList(returnTo = Screen.ReturnTo.Settings) },
+                    onOpenFoodManage = { screen = Screen.FoodManage },
                     settingsRepo = settingsRepo
                 )
             }
