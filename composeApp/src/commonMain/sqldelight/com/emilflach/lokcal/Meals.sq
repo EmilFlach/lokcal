@@ -50,7 +50,6 @@ WHERE mi.meal_id = ?;
 mealSearchByAny:
 SELECT * FROM Meal
 WHERE lower(name) LIKE ?
-   OR lower(description) LIKE ?
 ORDER BY name;
 
 -- Update meal meta fields
