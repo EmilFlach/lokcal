@@ -30,6 +30,6 @@ actual fun enableNightlyBackup(value: Boolean): Boolean {
     TODO("Not yet implemented")
 }
 
-actual fun isNightlyBackupEnabled(): Boolean {
+actual suspend fun isNightlyBackupEnabled(): Boolean {
     TODO("Not yet implemented")
 }
