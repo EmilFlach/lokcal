@@ -40,12 +40,6 @@ class MainViewModel(
     private val _selectedDate = MutableStateFlow(LocalDate.parse(initialDateIso))
     val selectedDate: StateFlow<LocalDate> = _selectedDate.asStateFlow()
 
-    // Exercise card info for main screen
-    private val _exerciseTotalKcal = MutableStateFlow(0.0)
-    val exerciseTotalKcal: StateFlow<Double> = _exerciseTotalKcal.asStateFlow()
-    private val _exerciseSummaryText = MutableStateFlow("")
-    val exerciseSummaryText: StateFlow<String> = _exerciseSummaryText.asStateFlow()
-
     // Derived totals for the header
     private val _eatenKcal = MutableStateFlow(0.0)
     val eatenKcal: StateFlow<Double> = _eatenKcal.asStateFlow()
@@ -65,17 +59,16 @@ class MainViewModel(
 
     init {
         loadFor(_selectedDate.value)
-        if (HealthManager.arePermissionsGranted()) {
-            fetchAndLogHealthData()
-        }
     }
 
-    private fun fetchAndLogHealthData() {
-        viewModelScope.launch {
-            val steps = HealthManager.readSteps()
-            if (steps > -1) {
-                exerciseRepo.logAutomaticSteps(steps)
-                loadFor(_selectedDate.value)
+    fun fetchAndLogHealthData() {
+        if(HealthManager.arePermissionsGranted()) {
+            viewModelScope.launch {
+                val steps = HealthManager.readSteps()
+                if (steps > -1) {
+                    exerciseRepo.logAutomaticSteps(steps)
+                    loadFor(_selectedDate.value)
+                }
             }
         }
     }
@@ -105,15 +98,11 @@ class MainViewModel(
                 summaryText = buildMealSummary(list)
             )
         }
-        // Exercise summary
-        val exercises = exerciseRepo.getByDateRange(startIso, endIso)
-        _exerciseTotalKcal.value = exercises.sumOf { it.energy_kcal_total }
-        _exerciseSummaryText.value = buildExerciseSummary(exercises.map { it.exercise_type to it.duration_min })
 
-        // Update derived totals
+        val exercises = exerciseRepo.getByDateRange(startIso, endIso)
         val eaten = _summaries.value.sumOf { it.totalKcal }.coerceAtLeast(0.0)
         val start = settingsRepo.getStartingKcal()
-        val burned = _exerciseTotalKcal.value
+        val burned = exercises.sumOf { it.energy_kcal_total }
         val totalBudget = start + burned
         val left = totalBudget - eaten
         _eatenKcal.value = eaten
@@ -132,20 +121,5 @@ class MainViewModel(
             .sortedByDescending { it.value }
             .take(6)
         return counts.joinToString(", ") { (name, count) -> if (count > 1) "$name x$count" else name }
-    }
-
-    private fun buildExerciseSummary(pairs: List<Pair<String, Double>>): String {
-        if (pairs.isEmpty()) return ""
-        val byType = pairs.groupBy { it.first }.mapValues { it.value.sumOf { p -> p.second } }
-        val parts = byType.entries.sortedByDescending { it.value }.take(3).map { (type, min) ->
-            val label = when (type) {
-                "WALKING" -> "Walking"
-                "RUNNING" -> "Running"
-                "AUTOMATIC_STEPS" -> "Step counter"
-                else -> type
-            }
-            "$label ${min.toInt()} min"
-        }
-        return parts.joinToString(", ")
     }
 }

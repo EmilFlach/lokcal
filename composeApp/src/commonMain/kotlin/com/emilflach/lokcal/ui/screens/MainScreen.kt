@@ -1,35 +1,19 @@
 package com.emilflach.lokcal.ui.screens
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -37,11 +21,15 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.ParticleBackground
 import com.emilflach.lokcal.viewmodel.MainViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(
@@ -55,8 +43,6 @@ fun MainScreen(
     val eaten by viewModel.eatenKcal.collectAsState()
     val left by viewModel.leftKcal.collectAsState()
     val burned by viewModel.burnedKcal.collectAsState()
-    val exerciseTotal by viewModel.exerciseTotalKcal.collectAsState()
-    val exerciseSummary by viewModel.exerciseSummaryText.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
     val showWeightPrompt by viewModel.showWeightPrompt.collectAsState()
 
@@ -64,6 +50,26 @@ fun MainScreen(
     val colors = LocalRecipesColors.current
     val thresholdPx = remember(density) { with(density) { 64.dp.toPx() } }
     val particleCount = remember(eaten) { eaten.toInt() }
+    val coroutineScope = rememberCoroutineScope()
+    var animationTrigger by remember { mutableStateOf(0) }
+
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchAndLogHealthData()
+    }
+
+    DisposableEffect(Unit) {
+        val job = coroutineScope.launch {
+            while (isActive) {
+                delay(10000)
+                viewModel.fetchAndLogHealthData()
+                animationTrigger++
+            }
+        }
+        onDispose {
+            job.cancel()
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         ParticleBackground(
@@ -100,19 +106,18 @@ fun MainScreen(
             ) {
                 Row (
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment = Alignment.Bottom,
                 ) {
-                    Spacer(Modifier.width(40.dp))
-                    Spacer(Modifier.weight(1f))
+                    Spacer(Modifier.width(16.dp))
                     Text(
                         text = selectedDate.toString(),
                         color = colors.foregroundSupport,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyMedium
                     )
                     Spacer(Modifier.weight(1f))
                     IconButton(
                         onClick = onOpenSettings,
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(24.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Settings,
@@ -120,36 +125,88 @@ fun MainScreen(
                             tint = colors.foregroundSupport,
                         )
                     }
+                    Spacer(Modifier.width(12.dp))
+                }
+                Spacer(Modifier.height(12.dp))
+                Row {
+                    Surface(
+                        color = Color.Transparent,
+                        modifier = Modifier
+                            .weight(4f)
+                            .background(colors.backgroundSurface2, MaterialTheme.shapes.medium)
+                            .padding(16.dp)
+                        ,
+                    ) {
+                        Column {
+                            Text(
+                                text = if (left > 0) "kcal left" else "kcal over",
+                                style = MaterialTheme.typography.titleMedium,
+                                textAlign = TextAlign.Left,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Text(
+                                text = if (left > 0) "${left.toInt()}" else "${left.toInt() * -1}",
+                                style = MaterialTheme.typography.displayLarge,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Left,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                    Spacer(Modifier.width(16.dp))
+
+                    val fadeAlpha = remember { Animatable(1f) }
+                    LaunchedEffect(animationTrigger) {
+                        if (animationTrigger > 0) {
+                            fadeAlpha.animateTo(
+                                targetValue = 0.5f,
+                                animationSpec = tween(durationMillis = 200, easing = LinearEasing)
+                            )
+                            fadeAlpha.animateTo(
+                                targetValue = 1f,
+                                animationSpec = tween(durationMillis = 300, easing = LinearEasing)
+                            )
+
+                        }
+                    }
+
+                    Surface(
+                        color = Color.Transparent,
+                        modifier = Modifier
+                            .weight(3f)
+                            .background(colors.backgroundSurface1, MaterialTheme.shapes.medium)
+                            .clip(MaterialTheme.shapes.medium)
+                            .clickable { onOpenExercise(selectedDate.toString()) }
+                            .padding(16.dp)
+                            .alpha(fadeAlpha.value)
+                    )  {
+                        Column {
+                            Text(
+                                text = "kcal burned",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = colors.foregroundSupport,
+                                textAlign = TextAlign.Left,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Text(
+                                text = burned.toInt().toString(),
+                                style = MaterialTheme.typography.displayLarge,
+                                color = colors.foregroundSupport,
+                                textAlign = TextAlign.Left,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                    }
                 }
 
-                Text(
-                    text = if (left > 0) "${left.toInt()}" else "${left.toInt() * -1}",
-                    style = MaterialTheme.typography.displayLarge,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Text(
-                    text = if (left > 0) "kcal left" else "kcal over",
-                    style = MaterialTheme.typography.titleLarge,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(Modifier.height(16.dp))
-
-                Text(
-                    text = "Eaten: ${eaten.toInt()} kcal, Burned: ${burned.toInt()} kcal",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = colors.foregroundSupport,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
                 Spacer(Modifier.height(8.dp))
 
                 // Thursday prompt to log weight (from view model)
                 if (showWeightPrompt) {
                     Spacer(Modifier.height(8.dp))
                     Surface(
-                        color = colors.backgroundSurface1,
+                        color = colors.backgroundBrand,
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(colors.backgroundPage)
@@ -161,15 +218,10 @@ fun MainScreen(
                         }
                     }
                 }
-
             }
 
-            // Push sections to the bottom
             Spacer(Modifier.weight(1f))
 
-
-
-            // Meal sections displayed at the bottom
             summaries.forEach { s ->
                 Surface(
                     color = Color.Transparent,
@@ -193,7 +245,6 @@ fun MainScreen(
                             }
                         }
                         .clickable { onOpenMeal(s.mealType, selectedDate.toString()) }
-
                 ) {
                     Column(Modifier.padding(horizontal = 16.dp, vertical = 20.dp)) {
                         Row(
@@ -218,49 +269,6 @@ fun MainScreen(
                                 maxLines = 2
                             )
                         }
-                    }
-                }
-            }
-
-            // Exercise summary card
-            Surface(
-                color = Color.Transparent,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp)
-                    .background(colors.backgroundPage)
-                    .clip(MaterialTheme.shapes.large)
-                    .let { modifier ->
-                        if (exerciseTotal.toInt() > 0) {
-                            modifier.drawBehind {
-                                val borderWidth = 2.dp.toPx()
-                                drawRect(
-                                    color = colors.backgroundBrand,
-                                    topLeft = Offset(0f, 0f),
-                                    size = Size(borderWidth, this.size.height)
-                                )
-                            }
-                        } else {
-                            modifier
-                        }
-                    }
-                    .clickable { onOpenExercise(selectedDate.toString()) }
-            ) {
-                Column(Modifier.padding(horizontal = 16.dp, vertical = 20.dp)) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Exercise", style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            "${exerciseTotal.toInt()} kcal",
-                            style = MaterialTheme.typography.titleSmall
-                        )
-                    }
-                    if (exerciseSummary.isNotEmpty()) {
-                        Spacer(Modifier.height(6.dp))
-                        Text(
-                            text = exerciseSummary,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = colors.foregroundSupport
-                        )
                     }
                 }
             }
