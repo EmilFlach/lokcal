@@ -95,21 +95,58 @@ private fun ensureMealSchemaUpgrades(driver: SqlDriver) {
 }
 
 private fun ensureExerciseSchemaUpgrades(driver: SqlDriver) {
-    // Ensure Exercise table exists
-    tryExec(
-        driver,
-        """
-        CREATE TABLE IF NOT EXISTS Exercise (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT NOT NULL,
-            exercise_type TEXT NOT NULL CHECK (exercise_type IN ('WALKING','RUNNING')),
-            duration_min REAL NOT NULL CHECK (duration_min >= 0),
-            energy_kcal_total REAL NOT NULL,
-            notes TEXT
+    // First check if the table exists and if it needs updating
+    try {
+        // Try to insert a dummy record with AUTOMATIC_STEPS to test if the constraint allows it
+        driver.execute(
+            null,
+            "INSERT INTO Exercise(id, timestamp, exercise_type, duration_min, energy_kcal_total, notes) VALUES (NULL, '2000-01-01', 'AUTOMATIC_STEPS', 0, 0, NULL)",
+            0
         )
-        """.trimIndent()
-    )
+        // If we get here, the constraint is already correct, delete the test record
+
+        driver.execute(
+            null,
+            "DELETE FROM Exercise WHERE timestamp = '2000-01-01' AND exercise_type = 'AUTOMATIC_STEPS' AND duration_min = 0",
+            0
+        )
+    } catch (e: Exception) {
+        // Constraint error or table doesn't exist, need to create or update the table
+
+        // Create a new table with the correct constraint
+        tryExec(
+            driver,
+            """
+            CREATE TABLE IF NOT EXISTS Exercise_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT NOT NULL,
+                exercise_type TEXT NOT NULL CHECK (exercise_type IN ('WALKING','RUNNING','AUTOMATIC_STEPS')),
+                duration_min REAL NOT NULL CHECK (duration_min >= 0),
+                energy_kcal_total REAL NOT NULL,
+                notes TEXT
+            )
+            """.trimIndent()
+        )
+
+        // Try to copy data from the old table if it exists
+        tryExec(
+            driver,
+            """
+            INSERT INTO Exercise_new
+            SELECT id, timestamp, exercise_type, duration_min, energy_kcal_total, notes
+            FROM Exercise
+            WHERE exercise_type IN ('WALKING', 'RUNNING')
+            """
+        )
+
+        // Drop the old table
+        tryExec(driver, "DROP TABLE IF EXISTS Exercise")
+
+        // Rename the new table to the original name
+        tryExec(driver, "ALTER TABLE Exercise_new RENAME TO Exercise")
+    }
 }
+
 
 private fun ensureWeightSchemaUpgrades(driver: SqlDriver) {
     tryExec(

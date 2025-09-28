@@ -90,6 +90,7 @@ kotlin {
             implementation(libs.slf4j.simple)
             implementation(libs.androidx.documentfile)
             implementation(libs.androidx.work.runtime)
+            implementation(libs.androidx.connect.client)
         }
 
         jvmMain.dependencies {

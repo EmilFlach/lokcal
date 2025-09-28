@@ -4,9 +4,13 @@ import com.emilflach.lokcal.Intake
 import com.emilflach.lokcal.data.ExerciseRepository
 import com.emilflach.lokcal.data.IntakeRepository
 import com.emilflach.lokcal.data.WeightRepository
+import com.emilflach.lokcal.health.HealthManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
@@ -56,8 +60,24 @@ class MainViewModel(
     private val _showWeightPrompt = MutableStateFlow(false)
     val showWeightPrompt: StateFlow<Boolean> = _showWeightPrompt.asStateFlow()
 
+    private val viewModelScope = CoroutineScope(Dispatchers.Main)
+
+
     init {
         loadFor(_selectedDate.value)
+        if (HealthManager.arePermissionsGranted()) {
+            fetchAndLogHealthData()
+        }
+    }
+
+    private fun fetchAndLogHealthData() {
+        viewModelScope.launch {
+            val steps = HealthManager.readSteps()
+            if (steps > -1) {
+                exerciseRepo.logAutomaticSteps(steps)
+                loadFor(_selectedDate.value)
+            }
+        }
     }
 
     fun nextDay() {
@@ -121,6 +141,7 @@ class MainViewModel(
             val label = when (type) {
                 "WALKING" -> "Walking"
                 "RUNNING" -> "Running"
+                "AUTOMATIC_STEPS" -> "Step counter"
                 else -> type
             }
             "$label ${min.toInt()} min"

@@ -1,12 +1,13 @@
 [versions]
 
 composeCharts = "0.1.11"
+connectClient = "1.2.0-alpha01"
 kotlin = "2.2.20"
 compose = "1.9.0"
 agp = "8.11.2"
 androidx-activityCompose = "1.11.0"
 androidx-uiTest = "1.9.1"
-hotReload = "1.0.0-beta07"
+hotReload = "1.0.0-beta08"
 kotlinx-coroutines = "1.10.2"
 ktor = "3.3.0"
 androidx-navigation = "2.9.0"
@@ -22,6 +23,7 @@ workRuntimeKtx = "2.10.4"
 [libraries]
 
 androidx-activityCompose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
+androidx-connect-client = { module = "androidx.health.connect:connect-client", version.ref = "connectClient" }
 androidx-uitest-testManifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "androidx-uiTest" }
 androidx-uitest-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "androidx-uiTest" }
 compose-charts = { module = "io.github.ehsannarmani:compose-charts", version.ref = "composeCharts" }

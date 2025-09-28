@@ -2,13 +2,15 @@ package com.emilflach.lokcal.data
 
 import com.emilflach.lokcal.Database
 import com.emilflach.lokcal.Exercise
+import com.emilflach.lokcal.util.currentDateIso
 
 class ExerciseRepository(private val db: Database) {
     private val q get() = db.exerciseQueries
 
     enum class Type(val dbName: String, val kcalPerHour: Double) {
         WALKING("WALKING", 200.0),
-        RUNNING("RUNNING", 740.0);
+        RUNNING("RUNNING", 740.0),
+        AUTOMATIC_STEPS("AUTOMATIC_STEPS", 220.0);
         companion object {
             fun fromDb(name: String): Type = entries.first { it.dbName == name }
         }
@@ -26,6 +28,18 @@ class ExerciseRepository(private val db: Database) {
         val kcalPerMinute = type.kcalPerHour / 60.0
         val total = kcalPerMinute * minutes
         q.updateExercise(exercise_type = type.dbName, duration_min = minutes, energy_kcal_total = total, notes = notes, id = id)
+    }
+
+    fun logAutomaticSteps(steps: Int) {
+        val minutes = if(steps > 0) steps / 100.0 else 0.0
+        val timestamp = currentDateIso() + "T12:00:00"
+        val type = Type.AUTOMATIC_STEPS
+        val existing = getByDateRange(timestamp, timestamp).firstOrNull { it.exercise_type == type.dbName }
+        if (existing == null) {
+            logExercise(type = type, minutes = minutes, timestamp = timestamp, notes = null)
+        } else {
+            updateExercise(id = existing.id, type = type, minutes = minutes, notes = existing.notes)
+        }
     }
 
     fun deleteById(id: Long) = q.deleteExerciseById(id)

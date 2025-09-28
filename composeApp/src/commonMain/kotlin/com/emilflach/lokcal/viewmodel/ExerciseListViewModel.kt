@@ -46,6 +46,7 @@ class ExerciseListViewModel(private val repo: ExerciseRepository, private val da
                 val label = when (type) {
                     ExerciseRepository.Type.WALKING.dbName -> "Walking"
                     ExerciseRepository.Type.RUNNING.dbName -> "Running"
+                    ExerciseRepository.Type.AUTOMATIC_STEPS.dbName -> "Step counter"
                     else -> type
                 }
                 "$label ${min.toInt()} m"
