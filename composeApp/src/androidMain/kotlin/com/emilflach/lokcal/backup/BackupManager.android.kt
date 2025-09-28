@@ -2,29 +2,16 @@ package com.emilflach.lokcal.backup
 
 import android.content.Context
 import androidx.documentfile.provider.DocumentFile
-import androidx.work.Constraints
-import androidx.work.CoroutineWorker
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
-import androidx.work.WorkerParameters
-import io.github.vinceglb.filekit.AndroidFile
-import io.github.vinceglb.filekit.FileKit
-import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.context
-import io.github.vinceglb.filekit.databasesDir
+import androidx.lifecycle.asFlow
+import androidx.work.*
+import io.github.vinceglb.filekit.*
 import io.github.vinceglb.filekit.dialogs.openDirectoryPicker
 import io.github.vinceglb.filekit.dialogs.openFileSaver
-import io.github.vinceglb.filekit.div
-import io.github.vinceglb.filekit.startAccessingSecurityScopedResource
-import io.github.vinceglb.filekit.stopAccessingSecurityScopedResource
-import io.github.vinceglb.filekit.write
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.net.URLDecoder
-import java.util.Calendar
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 actual suspend fun replaceDatabase(file: PlatformFile): Boolean {
@@ -135,14 +122,21 @@ actual fun enableNightlyBackup(value: Boolean): Boolean {
     }
 }
 
-actual fun isNightlyBackupEnabled(): Boolean {
+actual suspend fun isNightlyBackupEnabled(): Boolean {
     val workManager = WorkManager.getInstance(FileKit.context)
-    val workInfos = workManager.getWorkInfosForUniqueWork("NightlyBackup").get()
 
-    return workInfos.any { workInfo ->
-        workInfo.state == WorkInfo.State.ENQUEUED ||
-                workInfo.state == WorkInfo.State.RUNNING
+    try {
+        val workInfos = workManager.getWorkInfosForUniqueWorkLiveData("NightlyBackup")
+            .asFlow()
+            .first()
+        return workInfos.any { workInfo ->
+            workInfo.state == WorkInfo.State.ENQUEUED ||
+                    workInfo.state == WorkInfo.State.RUNNING
+        }
+    } catch (e: Exception) {
+        return false
     }
+
 }
 
 

@@ -20,7 +20,7 @@ object BackupManager {
     suspend fun getBackupDirectory() = retrieveBackupDirectory()
 
     fun showNightlyBackupSettings() = allowNightlyBackup()
-    fun getNightlyBackup() = isNightlyBackupEnabled()
+    suspend fun getNightlyBackup() = isNightlyBackupEnabled()
     fun setNightlyBackup(value: Boolean) = enableNightlyBackup(value)
 }
 
@@ -37,4 +37,4 @@ expect fun allowNightlyBackup(): Boolean
 
 expect fun enableNightlyBackup(value: Boolean): Boolean
 
-expect fun isNightlyBackupEnabled(): Boolean
+expect suspend fun isNightlyBackupEnabled(): Boolean

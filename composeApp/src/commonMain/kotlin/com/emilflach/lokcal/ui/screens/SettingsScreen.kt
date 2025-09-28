@@ -146,12 +146,13 @@ fun SettingsScreen(
 
             if(BackupManager.showNightlyBackupSettings()) {
                 Spacer(modifier = Modifier.height(16.dp))
-                var enabled by remember { mutableStateOf(BackupManager.getNightlyBackup()) }
+                var enabled by remember { mutableStateOf(false) }
                 var backupLocation by remember { mutableStateOf("Loading...") }
                 var hasBackupLocation by remember { mutableStateOf(false) }
                 LaunchedEffect(Unit) {
                     hasBackupLocation = BackupManager.getBackupDirectory() != null
                     backupLocation = BackupManager.getBackupDirectory() ?: "No directory set"
+                    enabled = BackupManager.getNightlyBackup()
                 }
                 ListItem(
                     headlineContent = { Text("Nightly backup directory") },
@@ -171,7 +172,9 @@ fun SettingsScreen(
                         trailingContent = {
                             Switch(checked = enabled, onCheckedChange = { value ->
                                 BackupManager.setNightlyBackup(value)
-                                enabled = BackupManager.getNightlyBackup()
+                                scope.launch {
+                                    enabled = BackupManager.getNightlyBackup()
+                                }
                             })
                         }
                     )
