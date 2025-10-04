@@ -25,7 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
-import com.emilflach.lokcal.ui.components.ParticleBackground
+import com.emilflach.lokcal.ui.components.meshGradient
 import com.emilflach.lokcal.viewmodel.MainViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -40,7 +40,7 @@ fun MainScreen(
     onOpenWeightToday: () -> Unit,
 ) {
     val summaries by viewModel.summaries.collectAsState()
-    val eaten by viewModel.eatenKcal.collectAsState()
+    val percentageLeft by viewModel.percentageLeft.collectAsState()
     val left by viewModel.leftKcal.collectAsState()
     val burned by viewModel.burnedKcal.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
@@ -49,10 +49,8 @@ fun MainScreen(
     val density = LocalDensity.current
     val colors = LocalRecipesColors.current
     val thresholdPx = remember(density) { with(density) { 64.dp.toPx() } }
-    val particleCount = remember(eaten) { eaten.toInt() }
     val coroutineScope = rememberCoroutineScope()
     var animationTrigger by remember { mutableStateOf(0) }
-
 
     LaunchedEffect(Unit) {
         viewModel.fetchAndLogHealthData()
@@ -71,11 +69,34 @@ fun MainScreen(
         }
     }
 
+    val gradientPosition = remember(left) { percentageLeft.coerceIn(0.1, 0.95).toFloat() }
+    val middleGradientColor = remember(left) { if (left > 0) colors.backgroundSurface1 else colors.backgroundDangerSubtle}
+    val bottomGradientColor = remember(left) { if (left > 0) colors.backgroundSurface1 else colors.backgroundPage}
     Box(modifier = Modifier.fillMaxSize()) {
-        ParticleBackground(
-            particleCount = particleCount,
-            modifier = Modifier.fillMaxSize()
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .meshGradient(
+                points = listOf(
+                    listOf(
+                        Offset(0f, 0f) to colors.backgroundPage,
+                        Offset(.5f, 0f) to colors.backgroundPage,
+                        Offset(1f, 0f) to colors.backgroundPage,
+                    ),
+                    listOf(
+                        Offset(0f, .8f) to colors.backgroundPage,
+                        Offset(.5f, gradientPosition) to middleGradientColor,
+                        Offset(1f, .8f) to colors.backgroundPage,
+                    ),
+                    listOf(
+                        Offset(0f, 1f) to bottomGradientColor,
+                        Offset(.5f, 1f) to bottomGradientColor,
+                        Offset(1f, 1f) to bottomGradientColor,
+                    ),
+                ),
+                resolutionX = 100,
+            )
         )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -128,6 +149,21 @@ fun MainScreen(
                     Spacer(Modifier.width(12.dp))
                 }
                 Spacer(Modifier.height(12.dp))
+
+                val fadeAlpha = remember { Animatable(1f) }
+                LaunchedEffect(animationTrigger) {
+                    if (animationTrigger > 0) {
+                        fadeAlpha.animateTo(
+                            targetValue = 0.5f,
+                            animationSpec = tween(durationMillis = 200, easing = LinearEasing)
+                        )
+                        fadeAlpha.animateTo(
+                            targetValue = 1f,
+                            animationSpec = tween(durationMillis = 300, easing = LinearEasing)
+                        )
+
+                    }
+                }
                 Row {
                     Surface(
                         color = Color.Transparent,
@@ -135,6 +171,7 @@ fun MainScreen(
                             .weight(4f)
                             .background(colors.backgroundSurface2, MaterialTheme.shapes.medium)
                             .padding(16.dp)
+                            .alpha(fadeAlpha.value)
                         ,
                     ) {
                         Column {
@@ -149,27 +186,12 @@ fun MainScreen(
                                 style = MaterialTheme.typography.displayLarge,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Left,
+                                color = colors.foregroundDefault,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }
                     Spacer(Modifier.width(16.dp))
-
-                    val fadeAlpha = remember { Animatable(1f) }
-                    LaunchedEffect(animationTrigger) {
-                        if (animationTrigger > 0) {
-                            fadeAlpha.animateTo(
-                                targetValue = 0.5f,
-                                animationSpec = tween(durationMillis = 200, easing = LinearEasing)
-                            )
-                            fadeAlpha.animateTo(
-                                targetValue = 1f,
-                                animationSpec = tween(durationMillis = 300, easing = LinearEasing)
-                            )
-
-                        }
-                    }
-
                     Surface(
                         color = Color.Transparent,
                         modifier = Modifier
@@ -227,9 +249,10 @@ fun MainScreen(
                     color = Color.Transparent,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .clip(MaterialTheme.shapes.large)
                         .padding(vertical = 6.dp)
                         .background(colors.backgroundPage)
-                        .clip(MaterialTheme.shapes.large)
+
                         .let { modifier ->
                             if (s.totalKcal.toInt() > 0) {
                                 modifier.drawBehind {

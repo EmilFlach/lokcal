@@ -40,9 +40,8 @@ class MainViewModel(
     private val _selectedDate = MutableStateFlow(LocalDate.parse(initialDateIso))
     val selectedDate: StateFlow<LocalDate> = _selectedDate.asStateFlow()
 
-    // Derived totals for the header
-    private val _eatenKcal = MutableStateFlow(0.0)
-    val eatenKcal: StateFlow<Double> = _eatenKcal.asStateFlow()
+    private val _percentageLeft = MutableStateFlow(0.0)
+    val percentageLeft: StateFlow<Double> = _percentageLeft.asStateFlow()
 
     private val _leftKcal = MutableStateFlow(1690.0)
     val leftKcal: StateFlow<Double> = _leftKcal.asStateFlow()
@@ -101,11 +100,11 @@ class MainViewModel(
 
         val exercises = exerciseRepo.getByDateRange(startIso, endIso)
         val eaten = _summaries.value.sumOf { it.totalKcal }.coerceAtLeast(0.0)
-        val start = settingsRepo.getStartingKcal()
+        val start = settingsRepo.getStartingKcal().coerceAtLeast(0.0)
         val burned = exercises.sumOf { it.energy_kcal_total }
         val totalBudget = start + burned
         val left = totalBudget - eaten
-        _eatenKcal.value = eaten
+        _percentageLeft.value = (left / start).coerceIn(0.0, 1.0)
         _burnedKcal.value = burned
         _leftKcal.value = left
 
