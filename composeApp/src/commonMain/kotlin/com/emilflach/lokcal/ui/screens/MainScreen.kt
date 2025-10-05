@@ -25,7 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
-import com.emilflach.lokcal.ui.components.meshGradient
+import com.emilflach.lokcal.ui.components.GradientBackground
 import com.emilflach.lokcal.viewmodel.MainViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -69,39 +69,13 @@ fun MainScreen(
         }
     }
 
-    val gradientPosition = remember(left) { percentageLeft.coerceIn(0.1, 0.95).toFloat() }
-    val middleGradientColor = remember(left) { if (left > 0) colors.backgroundSurface1 else colors.backgroundDangerSubtle}
-    val bottomGradientColor = remember(left) { if (left > 0) colors.backgroundSurface1 else colors.backgroundPage}
     Box(modifier = Modifier.fillMaxSize()) {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .meshGradient(
-                points = listOf(
-                    listOf(
-                        Offset(0f, 0f) to colors.backgroundPage,
-                        Offset(.5f, 0f) to colors.backgroundPage,
-                        Offset(1f, 0f) to colors.backgroundPage,
-                    ),
-                    listOf(
-                        Offset(0f, .8f) to colors.backgroundPage,
-                        Offset(.5f, gradientPosition) to middleGradientColor,
-                        Offset(1f, .8f) to colors.backgroundPage,
-                    ),
-                    listOf(
-                        Offset(0f, 1f) to bottomGradientColor,
-                        Offset(.5f, 1f) to bottomGradientColor,
-                        Offset(1f, 1f) to bottomGradientColor,
-                    ),
-                ),
-                resolutionX = 100,
-            )
-        )
-
+        GradientBackground(percentageLeft.toFloat())
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
                 .pointerInput(Unit) {
                     var accumX = 0f
                     detectHorizontalDragGestures(
@@ -118,7 +92,7 @@ fun MainScreen(
                     )
                 }
         ) {
-            // Selected date label
+
             Column (
                 modifier = Modifier
                     .fillMaxWidth()
@@ -249,10 +223,9 @@ fun MainScreen(
                     color = Color.Transparent,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(MaterialTheme.shapes.large)
-                        .padding(vertical = 6.dp)
+                        .padding(top = 8.dp)
+                        .clip(MaterialTheme.shapes.medium)
                         .background(colors.backgroundPage)
-
                         .let { modifier ->
                             if (s.totalKcal.toInt() > 0) {
                                 modifier.drawBehind {
@@ -289,7 +262,7 @@ fun MainScreen(
                                 text = s.summaryText,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = colors.foregroundSupport,
-                                maxLines = 2
+                                maxLines = 1
                             )
                         }
                     }
