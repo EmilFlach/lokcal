@@ -5,6 +5,7 @@ import com.emilflach.lokcal.data.ExerciseRepository
 import com.emilflach.lokcal.data.IntakeRepository
 import com.emilflach.lokcal.data.WeightRepository
 import com.emilflach.lokcal.health.HealthManager
+import com.emilflach.lokcal.util.currentDateIso
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,12 +34,19 @@ class MainViewModel(
         val summaryText: String,
     )
 
+    data class DayDelta(
+        val date: LocalDate,
+        val deltaKcal: Double // positive => over, negative => under
+    )
+
     private val _summaries = MutableStateFlow<List<MealSummary>>(emptyList())
     val summaries: StateFlow<List<MealSummary>> = _summaries.asStateFlow()
 
-    // Selected date for which data is displayed
     private val _selectedDate = MutableStateFlow(LocalDate.parse(initialDateIso))
     val selectedDate: StateFlow<LocalDate> = _selectedDate.asStateFlow()
+
+    private val _selectedDateIsToday = MutableStateFlow(initialDateIso == currentDateIso())
+    val selectedDateIsToday: StateFlow<Boolean> = _selectedDateIsToday.asStateFlow()
 
     private val _percentageLeft = MutableStateFlow(0.0)
     val percentageLeft: StateFlow<Double> = _percentageLeft.asStateFlow()
@@ -52,6 +60,9 @@ class MainViewModel(
     // Thursday weight prompt visibility
     private val _showWeightPrompt = MutableStateFlow(false)
     val showWeightPrompt: StateFlow<Boolean> = _showWeightPrompt.asStateFlow()
+
+    private val _last7Deltas = MutableStateFlow<List<DayDelta>>(emptyList())
+    val last7Deltas: StateFlow<List<DayDelta>> = _last7Deltas.asStateFlow()
 
     private val viewModelScope = CoroutineScope(Dispatchers.Main)
 
@@ -74,11 +85,13 @@ class MainViewModel(
 
     fun nextDay() {
         _selectedDate.value = _selectedDate.value.plus(1, DateTimeUnit.DAY)
+        _selectedDateIsToday.value = _selectedDate.value.toString() == currentDateIso()
         loadFor(_selectedDate.value)
     }
 
     fun previousDay() {
         _selectedDate.value = _selectedDate.value.plus(-1, DateTimeUnit.DAY)
+        _selectedDateIsToday.value = _selectedDate.value.toString() == currentDateIso()
         loadFor(_selectedDate.value)
     }
 
@@ -112,6 +125,8 @@ class MainViewModel(
         val isThursday = date.dayOfWeek.name == "THURSDAY"
         val hasWeight = weightRepo.getForDate(dateIso) != null
         _showWeightPrompt.value = isThursday && !hasWeight
+
+        computeLast7Deltas()
     }
 
     private fun buildMealSummary(list: List<Intake>): String {
@@ -120,5 +135,24 @@ class MainViewModel(
             .sortedByDescending { it.value }
             .take(6)
         return counts.joinToString(", ") { (name, count) -> if (count > 1) "$name x$count" else name }
+    }
+
+    private fun computeLast7Deltas() {
+        val today = LocalDate.parse(selectedDate.value.toString())
+        val startKcal = settingsRepo.getStartingKcal().coerceAtLeast(0.0)
+        val mealTypes = listOf("BREAKFAST", "LUNCH", "DINNER", "SNACK")
+        val list = (1..7).map { offset ->
+            val d = today.plus(-offset, DateTimeUnit.DAY)
+            val iso = d.toString()
+            val startIso = "${iso}T00:00:00"
+            val endIso = "${iso}T23:59:59"
+            val eaten = mealTypes.sumOf { type ->
+                intakeRepo.getIntakeByMealAndDateRange(type, startIso, endIso).sumOf { it.energy_kcal_total }
+            }.coerceAtLeast(0.0)
+            val burned = exerciseRepo.sumKcalByDate(startIso, endIso)
+            val delta = (eaten - (startKcal + burned)) * -1
+            DayDelta(date = d, deltaKcal = delta)
+        }.reversed()
+        _last7Deltas.value = list
     }
 }

@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.GradientBackground
+import com.emilflach.lokcal.ui.components.WeeklyKcalGraph
 import com.emilflach.lokcal.viewmodel.MainViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -44,7 +45,9 @@ fun MainScreen(
     val left by viewModel.leftKcal.collectAsState()
     val burned by viewModel.burnedKcal.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
+    val selectDateIsToday by viewModel.selectedDateIsToday.collectAsState()
     val showWeightPrompt by viewModel.showWeightPrompt.collectAsState()
+    val last7 by viewModel.last7Deltas.collectAsState()
 
     val density = LocalDensity.current
     val colors = LocalRecipesColors.current
@@ -93,128 +96,128 @@ fun MainScreen(
                 }
         ) {
 
-            Column (
+            BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(colors.backgroundPage, MaterialTheme.shapes.medium)
                     .padding(16.dp)
             ) {
-                Row (
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Bottom,
-                ) {
-                    Spacer(Modifier.width(16.dp))
-                    Text(
-                        text = selectedDate.toString(),
-                        color = colors.foregroundSupport,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Spacer(Modifier.weight(1f))
-                    IconButton(
-                        onClick = onOpenSettings,
-                        modifier = Modifier.size(24.dp)
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.Bottom,
                     ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Settings,
-                            contentDescription = "Settings",
-                            tint = colors.foregroundSupport,
+                        Spacer(Modifier.width(16.dp))
+                        Text(
+                            text = if(selectDateIsToday) "Today" else selectedDate.toString(),
+                            color = colors.foregroundSupport,
+                            style = MaterialTheme.typography.bodyMedium
                         )
-                    }
-                    Spacer(Modifier.width(12.dp))
-                }
-                Spacer(Modifier.height(12.dp))
-
-                val fadeAlpha = remember { Animatable(1f) }
-                LaunchedEffect(animationTrigger) {
-                    if (animationTrigger > 0) {
-                        fadeAlpha.animateTo(
-                            targetValue = 0.5f,
-                            animationSpec = tween(durationMillis = 200, easing = LinearEasing)
-                        )
-                        fadeAlpha.animateTo(
-                            targetValue = 1f,
-                            animationSpec = tween(durationMillis = 300, easing = LinearEasing)
-                        )
-
-                    }
-                }
-                Row {
-                    Surface(
-                        color = Color.Transparent,
-                        modifier = Modifier
-                            .weight(4f)
-                            .background(colors.backgroundSurface2, MaterialTheme.shapes.medium)
-                            .padding(16.dp)
-                            .alpha(fadeAlpha.value)
-                        ,
-                    ) {
-                        Column {
-                            Text(
-                                text = if (left > 0) "kcal left" else "kcal over",
-                                style = MaterialTheme.typography.titleMedium,
-                                textAlign = TextAlign.Left,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Text(
-                                text = if (left > 0) "${left.toInt()}" else "${left.toInt() * -1}",
-                                style = MaterialTheme.typography.displayLarge,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Left,
-                                color = colors.foregroundDefault,
-                                modifier = Modifier.fillMaxWidth()
+                        Spacer(Modifier.weight(1f))
+                        IconButton(
+                            onClick = onOpenSettings,
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Settings,
+                                contentDescription = "Settings",
+                                tint = colors.foregroundSupport,
                             )
                         }
+                        Spacer(Modifier.width(12.dp))
                     }
-                    Spacer(Modifier.width(16.dp))
-                    Surface(
-                        color = Color.Transparent,
-                        modifier = Modifier
-                            .weight(3f)
-                            .background(colors.backgroundSurface1, MaterialTheme.shapes.medium)
-                            .clip(MaterialTheme.shapes.medium)
-                            .clickable { onOpenExercise(selectedDate.toString()) }
-                            .padding(16.dp)
-                            .alpha(fadeAlpha.value)
-                    )  {
-                        Column {
-                            Text(
-                                text = "kcal burned",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = colors.foregroundSupport,
-                                textAlign = TextAlign.Left,
-                                modifier = Modifier.fillMaxWidth()
+                    Spacer(Modifier.height(12.dp))
+
+                    val fadeAlpha = remember { Animatable(1f) }
+                    LaunchedEffect(animationTrigger) {
+                        if (animationTrigger > 0) {
+                            fadeAlpha.animateTo(
+                                targetValue = 0.5f,
+                                animationSpec = tween(durationMillis = 200, easing = LinearEasing)
                             )
-                            Text(
-                                text = burned.toInt().toString(),
-                                style = MaterialTheme.typography.displayLarge,
-                                color = colors.foregroundSupport,
-                                textAlign = TextAlign.Left,
-                                modifier = Modifier.fillMaxWidth()
+                            fadeAlpha.animateTo(
+                                targetValue = 1f,
+                                animationSpec = tween(durationMillis = 300, easing = LinearEasing)
                             )
+
                         }
-
                     }
-                }
-
-                Spacer(Modifier.height(8.dp))
-
-                // Thursday prompt to log weight (from view model)
-                if (showWeightPrompt) {
-                    Spacer(Modifier.height(8.dp))
-                    Surface(
-                        color = colors.backgroundBrand,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(colors.backgroundPage)
-                            .clip(MaterialTheme.shapes.large)
-                            .clickable { onOpenWeightToday() }
-                    ) {
-                        Column(Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
-                            Text("It's Thursday, log your weight!", style = MaterialTheme.typography.titleMedium)
+                    Row {
+                        Surface(
+                            color = Color.Transparent,
+                            modifier = Modifier
+                                .weight(4f)
+                                .background(colors.backgroundSurface2, MaterialTheme.shapes.medium)
+                                .padding(16.dp)
+                                .alpha(fadeAlpha.value),
+                        ) {
+                            Column {
+                                Text(
+                                    text = if (left > 0) "kcal left" else "kcal over",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    textAlign = TextAlign.Left,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Text(
+                                    text = if (left > 0) "${left.toInt()}" else "${left.toInt() * -1}",
+                                    style = MaterialTheme.typography.displayLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Left,
+                                    color = colors.foregroundDefault,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        Surface(
+                            color = Color.Transparent,
+                            modifier = Modifier
+                                .weight(3f)
+                                .background(colors.backgroundSurface1, MaterialTheme.shapes.medium)
+                                .clip(MaterialTheme.shapes.medium)
+                                .clickable { onOpenExercise(selectedDate.toString()) }
+                                .padding(16.dp)
+                                .alpha(fadeAlpha.value)
+                        ) {
+                            Column {
+                                Text(
+                                    text = "kcal burned",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = colors.foregroundSupport,
+                                    textAlign = TextAlign.Left,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Text(
+                                    text = burned.toInt().toString(),
+                                    style = MaterialTheme.typography.displayLarge,
+                                    color = colors.foregroundSupport,
+                                    textAlign = TextAlign.Left,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(16.dp))
+                    WeeklyKcalGraph(last7, this@BoxWithConstraints.maxWidth)
+                    if (showWeightPrompt) {
+                        Spacer(Modifier.height(16.dp))
+                        Surface(
+                            color = colors.backgroundBrand,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(colors.backgroundPage)
+                                .clip(MaterialTheme.shapes.large)
+                                .clickable { onOpenWeightToday() }
+                        ) {
+                            Column(Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
+                                Text("It's Thursday, log your weight!", style = MaterialTheme.typography.titleMedium)
+                            }
                         }
                     }
                 }
             }
+
+
 
             Spacer(Modifier.weight(1f))
 
