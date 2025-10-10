@@ -98,8 +98,10 @@ class MealTimeViewModel(
         loadForSelectedDate()
     }
 
+    fun productUrlForFoodId(foodId: Long): String? = intakeRepo.getFoodById(foodId)?.product_url
     fun imageUrlForFoodId(foodId: Long): String? = intakeRepo.getFoodById(foodId)?.image_url
     fun imageUrlForMealId(mealId: Long): String? = intakeRepo.getMealById(mealId)?.image_url
+
 
     fun portionForEntry(intake: Intake): Double = portionService.defaultPortionForIntake(intake)
     fun portionForMeal(mealId: Long): Double = portionService.defaultPortionForMeal(mealId)

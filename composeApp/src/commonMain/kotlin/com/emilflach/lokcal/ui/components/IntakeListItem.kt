@@ -1,7 +1,7 @@
 package com.emilflach.lokcal.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -43,6 +43,7 @@ fun IntakeListItem(
     gramsById: MutableMap<Long, String>,
     onAddClick: () -> Unit,
     onAddByKeyboard: () -> Unit,
+    onLongPress: (() -> Unit)? = null,
     inputField: @Composable (
         tf: TextFieldValue,
         requester: FocusRequester,
@@ -77,10 +78,13 @@ fun IntakeListItem(
                     modifier
                 }
             }
-            .clickable {
-                requesters.request(keyId)
-                keyboard?.show()
-            }
+            .combinedClickable(
+                onClick = {
+                    requesters.request(keyId)
+                    keyboard?.show()
+                },
+                onLongClick = onLongPress
+            )
             .padding(vertical = 24.dp, horizontal = 16.dp),
     ) {
         Row(
@@ -128,15 +132,15 @@ fun IntakeListItem(
 
 @Composable
 fun getRoundedCornerShape(index: Int, size: Int): Shape { 
-    return when {
-        index == 0 && size == 1 -> RoundedCornerShape(4.dp)
-        index == 0 -> RoundedCornerShape(
+    return when (index) {
+        0 if size == 1 -> RoundedCornerShape(16.dp)
+        0 -> RoundedCornerShape(
             topStart = 16.dp,
             topEnd = 16.dp,
             bottomStart = 4.dp,
             bottomEnd = 4.dp
         )
-        index == size - 1 -> RoundedCornerShape(
+        size - 1 -> RoundedCornerShape(
             bottomStart = 16.dp,
             bottomEnd = 16.dp,
             topStart = 4.dp,

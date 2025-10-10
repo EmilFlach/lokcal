@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,20 +29,20 @@ import com.emilflach.lokcal.viewmodel.MealTimeViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SaveMealAction(viewModel: MealTimeViewModel) {
-    val c = LocalRecipesColors.current
+    val color = LocalRecipesColors.current
     val haptic = LocalHapticFeedback.current
-    var show by remember { mutableStateOf(false) }
+    var showAlert by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
     var portions by remember { mutableStateOf("1") }
 
-    IconButton(onClick = { show = true }) {
+    IconButton(onClick = { showAlert = true }) {
         Icon(imageVector = Icons.Filled.Save, contentDescription = "Save as meal")
     }
 
-    if (show) {
+    if (showAlert) {
         AlertDialog(
-            containerColor = c.backgroundSurface1,
-            onDismissRequest = { show = false },
+            containerColor = color.backgroundSurface1,
+            onDismissRequest = { showAlert = false },
             title = { Text("Save as meal") },
             text = {
                 Column {
@@ -64,12 +65,12 @@ fun SaveMealAction(viewModel: MealTimeViewModel) {
                 TextButton(onClick = {
                     viewModel.saveAsMealFromInputs(name, portions)
                     haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                    show = false
+                    showAlert = false
                 }) { Text("Save") }
             },
             dismissButton = {
                 TextButton(onClick = {
-                    show = false
+                    showAlert = false
                     haptic.performHapticFeedback(HapticFeedbackType.Reject)
                 }) { Text("Cancel") }
             }
@@ -85,7 +86,8 @@ fun MealTimeScreen(
     onAdd: (String) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
-    val c = LocalRecipesColors.current
+    val color = LocalRecipesColors.current
+    val uriHandler = LocalUriHandler.current
     val haptic = LocalHapticFeedback.current
     val gramsById = remember { mutableStateMapOf<Long, String>() }
     val requesters = remember { FocusRequesters() }
@@ -115,8 +117,8 @@ fun MealTimeScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { onAdd(viewModel.mealType) },
-                containerColor = c.backgroundBrand,
-                contentColor = c.onBackgroundBrand
+                containerColor = color.backgroundBrand,
+                contentColor = color.onBackgroundBrand
             ) {
                 Column (horizontalAlignment = Alignment.CenterHorizontally){
                     Icon(imageVector = Icons.Filled.Add, contentDescription = "Add portion")
@@ -142,7 +144,7 @@ fun MealTimeScreen(
                             style = MaterialTheme.typography.headlineLarge,
                             fontSize = 60.sp,
                             textAlign = TextAlign.Center,
-                            color = c.foregroundDefault,
+                            color = color.foregroundDefault,
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(Modifier.height(32.dp))
@@ -154,14 +156,26 @@ fun MealTimeScreen(
                         MealTimeItem(
                             title = entry.item_name,
                             subtitle = subtitle,
+                            index = state.items.indexOf(entry),
+                            size = state.items.size,
                             imageUrl = when {
                                 entry.source_food_id != null -> viewModel.imageUrlForFoodId(entry.source_food_id)
                                 entry.source_meal_id != null -> viewModel.imageUrlForMealId(entry.source_meal_id)
                                 else -> null
                             },
-                            isMeal = isMeal,
                             onLongPress = {
-                                entry.source_meal_id?.let { viewModel.copyMealItemsIntoMealTime(it) }
+                                if (isMeal) {
+                                    entry.source_meal_id.let { viewModel.copyMealItemsIntoMealTime(it) }
+                                } else {
+                                    entry.source_food_id?.let {
+                                        val productUrl = viewModel.productUrlForFoodId(it)
+                                        productUrl?.let { url ->
+                                            uriHandler.openUri(
+                                                uri = url,
+                                            )
+                                        }
+                                    }
+                                }
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             },
                             quantityControls = { requester ->
@@ -190,7 +204,7 @@ fun MealTimeScreen(
                                 }
                             }
                         )
-                        Spacer(Modifier.height(4.dp))
+                        Spacer(Modifier.height(2.dp))
                     }
 
                     val items = state.yesterdayItems
@@ -201,7 +215,7 @@ fun MealTimeScreen(
                             Text(
                                 text = "Same as yesterday",
                                 style = MaterialTheme.typography.titleMedium,
-                                color = c.foregroundDefault
+                                color = color.foregroundDefault
                             )
                             Spacer(Modifier.height(8.dp))
                         }
@@ -269,12 +283,17 @@ fun MealTimeScreen(
                                     val gramsText = gramsById[keyId] ?: initialGrams
                                     viewModel.addFoodSuggestion(foodId, gramsText)
                                 },
+                                onLongPress = {
+                                    val food = viewModel.productUrlForFoodId(foodId)
+                                    food?.let { url ->
+                                        uriHandler.openUri(url)
+                                    }
+                                },
                                 inputField = { tf, requester, onValueChange, onDone ->
                                     GramTextField(tf, requester, onValueChange, onDone)
                                 }
                             )
                         }
-                        Spacer(Modifier.height(4.dp))
                     }
 
                     val leftovers = state.leftoversItems
@@ -285,7 +304,7 @@ fun MealTimeScreen(
                             Text(
                                 text = "Leftovers",
                                 style = MaterialTheme.typography.titleMedium,
-                                color = c.foregroundDefault
+                                color = color.foregroundDefault
                             )
                             Spacer(Modifier.height(8.dp))
                         }
@@ -351,12 +370,17 @@ fun MealTimeScreen(
                                     val gramsText2 = gramsById[keyId] ?: initialGrams
                                     viewModel.addFoodSuggestionFromLeftover(foodId, gramsText2, intake)
                                 },
+                                onLongPress = {
+                                    val food = viewModel.productUrlForFoodId(foodId)
+                                    food?.let { url ->
+                                        uriHandler.openUri(url)
+                                    }
+                                },
                                 inputField = { tf, requester, onValueChange, onDone ->
                                     GramTextField(tf, requester, onValueChange, onDone)
                                 }
                             )
                         }
-                        Spacer(Modifier.height(4.dp))
                     }
                 }
             }

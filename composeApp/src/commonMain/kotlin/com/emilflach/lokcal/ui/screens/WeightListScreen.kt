@@ -27,6 +27,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.WeightLog
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.components.getRoundedCornerShape
 import com.emilflach.lokcal.viewmodel.WeightListViewModel
 import ir.ehsannarmani.compose_charts.LineChart
 import ir.ehsannarmani.compose_charts.models.*
@@ -122,11 +123,12 @@ fun WeightListScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(16.dp),
             ) {
                 items(items) { item: WeightLog ->
                     ListItem(
                         headlineContent = { Text("${item.weight_kg} kg") },
-                        supportingContent = { Text(item.date) },
+                        supportingContent = { Text(item.date, color = colors.foregroundSupport) },
                         trailingContent = {
                             Icon(
                                 imageVector = Icons.Filled.Delete,
@@ -137,8 +139,13 @@ fun WeightListScreen(
                                         viewModel.deleteById(item.id)
                                     }
                             )
-                        }
+                        },
+                        modifier = Modifier.clip(getRoundedCornerShape(
+                            index = items.indexOf(item),
+                            size = items.size
+                        ))
                     )
+                    Spacer(Modifier.height(4.dp))
                 }
             }
         }
@@ -257,7 +264,6 @@ fun WeightChart(viewModel: WeightListViewModel) {
                     inactiveTrackColor = colors.foregroundSupport.copy(alpha = 0.2f)
                 )
             )
-            Spacer(Modifier.height(16.dp))
         }
     }
 

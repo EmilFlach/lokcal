@@ -2,15 +2,7 @@ package com.emilflach.lokcal.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,9 +22,10 @@ import com.emilflach.lokcal.ui.util.rememberKtorImageLoader
 fun MealTimeItem(
     title: String,
     subtitle: String,
+    index: Int,
+    size: Int,
     imageUrl: String?,
     modifier: Modifier = Modifier,
-    isMeal: Boolean = false,
     onLongPress: (() -> Unit)? = null,
     quantityControls: @Composable (requester: FocusRequester) -> Unit,
 ) {
@@ -45,15 +38,13 @@ fun MealTimeItem(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 2.dp)
-            .clip(MaterialTheme.shapes.medium)
+            .clip(getRoundedCornerShape(index, size))
             .background(colors.backgroundSurface1)
             .combinedClickable(
                 onClick = {
                     requester.requestFocus(); keyboard?.show()
                 },
-                onLongClick = {
-                    if (isMeal) onLongPress?.invoke()
-                }
+                onLongClick = onLongPress
             )
             .height(IntrinsicSize.Min)
             .padding(top = 12.dp, bottom = 12.dp, start = 12.dp, end = 4.dp),

@@ -6,14 +6,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.GramTextField
@@ -29,13 +28,12 @@ fun IntakeScreen(
     onDone: () -> Unit,
     autoFocusSearch: Boolean = false,
 ) {
-    val colors = LocalRecipesColors.current
+    val color = LocalRecipesColors.current
     val haptic = LocalHapticFeedback.current
+    val uriHandler = LocalUriHandler.current
     val state by viewModel.state.collectAsState()
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             MealTopBar(
                 title = state.selectedMealType,
@@ -43,15 +41,14 @@ fun IntakeScreen(
                 showSearch = true,
                 query = state.query,
                 onQueryChange = viewModel::setQuery,
-                autoFocusSearch = autoFocusSearch,
-                scrollBehavior = scrollBehavior,
+                autoFocusSearch = autoFocusSearch
             )
         }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colors.backgroundPage)
+                .background(color.backgroundPage)
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.Top,
@@ -115,6 +112,11 @@ fun IntakeScreen(
                         },
                         onAddByKeyboard = {
                             viewModel.addFoodByGrams(item.id, initialGrams) { onDone() }
+                        },
+                        onLongPress = {
+                            item.product_url?.let {
+                                uriHandler.openUri(item.product_url)
+                            }
                         },
                         inputField = { tf, requester, onValueChange, onDone ->
                             GramTextField(tf, requester, onValueChange, onDone)
