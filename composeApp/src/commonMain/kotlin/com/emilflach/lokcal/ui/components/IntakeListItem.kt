@@ -2,12 +2,7 @@ package com.emilflach.lokcal.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -24,6 +19,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.TextFieldValue
@@ -44,9 +42,10 @@ fun IntakeListItem(
     requesters: FocusRequesters,
     gramsById: MutableMap<Long, String>,
     onAddClick: () -> Unit,
+    onAddByKeyboard: () -> Unit,
     inputField: @Composable (
         tf: TextFieldValue,
-        requester: androidx.compose.ui.focus.FocusRequester,
+        requester: FocusRequester,
         onValueChange: (TextFieldValue, String) -> Unit,
         onDone: () -> Unit
     ) -> Unit
@@ -70,8 +69,8 @@ fun IntakeListItem(
                         val borderWidth = 2.dp.toPx()
                         drawRect(
                             color = colors.backgroundBrand,
-                            topLeft = androidx.compose.ui.geometry.Offset(0f, 0f),
-                            size = androidx.compose.ui.geometry.Size(borderWidth, this.size.height)
+                            topLeft = Offset(0f, 0f),
+                            size = Size(borderWidth, this.size.height)
                         )
                     }
                 } else {
@@ -111,7 +110,7 @@ fun IntakeListItem(
                     tf = newTf
                     gramsById[keyId] = value
                 },
-                onAddClick
+                onAddByKeyboard
             )
 
             FilledIconButton(

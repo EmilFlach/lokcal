@@ -14,6 +14,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -27,6 +29,7 @@ import com.emilflach.lokcal.viewmodel.MealTimeViewModel
 @Composable
 fun SaveMealAction(viewModel: MealTimeViewModel) {
     val c = LocalRecipesColors.current
+    val haptic = LocalHapticFeedback.current
     var show by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
     var portions by remember { mutableStateOf("1") }
@@ -60,11 +63,15 @@ fun SaveMealAction(viewModel: MealTimeViewModel) {
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.saveAsMealFromInputs(name, portions)
+                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                     show = false
                 }) { Text("Save") }
             },
             dismissButton = {
-                TextButton(onClick = { show = false }) { Text("Cancel") }
+                TextButton(onClick = {
+                    show = false
+                    haptic.performHapticFeedback(HapticFeedbackType.Reject)
+                }) { Text("Cancel") }
             }
         )
     }
@@ -79,6 +86,7 @@ fun MealTimeScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val c = LocalRecipesColors.current
+    val haptic = LocalHapticFeedback.current
     val gramsById = remember { mutableStateMapOf<Long, String>() }
     val requesters = remember { FocusRequesters() }
 
@@ -91,7 +99,10 @@ fun MealTimeScreen(
                 trailingActions = {
                     // Toggle leftovers marker for this meal/date
                     val isLeftover = state.isMarkedLeftover
-                    IconToggleButton(checked = isLeftover, onCheckedChange = { viewModel.toggleLeftovers() }) {
+                    IconToggleButton(checked = isLeftover, onCheckedChange = {
+                        viewModel.toggleLeftovers()
+                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                    }) {
                         Icon(
                             imageVector = if(isLeftover) Icons.Filled.BookmarkRemove else Icons.Outlined.BookmarkAdd,
                             contentDescription = "Toggle leftovers")
@@ -139,6 +150,7 @@ fun MealTimeScreen(
                     items(state.items, key = { it.id }) { entry ->
                         val subtitle = viewModel.subtitleForIntake(entry)
                         val isMeal = entry.source_meal_id != null
+
                         MealTimeItem(
                             title = entry.item_name,
                             subtitle = subtitle,
@@ -150,6 +162,7 @@ fun MealTimeScreen(
                             isMeal = isMeal,
                             onLongPress = {
                                 entry.source_meal_id?.let { viewModel.copyMealItemsIntoMealTime(it) }
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             },
                             quantityControls = { requester ->
                                 if (isMeal) {
@@ -169,7 +182,9 @@ fun MealTimeScreen(
                                         stateKey = entry.id,
                                         initialGrams = entry.quantity_g,
                                         portionGrams = viewModel.portionForEntry(entry),
-                                        onCommitGrams = { g -> viewModel.updateQuantity(entry.id, g) },
+                                        onCommitGrams = { g ->
+                                            viewModel.updateQuantity(entry.id, g)
+                                        },
                                         onDelete = { viewModel.deleteItem(entry.id) }
                                     )
                                 }
@@ -218,6 +233,11 @@ fun MealTimeScreen(
                                 onAddClick = {
                                     val portionsText = gramsById[keyId] ?: initialPortions
                                     viewModel.addMealSuggestion(mealId, portionsText)
+                                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                                },
+                                onAddByKeyboard = {
+                                    val portionsText = gramsById[keyId] ?: initialPortions
+                                    viewModel.addMealSuggestion(mealId, portionsText)
                                 },
                                 inputField = { tf, requester, onValueChange, onDone ->
                                     PortionsTextField(tf, requester, onValueChange, onDone)
@@ -241,6 +261,11 @@ fun MealTimeScreen(
                                 requesters = requesters,
                                 gramsById = gramsById,
                                 onAddClick = {
+                                    val gramsText = gramsById[keyId] ?: initialGrams
+                                    viewModel.addFoodSuggestion(foodId, gramsText)
+                                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                                },
+                                onAddByKeyboard = {
                                     val gramsText = gramsById[keyId] ?: initialGrams
                                     viewModel.addFoodSuggestion(foodId, gramsText)
                                 },
@@ -290,6 +315,11 @@ fun MealTimeScreen(
                                 onAddClick = {
                                     val portionsText2 = gramsById[keyId] ?: initialPortions
                                     viewModel.addMealSuggestionFromLeftover(mealId, portionsText2, intake)
+                                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                                },
+                                onAddByKeyboard = {
+                                    val portionsText2 = gramsById[keyId] ?: initialPortions
+                                    viewModel.addMealSuggestionFromLeftover(mealId, portionsText2, intake)
                                 },
                                 inputField = { tf, requester, onValueChange, onDone ->
                                     PortionsTextField(tf, requester, onValueChange, onDone)
@@ -313,6 +343,11 @@ fun MealTimeScreen(
                                 requesters = requesters,
                                 gramsById = gramsById,
                                 onAddClick = {
+                                    val gramsText2 = gramsById[keyId] ?: initialGrams
+                                    viewModel.addFoodSuggestionFromLeftover(foodId, gramsText2, intake)
+                                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                                },
+                                onAddByKeyboard = {
                                     val gramsText2 = gramsById[keyId] ?: initialGrams
                                     viewModel.addFoodSuggestionFromLeftover(foodId, gramsText2, intake)
                                 },

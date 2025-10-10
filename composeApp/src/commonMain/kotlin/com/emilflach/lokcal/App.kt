@@ -130,7 +130,8 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                     onOpenMeal = { meal, dateIso -> screen = Screen.MealTime(meal, dateIso) },
                     onOpenExercise = { dateIso -> screen = Screen.ExerciseList(dateIso) },
                     onOpenSettings = { screen = Screen.Settings },
-                    onOpenWeightToday = { screen = Screen.WeightList(openAdd = true, returnTo = Screen.ReturnTo.Main(s.dateIso)) }
+                    onOpenWeightToday = { screen = Screen.WeightList(openAdd = true, returnTo = Screen.ReturnTo.Main(s.dateIso)) },
+                    onOpenWeightList = { screen = Screen.WeightList(openAdd = false, returnTo = Screen.ReturnTo.Main(s.dateIso)) }
                 )
             }
             is Screen.MealTime -> {

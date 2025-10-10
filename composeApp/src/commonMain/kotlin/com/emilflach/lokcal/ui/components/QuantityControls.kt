@@ -19,6 +19,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.data.PortionService
@@ -37,6 +39,7 @@ fun GramQuantityControls(
 ) {
     val portionService = PortionService()
     val colors = LocalRecipesColors.current
+    val haptic = LocalHapticFeedback.current
     var text by rememberSaveable(stateKey) { mutableStateOf(initialGrams.toInt().toString()) }
     var tf by rememberSaveable(stateKey, stateSaver = TextFieldValue.Saver) {
         mutableStateOf(TextFieldValue(text = text))
@@ -56,7 +59,9 @@ fun GramQuantityControls(
                 text = value
                 commitFromText(value)
             },
-            onDone = { commitFromText(tf.text) }
+            onDone = {
+                commitFromText(tf.text)
+            }
         )
         Spacer(Modifier.weight(1f))
         OutlinedButton(
@@ -65,6 +70,7 @@ fun GramQuantityControls(
                 tf = tf.copy(text = newText)
                 text = newText
                 onCommitGrams(commitVal)
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
             },
         ) {
             Icon(imageVector = Icons.Filled.Add, contentDescription = "Add a portion")
@@ -78,11 +84,15 @@ fun GramQuantityControls(
                 tf = tf.copy(text = newText)
                 text = newText
                 onCommitGrams(commitVal)
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
             }
         ) {
             Icon(imageVector = Icons.Filled.Remove, contentDescription = "Subtract a portion")
         }
-        IconButton(onClick = onDelete) {
+        IconButton(onClick = {
+            onDelete()
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+        }) {
             Icon(
                 imageVector = Icons.Outlined.Delete,
                 contentDescription = "Delete item",
@@ -102,6 +112,7 @@ fun PortionQuantityControls(
     onDelete: () -> Unit,
 ) {
     val colors = LocalRecipesColors.current
+    val haptic = LocalHapticFeedback.current
     val portionService = PortionService()
     val initialPortions = portionService.portions(initialGrams, portionGrams)
     var text by rememberSaveable(stateKey) { mutableStateOf(formatDecimalTrimmed(initialPortions)) }
@@ -126,7 +137,9 @@ fun PortionQuantityControls(
                 text = value
                 commitFromText(value)
             },
-            onDone = { commitFromText(tf.text) }
+            onDone = {
+                commitFromText(tf.text)
+            }
         )
 
         Spacer(Modifier.weight(1f))
@@ -137,6 +150,7 @@ fun PortionQuantityControls(
                 tf = tf.copy(text = newText)
                 text = newText
                 onCommitPortions(commitVal)
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
             },
         ) {
             Icon(imageVector = Icons.Filled.Add, contentDescription = "Add a portion")
@@ -152,12 +166,16 @@ fun PortionQuantityControls(
                 tf = tf.copy(text = newText)
                 text = newText
                 onCommitPortions(commitVal)
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
             }
         ) {
             Icon(imageVector = Icons.Filled.Remove, contentDescription = "Subtract a portion")
         }
 
-        IconButton(onClick = onDelete) {
+        IconButton(onClick = {
+            onDelete()
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+        }) {
             Icon(
                 imageVector = Icons.Outlined.Delete,
                 contentDescription = "Delete item",

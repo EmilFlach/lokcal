@@ -1,26 +1,19 @@
 package com.emilflach.lokcal.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.GramTextField
@@ -37,6 +30,7 @@ fun IntakeScreen(
     autoFocusSearch: Boolean = false,
 ) {
     val colors = LocalRecipesColors.current
+    val haptic = LocalHapticFeedback.current
     val state by viewModel.state.collectAsState()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
@@ -89,6 +83,10 @@ fun IntakeScreen(
                         gramsById = gramsById,
                         onAddClick = {
                             viewModel.addMealByPortions(item.id, initialPortions) { onDone() }
+                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                        },
+                        onAddByKeyboard = {
+                            viewModel.addMealByPortions(item.id, initialPortions) { onDone() }
                         },
                         inputField = { tf, requester, onValueChange, onDone ->
                             PortionsTextField(tf, requester, onValueChange, onDone)
@@ -112,6 +110,10 @@ fun IntakeScreen(
                         requesters = requesters,
                         gramsById = gramsById,
                         onAddClick = {
+                            viewModel.addFoodByGrams(item.id, initialGrams) { onDone() }
+                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                        },
+                        onAddByKeyboard = {
                             viewModel.addFoodByGrams(item.id, initialGrams) { onDone() }
                         },
                         inputField = { tf, requester, onValueChange, onDone ->
