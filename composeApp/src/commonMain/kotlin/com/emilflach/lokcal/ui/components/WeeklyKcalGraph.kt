@@ -25,10 +25,10 @@ fun WeeklyKcalGraph(last7: List<DayDelta>, maxWidth: Dp) {
             val gradient = if(d.deltaKcal < 0)
                 verticalGradient(
                     0f to Color.Transparent,
-                    1f to colors.backgroundDanger.copy(alpha = 0.9f),
+                    1f to colors.foregroundBrand.copy(alpha = 0.9f),
                 ) else
                 verticalGradient(
-                    0f to colors.backgroundSuccess.copy(alpha = 0.9f),
+                    0f to colors.foregroundBrand.copy(alpha = 0.9f),
                     1f to Color.Transparent,
                 )
             val value = when (d.deltaKcal) {

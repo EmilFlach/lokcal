@@ -167,7 +167,7 @@ class MainViewModel(
                 intakeRepo.getIntakeByMealAndDateRange(type, startIso, endIso).sumOf { it.energy_kcal_total }
             }.coerceAtLeast(0.0)
             val burned = exerciseRepo.sumKcalByDate(startIso, endIso)
-            val delta = (eaten - (startKcal + burned)) * -1
+            val delta = (eaten - (startKcal + burned))
             DayDelta(date = d, deltaKcal = delta)
         }.reversed()
         _last7Deltas.value = list
