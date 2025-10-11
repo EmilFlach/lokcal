@@ -68,7 +68,7 @@ fun GradientBackground(percentageLeft: Float) {
                         drawImage(
                             image = bitmap,
                             topLeft = Offset(x.toFloat(), y.toFloat()),
-                            alpha = 0.25f,
+                            alpha = 0.35f,
                             blendMode = BlendMode.Multiply
                         )
                     }

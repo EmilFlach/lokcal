@@ -16,18 +16,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.GradientBackground
 import com.emilflach.lokcal.ui.components.WeeklyKcalGraph
+import com.emilflach.lokcal.ui.components.getRoundedCornerShape
 import com.emilflach.lokcal.viewmodel.MainViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -239,47 +238,56 @@ fun MainScreen(
                     color = Color.Transparent,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp)
-                        .clip(MaterialTheme.shapes.medium)
+                        .padding(top = 2.dp)
+                        .clip(getRoundedCornerShape(index = summaries.indexOf(s), summaries.size))
                         .background(colors.backgroundPage)
-                        .let { modifier ->
-                            if (s.totalKcal.toInt() > 0) {
-                                modifier.drawBehind {
-                                    val borderWidth = 2.dp.toPx()
-                                    drawRect(
-                                        color = colors.backgroundBrand,
-                                        topLeft = Offset(0f, 0f),
-                                        size = Size(borderWidth, this.size.height)
-                                    )
-                                }
-                            } else {
-                                modifier
-                            }
-                        }
                         .clickable { onOpenMeal(s.mealType, selectedDate.toString()) }
                 ) {
-                    Column(Modifier.padding(horizontal = 16.dp, vertical = 20.dp)) {
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                    Row(Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 24.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Text(
-                                s.mealType.lowercase().replaceFirstChar { it.titlecase() },
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Text(
-                                "${s.totalKcal.toInt()} kcal",
-                                style = MaterialTheme.typography.titleSmall
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = s.mealIcon,
+                                    contentDescription = null,
+                                    tint = if(s.totalKcal > 0 ) colors.foregroundBrand else colors.foregroundDefault
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    s.mealType.lowercase().replaceFirstChar { it.titlecase() },
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
+                            if (s.summaryText.isNotEmpty()) {
+                                Spacer(Modifier.height(6.dp))
+                                Text(
+                                    text = s.summaryText,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = colors.foregroundSupport,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
-                        if (s.summaryText.isNotEmpty()) {
-                            Spacer(Modifier.height(6.dp))
+                        Column(modifier = Modifier.width(80.dp), horizontalAlignment = Alignment.End){
                             Text(
-                                text = s.summaryText,
+                                "kcal",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = colors.foregroundSupport,
-                                maxLines = 1
                             )
+                            Spacer(Modifier.height(6.dp))
+                            Text(
+                                "${s.totalKcal.toInt()}",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                            )
+
                         }
                     }
                 }

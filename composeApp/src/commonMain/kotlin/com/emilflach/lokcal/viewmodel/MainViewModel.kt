@@ -1,5 +1,12 @@
 package com.emilflach.lokcal.viewmodel
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cookie
+import androidx.compose.material.icons.filled.DinnerDining
+import androidx.compose.material.icons.filled.LunchDining
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.outlined.EggAlt
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.emilflach.lokcal.Intake
 import com.emilflach.lokcal.data.ExerciseRepository
 import com.emilflach.lokcal.data.IntakeRepository
@@ -32,6 +39,7 @@ class MainViewModel(
         val items: List<Intake>,
         val totalKcal: Double,
         val summaryText: String,
+        val mealIcon: ImageVector
     )
 
     data class DayDelta(
@@ -107,7 +115,8 @@ class MainViewModel(
                 mealType = type,
                 items = list,
                 totalKcal = totalKcal,
-                summaryText = buildMealSummary(list)
+                summaryText = buildMealSummary(list),
+                mealIcon = getMealIcon(type)
             )
         }
 
@@ -135,6 +144,14 @@ class MainViewModel(
             .sortedByDescending { it.value }
             .take(6)
         return counts.joinToString(", ") { (name, count) -> if (count > 1) "$name x$count" else name }
+    }
+
+    private fun getMealIcon(mealType: String) = when (mealType) {
+        "BREAKFAST" -> Icons.Outlined.EggAlt
+        "LUNCH" -> Icons.Filled.LunchDining
+        "DINNER" -> Icons.Filled.DinnerDining
+        "SNACK" -> Icons.Filled.Cookie
+        else -> Icons.Filled.Restaurant
     }
 
     private fun computeLast7Deltas() {
