@@ -6,17 +6,16 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AddLink
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,6 +41,8 @@ fun FoodEditScreen(
         if (id != null) onSaved()
     }
 
+    val scope = rememberCoroutineScope()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -58,6 +59,12 @@ fun FoodEditScreen(
                             onDeleted()
                         }) {
                             Icon(Icons.Default.Delete, contentDescription = "Delete")
+                        }
+                    } else {
+                        IconButton(onClick = {
+                            viewModel.openImportDialog()
+                        }) {
+                            Icon(Icons.Filled.AddLink, contentDescription = "Import food")
                         }
                     }
                 },
@@ -165,6 +172,42 @@ fun FoodEditScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(64.dp))
+        }
+
+        if (state.showUrlDialog) {
+            AlertDialog(
+                onDismissRequest = { if (!state.isImporting) viewModel.closeImportDialog() },
+                confirmButton = {
+                    TextButton(onClick = {
+                        if (!state.isImporting) {
+                            scope.launch { viewModel.importFromUrl(state.urlInput) }
+                        }
+                    }, enabled = !state.isImporting) {
+                        Text(if (state.isImporting) "Importing..." else "Import")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { if (!state.isImporting) viewModel.closeImportDialog() }, enabled = !state.isImporting) {
+                        Text("Cancel")
+                    }
+                },
+                title = { Text("Import from URL") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = state.urlInput,
+                            onValueChange = { viewModel.setUrlInput(it) },
+                            label = { Text("Albert Heijn product URL") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        val err = state.importError
+                        if (err != null) {
+                            Text(err, color = colors.backgroundBrand)
+                        }
+                    }
+                }
+            )
         }
     }
 }

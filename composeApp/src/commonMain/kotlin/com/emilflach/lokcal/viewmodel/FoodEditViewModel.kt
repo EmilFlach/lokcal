@@ -1,6 +1,7 @@
 package com.emilflach.lokcal.viewmodel
 
 import com.emilflach.lokcal.Food
+import com.emilflach.lokcal.data.AlbertHeijnScraper
 import com.emilflach.lokcal.data.FoodRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,10 +31,17 @@ class FoodEditViewModel(
         val imageUrl: String = "",
         val gtin13: String = "",
         val source: String = "manual",
+        // Import dialog state
+        val showUrlDialog: Boolean = false,
+        val urlInput: String = "",
+        val isImporting: Boolean = false,
+        val importError: String? = null,
     )
 
     private val _edit = MutableStateFlow(EditState())
     val edit: StateFlow<EditState> = _edit.asStateFlow()
+
+    private val scraper by lazy { AlbertHeijnScraper() }
 
     init {
         // initial load
@@ -73,6 +81,40 @@ class FoodEditViewModel(
             } else {
                 _edit.value = EditState()
             }
+        }
+    }
+
+    // Import dialog controls
+    fun openImportDialog() { _edit.value = _edit.value.copy(showUrlDialog = true, importError = null) }
+    fun closeImportDialog() { _edit.value = _edit.value.copy(showUrlDialog = false, isImporting = false, importError = null) }
+    fun setUrlInput(v: String) { _edit.value = _edit.value.copy(urlInput = v) }
+
+    suspend fun importFromUrl(urlRaw: String) {
+        val url = urlRaw.trim()
+        if (url.isEmpty()) {
+            _edit.value = _edit.value.copy(importError = "Please enter a URL")
+            return
+        }
+        _edit.value = _edit.value.copy(isImporting = true, importError = null)
+
+        try {
+            val r = scraper.scrape(url)
+            val current = _edit.value
+            _edit.value = current.copy(
+                name = r.name.toString().ifBlank { current.name },
+                energyText = r.kcalPer100g.toString().ifBlank { current.energyText },
+                servingSize = r.servingSizeGrams.toString().ifBlank { current.servingSize },
+                productUrl = url,
+                imageUrl = r.imageUrl ?: current.imageUrl,
+                gtin13 = r.gtin13 ?: current.gtin13,
+                brandName = r.name.toString().ifBlank { current.name },
+                source = "ah",
+                showUrlDialog = false,
+                isImporting = false,
+                importError = null,
+            )
+        } catch (e: Exception) {
+            _edit.value = _edit.value.copy(isImporting = false, importError = "Failed to import from URL")
         }
     }
 

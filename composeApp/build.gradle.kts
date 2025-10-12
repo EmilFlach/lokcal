@@ -23,6 +23,8 @@ kotlin {
         instrumentedTestVariant.sourceSetTree.set(KotlinSourceSetTree.test)
     }
 
+    compilerOptions.freeCompilerArgs.add("-Xexpect-actual-classes")
+
     jvm()
 
     wasmJs {
