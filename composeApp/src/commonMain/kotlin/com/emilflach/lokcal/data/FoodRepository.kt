@@ -52,19 +52,21 @@ class FoodRepository(database: Database) {
         dutchName: String?,
         source: String?,
     ): Long {
-        queries.insertManual(
-            name = name,
-            brand_name = brandName,
-            energy_kcal_per_100g = energyKcalPer100g,
-            product_url = productUrl,
-            image_url = imageUrl,
-            gtin13 = gtin13,
-            serving_size = servingSize,
-            english_name = englishName,
-            dutch_name = dutchName,
-            source = source
-        )
-        return queries.selectLastInsertRowId().executeAsOne()
+        return queries.transactionWithResult {
+            queries.insertManual(
+                name = name,
+                brand_name = brandName,
+                energy_kcal_per_100g = energyKcalPer100g,
+                product_url = productUrl,
+                image_url = imageUrl,
+                gtin13 = gtin13,
+                serving_size = servingSize,
+                english_name = englishName,
+                dutch_name = dutchName,
+                source = source
+            )
+            queries.selectLastInsertRowId().executeAsOne()
+        }
     }
 
     fun delete(id: Long) {

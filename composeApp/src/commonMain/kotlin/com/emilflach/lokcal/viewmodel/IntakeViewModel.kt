@@ -2,19 +2,12 @@ package com.emilflach.lokcal.viewmodel
 
 import com.emilflach.lokcal.Food
 import com.emilflach.lokcal.Meal
-import com.emilflach.lokcal.data.FoodRepository
-import com.emilflach.lokcal.data.IntakeRepository
-import com.emilflach.lokcal.data.LabelService
-import com.emilflach.lokcal.data.PortionService
+import com.emilflach.lokcal.data.*
 import com.emilflach.lokcal.util.NumberUtils
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
 class IntakeViewModel(
     private val foodRepo: FoodRepository,
@@ -27,6 +20,7 @@ class IntakeViewModel(
         val meals: List<Meal> = emptyList(),
         val foods: List<Food> = emptyList(),
         val selectedMealType: String,
+        val isSearchingOnline: Boolean = false,
     )
 
     private val _state = MutableStateFlow(UiState(selectedMealType = initialMealType))
@@ -38,6 +32,9 @@ class IntakeViewModel(
     // Centralized services
     private val portionService = PortionService(intakeRepo)
     private val labelService = LabelService(intakeRepo, portionService)
+    private val openFoodFactsSearch = OpenFoodFactsSearch()
+    private val openFoodFactsResults = mutableMapOf<Long, OffItem>()
+    private var openFoodFactsTempId = -1L
 
     init {
         performSearch(state.value.selectedMealType)
@@ -45,6 +42,8 @@ class IntakeViewModel(
 
     fun setQuery(value: String) {
         _state.value = _state.value.copy(query = value)
+        openFoodFactsResults.clear()
+        openFoodFactsTempId = -1L
         performSearch(state.value.selectedMealType)
     }
 
@@ -112,11 +111,79 @@ class IntakeViewModel(
 
     fun addFoodByGrams(foodId: Long, gramsText: String, onSuccess: () -> Unit) {
         val grams = NumberUtils.parseDecimal(gramsText, min = 0.0).coerceAtLeast(0.0)
-        if (grams > 0.0) {
+        if (grams <= 0.0) return
+
+        // If this is an OpenFoodFacts item (negative ID), insert it first
+        if (foodId < 0 && openFoodFactsResults.containsKey(foodId)) {
+            val it = openFoodFactsResults[foodId] ?: return
+            try {
+                val newId = foodRepo.insertManual(
+                    name = it.name,
+                    brandName = null,
+                    energyKcalPer100g = it.energyKcalPer100g ?: 0.0,
+                    productUrl = it.productUrl,
+                    imageUrl = it.imageUrl,
+                    gtin13 = it.gtin13,
+                    servingSize = if(it.servingSize != null)  it.servingSize.toString() else "100",
+                    englishName = null,
+                    dutchName = it.dutchName,
+                    source = "manual",
+                )
+                logPortion(newId, grams)
+                onSuccess()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        } else {
             logPortion(foodId, grams)
             onSuccess()
         }
+
     }
 
     private fun mealType() = _state.value.selectedMealType
+
+    fun searchOpenFoodFacts() {
+        val q = _state.value.query.trim()
+        if (q.isEmpty()) return
+        _state.value = _state.value.copy(isSearchingOnline = true)
+        scope.launch {
+            try {
+                val items = openFoodFactsSearch.search(q)
+                openFoodFactsResults.clear()
+                openFoodFactsTempId = -1L
+
+                val transientFoods = items.map {
+                    val tempId = openFoodFactsTempId--
+                    openFoodFactsResults[tempId] = it
+                    Food(
+                        id = tempId,
+                        name = it.name,
+                        description = null,
+                        brand = null,
+                        category = null,
+                        energy_kcal_per_100g = it.energyKcalPer100g ?: 0.0,
+                        unit = "g",
+                        external_id = null,
+                        plural_name = null,
+                        english_name = null,
+                        dutch_name = it.dutchName,
+                        brand_name = null,
+                        serving_size = it.servingSize.toString(),
+                        gtin13 = it.gtin13,
+                        image_url = it.imageUrl,
+                        product_url = it.productUrl,
+                        source = "off",
+                        label_id = null,
+                        created_at_source = null,
+                        updated_at_source = null,
+                        on_hand = 0L,
+                        raw_json = null,
+                        created_at = ""
+                    )
+                }
+                _state.value = _state.value.copy(foods = transientFoods, isSearchingOnline = false)
+            } catch (_: Throwable) {}
+        }
+    }
 }

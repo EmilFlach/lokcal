@@ -1,18 +1,19 @@
 package com.emilflach.lokcal.ui.components
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ManageSearch
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -28,6 +29,8 @@ fun MealTopBar(
     query: String = "",
     onQueryChange: (String) -> Unit = {},
     autoFocusSearch: Boolean = false,
+    onSearchOnline: () -> Unit = {},
+    isSearchingOnline: Boolean = false,
     trailingActions: (@Composable () -> Unit)? = null,
     colors: TopAppBarColors = run {
         val color = LocalRecipesColors.current
@@ -71,41 +74,68 @@ fun MealTopBar(
 
         if (showSearch) {
             val color = LocalRecipesColors.current
-            TextField(
-                value = query,
-                onValueChange = onQueryChange,
-                singleLine = true,
-                shape = MaterialTheme.shapes.extraLarge,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = color.backgroundSurface1,
-                    unfocusedContainerColor = color.backgroundSurface1,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                ),
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        modifier = Modifier.padding(start = 16.dp)
-                    )
-                },
-                trailingIcon = {
-                    IconButton(onClick = {
-                        onQueryChange("")
-                        focusRequester.requestFocus()
-                    }, modifier = Modifier.padding(end = 8.dp)) {
+            Row {
+                TextField(
+                    value = query,
+                    onValueChange = onQueryChange,
+                    singleLine = true,
+                    shape = MaterialTheme.shapes.extraLarge,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = color.backgroundSurface1,
+                        unfocusedContainerColor = color.backgroundSurface1,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                    ),
+                    leadingIcon = {
                         Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Clear search",
-
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            modifier = Modifier.padding(start = 16.dp)
                         )
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            onQueryChange("")
+                            focusRequester.requestFocus()
+                        }, modifier = Modifier.padding(end = 8.dp)) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Clear search",
+
+                                )
+                        }
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                        .focusRequester(focusRequester)
+                )
+                Surface(
+                    onClick = { onSearchOnline() }, modifier = Modifier
+                        .padding(end = 16.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .size(57.dp)
+                        .background(color.backgroundSurface2)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isSearchingOnline) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = color.foregroundDefault,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ManageSearch,
+                                contentDescription = "Search OpenFoodFacts",
+                            )
+                        }
                     }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                    .focusRequester(focusRequester)
-            )
+                }
+            }
         }
     }
 }

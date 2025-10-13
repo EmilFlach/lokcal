@@ -23,16 +23,20 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.screens.FocusRequesters
+import com.emilflach.lokcal.ui.util.rememberKtorImageLoader
 
 @Composable
 fun IntakeListItem(
     name: String,
     subtitle: String,
+    imageUrl: String? = null,
     keyId: Long,
     initialValue: String,
     showBorder: Boolean = false,
@@ -53,6 +57,7 @@ fun IntakeListItem(
 ) {
     val keyboard = LocalSoftwareKeyboardController.current
     val colors = LocalRecipesColors.current
+    val imageLoader = rememberKtorImageLoader()
 
     var tf by rememberSaveable(keyId, stateSaver = TextFieldValue.Saver) {
         mutableStateOf(TextFieldValue(text = initialValue))
@@ -85,15 +90,29 @@ fun IntakeListItem(
                 },
                 onLongClick = onLongPress
             )
-            .padding(vertical = 24.dp, horizontal = 16.dp),
+            .padding(vertical = 16.dp, horizontal = 16.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            if (!imageUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = null,
+                    imageLoader = imageLoader,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .padding(end = 4.dp)
+                        .height(40.dp)
+                        .width(35.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .background(colors.backgroundSurface2)
+                )
+            }
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             ) {
                 Text(
                     text = name,
@@ -105,6 +124,7 @@ fun IntakeListItem(
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.foregroundSupport
                 )
+                Spacer(Modifier.height(4.dp))
             }
 
             inputField(

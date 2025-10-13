@@ -41,7 +41,9 @@ fun IntakeScreen(
                 showSearch = true,
                 query = state.query,
                 onQueryChange = viewModel::setQuery,
-                autoFocusSearch = autoFocusSearch
+                autoFocusSearch = autoFocusSearch,
+                onSearchOnline = viewModel::searchOpenFoodFacts,
+                isSearchingOnline = state.isSearchingOnline,
             )
         }
     ) { innerPadding ->
@@ -101,6 +103,7 @@ fun IntakeScreen(
                         name = item.name,
                         subtitle = viewModel.subtitleForFood(item, initialGrams),
                         keyId = keyId,
+                        imageUrl = item.image_url,
                         initialValue = initialGrams,
                         index = state.meals.size + index,
                         size = totalSize,
