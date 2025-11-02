@@ -183,7 +183,9 @@ class IntakeViewModel(
                     )
                 }
                 _state.value = _state.value.copy(foods = transientFoods, isSearchingOnline = false)
-            } catch (_: Throwable) {}
+            } catch (_: Throwable) {
+                _state.value = _state.value.copy(isSearchingOnline = false)
+            }
         }
     }
 }

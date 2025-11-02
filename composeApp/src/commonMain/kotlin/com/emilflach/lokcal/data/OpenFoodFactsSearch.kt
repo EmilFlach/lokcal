@@ -2,6 +2,7 @@ package com.emilflach.lokcal.data
 
 import io.ktor.client.*
 import io.ktor.client.call.*
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
@@ -24,6 +25,9 @@ class OpenFoodFactsSearch(
                 parameters.append("json", "1")
             }
             accept(ContentType.Application.Json)
+            timeout {
+                requestTimeoutMillis = 10000
+            }
         }.body()
         return resp.products.orEmpty().mapNotNull { it.toOffItemOrNull() }
     }
