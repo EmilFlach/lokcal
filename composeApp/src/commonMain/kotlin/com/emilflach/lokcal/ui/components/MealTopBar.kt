@@ -1,12 +1,11 @@
 package com.emilflach.lokcal.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ManageSearch
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.DocumentScanner
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,6 +29,7 @@ fun MealTopBar(
     onQueryChange: (String) -> Unit = {},
     autoFocusSearch: Boolean = false,
     onSearchOnline: () -> Unit = {},
+    onScanBarcode: () -> Unit = {},
     isSearchingOnline: Boolean = false,
     trailingActions: (@Composable () -> Unit)? = null,
     colors: TopAppBarColors = run {
@@ -86,13 +86,6 @@ fun MealTopBar(
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
                     ),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search",
-                            modifier = Modifier.padding(start = 16.dp)
-                        )
-                    },
                     trailingIcon = {
                         IconButton(onClick = {
                             onQueryChange("")
@@ -107,15 +100,17 @@ fun MealTopBar(
                     },
                     modifier = Modifier
                         .weight(1f)
-                        .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                        .padding(start = 16.dp, end = 8.dp, bottom = 16.dp)
                         .focusRequester(focusRequester)
                 )
                 Surface(
-                    onClick = { onSearchOnline() }, modifier = Modifier
-                        .padding(end = 16.dp)
+                    onClick = { onSearchOnline() },
+                    color = color.backgroundSurface2,
+                    modifier = Modifier
+                        .padding(end = 8.dp)
                         .clip(MaterialTheme.shapes.small)
-                        .size(57.dp)
-                        .background(color.backgroundSurface2)
+                        .height(57.dp)
+                        .width(57.dp)
                 ) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -130,11 +125,31 @@ fun MealTopBar(
                         } else {
                             Icon(
                                 Icons.AutoMirrored.Filled.ManageSearch,
-                                contentDescription = "Search OpenFoodFacts",
+                                contentDescription = "Search the internet",
                             )
                         }
                     }
                 }
+                Surface(
+                    onClick = { onScanBarcode() },
+                    color = color.backgroundSurface2,
+                    modifier = Modifier
+                        .padding(end = 16.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .height(57.dp)
+                        .width(47.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            Icons.Default.DocumentScanner,
+                            contentDescription = "Scan a barcode",
+                        )
+                    }
+                }
+
             }
         }
     }

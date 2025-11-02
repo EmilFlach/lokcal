@@ -90,6 +90,13 @@ class FoodRepository(database: Database) {
         if (q.isEmpty()) return emptyList()
         val qLower = q.lowercase()
 
+        // If the query looks like a GTIN-13 (EAN-13) barcode, try exact match on gtin13 first
+        val digitsOnly = q.filter { it.isDigit() }
+        if (digitsOnly.length == 13) {
+            val byBarcode = queries.selectByGtin13(digitsOnly).executeAsList()
+            if (byBarcode.isNotEmpty()) return byBarcode
+        }
+
         fun sourcePriority(src: String?): Int = when (src?.lowercase()) {
             "manual" -> 0
             "nevo" -> 1

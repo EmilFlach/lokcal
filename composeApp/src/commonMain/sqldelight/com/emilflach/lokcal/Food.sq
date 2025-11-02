@@ -57,6 +57,10 @@ INSERT INTO FoodAlias(food_id, alias) VALUES (?, ?);
 selectById:
 SELECT * FROM Food WHERE id = ?;
 
+-- Exact match by GTIN-13 barcode
+selectByGtin13:
+SELECT * FROM Food WHERE gtin13 = ?;
+
 deleteById:
 DELETE FROM Food WHERE id = ?;
 

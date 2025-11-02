@@ -8,20 +8,25 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
+import com.emilflach.lokcal.camera.CameraManager
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.GramTextField
 import com.emilflach.lokcal.ui.components.IntakeListItem
 import com.emilflach.lokcal.ui.components.MealTopBar
 import com.emilflach.lokcal.ui.components.PortionsTextField
 import com.emilflach.lokcal.viewmodel.IntakeViewModel
+import org.ncgroup.kscan.*
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun IntakeScreen(
     viewModel: IntakeViewModel,
@@ -31,7 +36,9 @@ fun IntakeScreen(
     val color = LocalRecipesColors.current
     val haptic = LocalHapticFeedback.current
     val uriHandler = LocalUriHandler.current
+    val keyboard = LocalSoftwareKeyboardController.current
     val state by viewModel.state.collectAsState()
+    val showScanner = remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -42,6 +49,10 @@ fun IntakeScreen(
                 query = state.query,
                 onQueryChange = viewModel::setQuery,
                 autoFocusSearch = autoFocusSearch,
+                onScanBarcode = {
+                    keyboard?.hide()
+                    showScanner.value = true
+                },
                 onSearchOnline = viewModel::searchOpenFoodFacts,
                 isSearchingOnline = state.isSearchingOnline,
             )
@@ -129,7 +140,47 @@ fun IntakeScreen(
             }
         }
     }
+
+    if (showScanner.value) {
+        if (CameraManager.arePermissionsGranted()) {
+            BackHandler { showScanner.value = false }
+            ScannerView(
+                codeTypes = listOf(
+                    BarcodeFormats.FORMAT_EAN_13,
+                ),
+                scannerUiOptions = ScannerUiOptions(
+                    headerTitle = "Scan barcode",
+                    showZoom = false,
+                ),
+                colors = scannerColors(
+                    headerContainerColor = color.backgroundPage,
+                    barcodeFrameColor = color.foregroundBrand,
+                ),
+            ) { result ->
+                when (result) {
+                    is BarcodeResult.OnSuccess -> {
+                        val raw = result.barcode.data
+                        val digits = raw.filter { it.isDigit() }
+                        println("Barcode: $raw (digits=$digits), format: ${result.barcode.format}")
+                        if (digits.length == 13) {
+                            viewModel.setQuery(digits)
+                        } else {
+                            viewModel.setQuery(raw)
+                        }
+                        showScanner.value = false
+                    }
+                    else -> {
+                        showScanner.value = false
+                    }
+                }
+            }
+        } else {
+            showScanner.value = false
+        }
+    }
 }
+
+
 
 @Stable
 class FocusRequesters {
