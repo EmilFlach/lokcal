@@ -9,6 +9,7 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -192,13 +193,24 @@ fun MainScreen(
                                 .alpha(fadeAlpha.value)
                         ) {
                             Column {
-                                Text(
-                                    text = "kcal burned",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = colors.foregroundSupport,
-                                    textAlign = TextAlign.Left,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = "kcal burned",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = colors.foregroundSupport,
+                                        textAlign = TextAlign.Left
+                                    )
+                                    Spacer(Modifier.weight(1f))
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = "Edit burned kcal",
+                                        tint = colors.foregroundSupport,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
                                 Text(
                                     text = burned.toInt().toString(),
                                     style = MaterialTheme.typography.displayLarge,
