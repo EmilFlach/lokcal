@@ -74,10 +74,12 @@ class AlbertHeijnScraper(
     }
 
     private fun extractKcal(text: String): Double? {
-        // Prefer explicit kcal tokens like "76 kcal"
-        regexGroup(text, "(\\d{2,4})\\s*kcal", ignoreCase = true)?.let { return it.toDoubleOrNull() }
+        // Prefer explicit kcal tokens like "76 kcal" or "49.0 kcal" (supports comma or dot decimals)
+        regexGroup(text, "([0-9]+(?:[.,][0-9]+)?)\\s*kcal", ignoreCase = true)
+            ?.let { return it.replace(',', '.').toDoubleOrNull() }
         // Some AH JSON may hold perPortionKcal
-        regexGroup(text, "\\\"kcal\\\"\\s*:\\s*([0-9.]+)")?.let { return it.toDoubleOrNull() }
+        regexGroup(text, "\\\"kcal\\\"\\s*:\\s*([0-9.,]+)")
+            ?.let { return it.replace(',', '.').toDoubleOrNull() }
         return null
     }
 
