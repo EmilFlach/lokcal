@@ -17,6 +17,19 @@ class OpenFoodFactsSearch(
 ) {
     suspend fun search(query: String): List<OffItem> {
         if (query.isBlank()) return emptyList()
+        // If the query is a GTIN-13 (EAN-13) barcode, use the product endpoint (single item)
+        val isGtin13 = query.length == 13 && query.all { it.isDigit() }
+        if (isGtin13) {
+            val productUrl = "https://world.openfoodfacts.net/api/v3/product/$query"
+            val resp: OffProductResponse = client.get(productUrl) {
+                accept(ContentType.Application.Json)
+                timeout { requestTimeoutMillis = 10000 }
+            }.body()
+            val item = resp.product?.toOffItemOrNull()
+            return item?.let { listOf(it) } ?: emptyList()
+        }
+
+        // Fallback to search endpoint for non-barcode queries (list)
         val url = "https://world.openfoodfacts.org/cgi/search.pl"
         val resp: OffResponse = client.get(url) {
             url {
@@ -52,10 +65,16 @@ private data class OffResponse(
 )
 
 @Serializable
+private data class OffProductResponse(
+    val product: OffProduct? = null
+)
+
+@Serializable
 private data class OffProduct(
     @SerialName("product_name") val productName: String? = null,
     @SerialName("product_name_nl") val productNameNl: String? = null,
     @SerialName("_id") val id: String? = null,
+    @SerialName("code") val code: String? = null,
     @SerialName("url") val url: String? = null,
     @SerialName("selected_images") val selectedImages: SelectedImages? = null,
     @SerialName("nutriments") val nutriments: Nutriments? = null,
@@ -100,7 +119,7 @@ private fun OffProduct.toOffItemOrNull(): OffItem? {
     }
     return OffItem(
         name = name,
-        gtin13 = id,
+        gtin13 = id ?: code,
         energyKcalPer100g = nutriments?.energyKcalPer100g ?: 0.0,
         servingSize = servingQuantity,
         productUrl = url,
