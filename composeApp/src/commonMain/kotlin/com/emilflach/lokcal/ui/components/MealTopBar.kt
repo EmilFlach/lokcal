@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ManageSearch
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DocumentScanner
 import androidx.compose.material3.*
@@ -117,10 +118,9 @@ fun MealTopBar(
                         contentAlignment = Alignment.Center
                     ) {
                         if (isSearchingOnline) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = color.foregroundDefault,
-                                strokeWidth = 2.dp
+                            Icon(
+                                Icons.Default.Cancel,
+                                contentDescription = "Stop searching",
                             )
                         } else {
                             Icon(

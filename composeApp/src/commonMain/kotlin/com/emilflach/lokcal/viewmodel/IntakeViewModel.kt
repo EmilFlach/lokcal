@@ -21,6 +21,16 @@ class IntakeViewModel(
         val foods: List<Food> = emptyList(),
         val selectedMealType: String,
         val isSearchingOnline: Boolean = false,
+        // Separate online results and loading flags
+        val ahFoods: List<Food> = emptyList(),
+        val offFoods: List<Food> = emptyList(),
+        val isSearchingAh: Boolean = false,
+        val isSearchingOff: Boolean = false,
+        // Errors and empty-state flags per section
+        val ahError: String? = null,
+        val offError: String? = null,
+        val ahNoResults: Boolean = false,
+        val offNoResults: Boolean = false,
     )
 
     private val _state = MutableStateFlow(UiState(selectedMealType = initialMealType))
@@ -28,6 +38,7 @@ class IntakeViewModel(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var searchJob: Job? = null
+    private var onlineSearchJob: Job? = null
 
     // Centralized services
     private val portionService = PortionService(intakeRepo)
@@ -35,15 +46,32 @@ class IntakeViewModel(
     private val openFoodFactsSearch = OpenFoodFactsSearch()
     private val openFoodFactsResults = mutableMapOf<Long, OffItem>()
     private var openFoodFactsTempId = -1L
+    private val albertHeijnSearch = AlbertHeijnSearch()
+    private val albertHeijnResults = mutableMapOf<Long, OffItem>()
+    private var albertHeijnTempId = -100000L
 
     init {
         performSearch(state.value.selectedMealType)
     }
 
     fun setQuery(value: String) {
+        // Cancel any ongoing online searches when the query changes
+        cancelOnlineSearch()
         _state.value = _state.value.copy(query = value)
         openFoodFactsResults.clear()
-        openFoodFactsTempId = -1L
+        albertHeijnResults.clear()
+        // Clear sectioned online results when query changes
+        _state.value = _state.value.copy(
+            ahFoods = emptyList(),
+            offFoods = emptyList(),
+            isSearchingAh = false,
+            isSearchingOff = false,
+            isSearchingOnline = false,
+            ahError = null,
+            offError = null,
+            ahNoResults = false,
+            offNoResults = false,
+        )
         performSearch(state.value.selectedMealType)
     }
 
@@ -134,6 +162,26 @@ class IntakeViewModel(
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+        } else if (foodId < 0 && albertHeijnResults.containsKey(foodId)) {
+            val it = albertHeijnResults[foodId] ?: return
+            try {
+                val newId = foodRepo.insertManual(
+                    name = it.name,
+                    brandName = null,
+                    energyKcalPer100g = it.energyKcalPer100g ?: 0.0,
+                    productUrl = it.productUrl,
+                    imageUrl = it.imageUrl,
+                    gtin13 = it.gtin13,
+                    servingSize = if (it.servingSize != null) it.servingSize.toString() else "100",
+                    englishName = null,
+                    dutchName = it.dutchName,
+                    source = "ah",
+                )
+                logPortion(newId, grams)
+                onSuccess()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         } else {
             logPortion(foodId, grams)
             onSuccess()
@@ -143,49 +191,175 @@ class IntakeViewModel(
 
     private fun mealType() = _state.value.selectedMealType
 
-    fun searchOpenFoodFacts() {
+    fun searchOnline() {
         val q = _state.value.query.trim()
         if (q.isEmpty()) return
-        _state.value = _state.value.copy(isSearchingOnline = true)
-        scope.launch {
+        // If already searching, treat as cancel action
+        if (_state.value.isSearchingOnline) {
+            cancelOnlineSearch()
+            return
+        }
+        _state.value = _state.value.copy(
+            isSearchingOnline = true,
+            isSearchingAh = true,
+            isSearchingOff = true,
+            ahFoods = emptyList(),
+            offFoods = emptyList(),
+            ahError = null,
+            offError = null,
+            ahNoResults = false,
+            offNoResults = false,
+        )
+        // Cancel any previous job just in case
+        onlineSearchJob?.cancel()
+        onlineSearchJob = scope.launch {
             try {
-                val items = openFoodFactsSearch.search(q)
+                // Clear transient maps and counters
                 openFoodFactsResults.clear()
-                openFoodFactsTempId = -1L
+                albertHeijnResults.clear()
 
-                val transientFoods = items.map {
-                    val tempId = openFoodFactsTempId--
-                    openFoodFactsResults[tempId] = it
-                    Food(
-                        id = tempId,
-                        name = it.name,
-                        description = null,
-                        brand = null,
-                        category = null,
-                        energy_kcal_per_100g = it.energyKcalPer100g ?: 0.0,
-                        unit = "g",
-                        external_id = null,
-                        plural_name = null,
-                        english_name = null,
-                        dutch_name = it.dutchName,
-                        brand_name = null,
-                        serving_size = it.servingSize.toString(),
-                        gtin13 = it.gtin13,
-                        image_url = it.imageUrl,
-                        product_url = it.productUrl,
-                        source = "off",
-                        label_id = null,
-                        created_at_source = null,
-                        updated_at_source = null,
-                        on_hand = 0L,
-                        raw_json = null,
-                        created_at = ""
-                    )
+                // Launch OFF search
+                val offJob = launch {
+                    try {
+                        val offItems = withContext(Dispatchers.Default) { openFoodFactsSearch.search(q) }
+                        val offTransient = offItems.map {
+                            val tempId = openFoodFactsTempId--
+                            openFoodFactsResults[tempId] = it
+                            Food(
+                                id = tempId,
+                                name = it.name,
+                                description = null,
+                                brand = null,
+                                category = null,
+                                energy_kcal_per_100g = it.energyKcalPer100g ?: 0.0,
+                                unit = "g",
+                                external_id = null,
+                                plural_name = null,
+                                english_name = null,
+                                dutch_name = it.dutchName,
+                                brand_name = null,
+                                serving_size = it.servingSize?.toString(),
+                                gtin13 = it.gtin13,
+                                image_url = it.imageUrl,
+                                product_url = it.productUrl,
+                                source = "off",
+                                label_id = null,
+                                created_at_source = null,
+                                updated_at_source = null,
+                                on_hand = 0L,
+                                raw_json = null,
+                                created_at = ""
+                            )
+                        }
+                        _state.value = _state.value.copy(
+                            offFoods = offTransient,
+                            isSearchingOff = false,
+                            offError = null,
+                            offNoResults = offTransient.isEmpty()
+                        )
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (_: Throwable) {
+                        // Distinguish timeout/connectivity from other errors if desired; for now show connection error
+                        _state.value = _state.value.copy(
+                            isSearchingOff = false,
+                            offError = "Could not connect to OpenFoodFacts",
+                        )
+                    } finally {
+                        if (!_state.value.isSearchingAh) {
+                            _state.value = _state.value.copy(isSearchingOnline = false)
+                        }
+                    }
                 }
-                _state.value = _state.value.copy(foods = transientFoods, isSearchingOnline = false)
+
+                // Launch AH search
+                val ahJob = launch {
+                    try {
+                        val ahItems = withContext(Dispatchers.Default) { albertHeijnSearch.search(q) }
+                        val ahTransient = ahItems.map {
+                            val tempId = albertHeijnTempId--
+                            albertHeijnResults[tempId] = it
+                            Food(
+                                id = tempId,
+                                name = it.name,
+                                description = null,
+                                brand = null,
+                                category = null,
+                                energy_kcal_per_100g = it.energyKcalPer100g ?: 0.0,
+                                unit = "g",
+                                external_id = null,
+                                plural_name = null,
+                                english_name = null,
+                                dutch_name = it.dutchName,
+                                brand_name = null,
+                                serving_size = it.servingSize?.toString(),
+                                gtin13 = it.gtin13,
+                                image_url = it.imageUrl,
+                                product_url = it.productUrl,
+                                source = "ah",
+                                label_id = null,
+                                created_at_source = null,
+                                updated_at_source = null,
+                                on_hand = 0L,
+                                raw_json = null,
+                                created_at = ""
+                            )
+                        }
+                        _state.value = _state.value.copy(
+                            ahFoods = ahTransient,
+                            isSearchingAh = false,
+                            ahError = null,
+                            ahNoResults = ahTransient.isEmpty()
+                        )
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (_: Throwable) {
+                        _state.value = _state.value.copy(
+                            isSearchingAh = false,
+                            ahError = "Could not connect to Albert Heijn",
+                        )
+                    } finally {
+                        if (!_state.value.isSearchingOff) {
+                            _state.value = _state.value.copy(isSearchingOnline = false)
+                        }
+                    }
+                }
+
+                // Wait for both jobs to finish (or be cancelled)
+                try {
+                    offJob.join()
+                    ahJob.join()
+                } catch (_: CancellationException) {
+                    // Propagate cancellation handling below
+                }
+            } catch (_: CancellationException) {
+                // Search was cancelled: just turn off the loading flags, keep any partial results
+                _state.value = _state.value.copy(
+                    isSearchingOnline = false,
+                    isSearchingAh = false,
+                    isSearchingOff = false,
+                )
             } catch (_: Throwable) {
-                _state.value = _state.value.copy(isSearchingOnline = false)
+                _state.value = _state.value.copy(
+                    isSearchingOnline = false,
+                    isSearchingAh = false,
+                    isSearchingOff = false,
+                )
             }
         }
+    }
+
+    private fun cancelOnlineSearch() {
+        onlineSearchJob?.cancel()
+        onlineSearchJob = null
+        _state.value = _state.value.copy(
+            isSearchingOnline = false,
+            isSearchingAh = false,
+            isSearchingOff = false,
+            ahError = null,
+            offError = null,
+            ahNoResults = false,
+            offNoResults = false,
+        )
     }
 }

@@ -4,8 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -53,7 +52,7 @@ fun IntakeScreen(
                     keyboard?.hide()
                     showScanner.value = true
                 },
-                onSearchOnline = viewModel::searchOpenFoodFacts,
+                onSearchOnline = viewModel::searchOnline,
                 isSearchingOnline = state.isSearchingOnline,
             )
         }
@@ -68,74 +67,219 @@ fun IntakeScreen(
             horizontalAlignment = Alignment.Start
         ) {
 
-            val gramsById = remember { mutableStateMapOf<Long, String>() }
+            // Cache grams per transient item id; reset when the query changes to avoid stale values
+            val gramsById = remember(state.query) { mutableStateMapOf<Long, String>() }
             val requesters = remember { FocusRequesters() }
 
             LazyColumn(
                 contentPadding = PaddingValues(vertical = 16.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                val totalSize = state.meals.size + state.foods.size
-
-                itemsIndexed(items = state.meals) { index, item ->
-                    val keyId = -item.id // Negative to avoid collision with food IDs
-                    val initialPortions = gramsById.getOrPut(keyId) { "1" }
-
-                    IntakeListItem(
-                        name = item.name,
-                        subtitle = viewModel.subtitleForMeal(item, initialPortions),
-                        keyId = keyId,
-                        initialValue = initialPortions,
-                        showBorder = true,
-                        index = index,
-                        size = totalSize,
-                        requesters = requesters,
-                        gramsById = gramsById,
-                        onAddClick = {
-                            viewModel.addMealByPortions(item.id, initialPortions) { onDone() }
-                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                        },
-                        onAddByKeyboard = {
-                            viewModel.addMealByPortions(item.id, initialPortions) { onDone() }
-                        },
-                        inputField = { tf, requester, onValueChange, onDone ->
-                            PortionsTextField(tf, requester, onValueChange, onDone)
+                val showingOnline = state.isSearchingAh || state.isSearchingOff || state.ahFoods.isNotEmpty() || state.offFoods.isNotEmpty()
+                if (showingOnline) {
+                    // Show AH section first
+                    item("ah_header") {
+                        Text(
+                            text = "Albert Heijn",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = color.foregroundSupport,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
+                    if (state.ahFoods.isEmpty()) {
+                        if (state.isSearchingAh) {
+                            item("ah_loading") {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = color.foregroundDefault,
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                        } else if (state.ahError != null) {
+                            item("ah_error") {
+                                val err = state.ahError
+                                Text(
+                                    text = err ?: "",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = color.foregroundSupport,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                            }
+                        } else if (state.ahNoResults) {
+                            item("ah_empty") {
+                                Text(
+                                    text = "No matching results found",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = color.foregroundSupport,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                            }
                         }
-                    )
-                }
-
-                itemsIndexed(items = state.foods) { index, item ->
-                    val keyId = item.id
-                    val initialGrams = gramsById.getOrPut(keyId) {
-                        viewModel.defaultPortionGrams(item).toInt().toString()
+                    }
+                    itemsIndexed(items = state.ahFoods) { index, item ->
+                        val keyId = item.id
+                        val initialGrams = gramsById.getOrPut(keyId) {
+                            viewModel.defaultPortionGrams(item).toInt().toString()
+                        }
+                        IntakeListItem(
+                            name = item.name,
+                            subtitle = viewModel.subtitleForFood(item, initialGrams),
+                            keyId = keyId,
+                            imageUrl = item.image_url,
+                            initialValue = initialGrams,
+                            index = index,
+                            size = state.ahFoods.size,
+                            requesters = requesters,
+                            gramsById = gramsById,
+                            onAddClick = {
+                                viewModel.addFoodByGrams(item.id, initialGrams) { onDone() }
+                                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                            },
+                            onAddByKeyboard = {
+                                viewModel.addFoodByGrams(item.id, initialGrams) { onDone() }
+                            },
+                            onLongPress = {
+                                item.product_url?.let { uriHandler.openUri(it) }
+                            },
+                            inputField = { tf, requester, onValueChange, onDone ->
+                                GramTextField(tf, requester, onValueChange, onDone)
+                            }
+                        )
                     }
 
-                    IntakeListItem(
-                        name = item.name,
-                        subtitle = viewModel.subtitleForFood(item, initialGrams),
-                        keyId = keyId,
-                        imageUrl = item.image_url,
-                        initialValue = initialGrams,
-                        index = state.meals.size + index,
-                        size = totalSize,
-                        requesters = requesters,
-                        gramsById = gramsById,
-                        onAddClick = {
-                            viewModel.addFoodByGrams(item.id, initialGrams) { onDone() }
-                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                        },
-                        onAddByKeyboard = {
-                            viewModel.addFoodByGrams(item.id, initialGrams) { onDone() }
-                        },
-                        onLongPress = {
-                            item.product_url?.let {
-                                uriHandler.openUri(item.product_url)
+                    // OFF section
+                    item("off_header") {
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            text = "OpenFoodFacts",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = color.foregroundSupport,
+                            modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
+                        )
+                    }
+                    if (state.offFoods.isEmpty()) {
+                        if (state.isSearchingOff) {
+                            item("off_loading") {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = color.foregroundDefault,
+                                    strokeWidth = 2.dp
+                                )
                             }
-                        },
-                        inputField = { tf, requester, onValueChange, onDone ->
-                            GramTextField(tf, requester, onValueChange, onDone)
+                        } else if (state.offError != null) {
+                            item("off_error") {
+                                val err = state.offError
+                                Text(
+                                    text = err ?: "",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = color.foregroundSupport,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                            }
+                        } else if (state.offNoResults) {
+                            item("off_empty") {
+                                Text(
+                                    text = "No matching results found",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = color.foregroundSupport,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                            }
                         }
-                    )
+                    }
+                    itemsIndexed(items = state.offFoods) { index, item ->
+                        val keyId = item.id
+                        val initialGrams = gramsById.getOrPut(keyId) {
+                            viewModel.defaultPortionGrams(item).toInt().toString()
+                        }
+                        IntakeListItem(
+                            name = item.name,
+                            subtitle = viewModel.subtitleForFood(item, initialGrams),
+                            keyId = keyId,
+                            imageUrl = item.image_url,
+                            initialValue = initialGrams,
+                            index = index,
+                            size = state.offFoods.size,
+                            requesters = requesters,
+                            gramsById = gramsById,
+                            onAddClick = {
+                                viewModel.addFoodByGrams(item.id, initialGrams) { onDone() }
+                                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                            },
+                            onAddByKeyboard = {
+                                viewModel.addFoodByGrams(item.id, initialGrams) { onDone() }
+                            },
+                            onLongPress = {
+                                item.product_url?.let { uriHandler.openUri(it) }
+                            },
+                            inputField = { tf, requester, onValueChange, onDone ->
+                                GramTextField(tf, requester, onValueChange, onDone)
+                            }
+                        )
+                    }
+                } else {
+                    val totalSize = state.meals.size + state.foods.size
+
+                    itemsIndexed(items = state.meals) { index, item ->
+                        val keyId = -item.id // Negative to avoid collision with food IDs
+                        val initialPortions = gramsById.getOrPut(keyId) { "1" }
+
+                        IntakeListItem(
+                            name = item.name,
+                            subtitle = viewModel.subtitleForMeal(item, initialPortions),
+                            keyId = keyId,
+                            initialValue = initialPortions,
+                            showBorder = true,
+                            index = index,
+                            size = totalSize,
+                            requesters = requesters,
+                            gramsById = gramsById,
+                            onAddClick = {
+                                viewModel.addMealByPortions(item.id, initialPortions) { onDone() }
+                                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                            },
+                            onAddByKeyboard = {
+                                viewModel.addMealByPortions(item.id, initialPortions) { onDone() }
+                            },
+                            inputField = { tf, requester, onValueChange, onDone ->
+                                PortionsTextField(tf, requester, onValueChange, onDone)
+                            }
+                        )
+                    }
+
+                    itemsIndexed(items = state.foods) { index, item ->
+                        val keyId = item.id
+                        val initialGrams = gramsById.getOrPut(keyId) {
+                            viewModel.defaultPortionGrams(item).toInt().toString()
+                        }
+
+                        IntakeListItem(
+                            name = item.name,
+                            subtitle = viewModel.subtitleForFood(item, initialGrams),
+                            keyId = keyId,
+                            imageUrl = item.image_url,
+                            initialValue = initialGrams,
+                            index = state.meals.size + index,
+                            size = totalSize,
+                            requesters = requesters,
+                            gramsById = gramsById,
+                            onAddClick = {
+                                viewModel.addFoodByGrams(item.id, initialGrams) { onDone() }
+                                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                            },
+                            onAddByKeyboard = {
+                                viewModel.addFoodByGrams(item.id, initialGrams) { onDone() }
+                            },
+                            onLongPress = {
+                                item.product_url?.let {
+                                    uriHandler.openUri(item.product_url)
+                                }
+                            },
+                            inputField = { tf, requester, onValueChange, onDone ->
+                                GramTextField(tf, requester, onValueChange, onDone)
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -161,7 +305,6 @@ fun IntakeScreen(
                     is BarcodeResult.OnSuccess -> {
                         val raw = result.barcode.data
                         val digits = raw.filter { it.isDigit() }
-                        println("Barcode: $raw (digits=$digits), format: ${result.barcode.format}")
                         if (digits.length == 13) {
                             viewModel.setQuery(digits)
                         } else {

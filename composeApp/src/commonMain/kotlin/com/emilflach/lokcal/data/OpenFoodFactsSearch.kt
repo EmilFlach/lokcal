@@ -39,7 +39,9 @@ class OpenFoodFactsSearch(
             }
             accept(ContentType.Application.Json)
             timeout {
-                requestTimeoutMillis = 10000
+                requestTimeoutMillis = 100000
+                connectTimeoutMillis = 100000
+                socketTimeoutMillis = 100000
             }
         }.body()
         return resp.products.orEmpty().mapNotNull { it.toOffItemOrNull() }
