@@ -66,10 +66,10 @@ class AlbertHeijnScraper(
 
     private fun extractName(text: String): String? {
         // Try HTML <h1> first
-        regexFind(text, "<h1[^>]*>(.*?)</h1>")?.let { return stripTags(it) }
+        regexFind(text, "<h1[^>]*>(.*?)</h1>")?.let { return unescapeHtml(stripTags(it)) }
         // Try JSON-like fields
-        regexGroup(text, "\\\"title\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"")?.let { return it }
-        regexGroup(text, "\\\"name\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"")?.let { return it }
+        regexGroup(text, "\\\"title\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"")?.let { return unescapeHtml(it) }
+        regexGroup(text, "\\\"name\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"")?.let { return unescapeHtml(it) }
         return null
     }
 
@@ -128,5 +128,42 @@ class AlbertHeijnScraper(
         val re = Regex(pattern, if (ignoreCase) setOf(RegexOption.IGNORE_CASE) else emptySet())
         val m = re.find(text) ?: return null
         return m.groupValues.getOrNull(1)
+    }
+
+    private fun unescapeHtml(s: String): String {
+        var out = s
+        // Common named entities
+        out = out.replace("&amp;", "&")
+            .replace("&quot;", "\"")
+            .replace("&apos;", "'")
+            .replace("&lt;", "<")
+            .replace("&gt;", ">")
+            .replace("&nbsp;", " ")
+
+        // Numeric decimal entities: &#38;
+        out = Regex("&#(\\d+);", RegexOption.IGNORE_CASE).replace(out) { m ->
+            val code = m.groupValues[1].toIntOrNull() ?: return@replace m.value
+            codePointToStringOrNull(code) ?: m.value
+        }
+
+        // Numeric hex entities: &#x26;
+        out = Regex("&#x([0-9a-fA-F]+);", RegexOption.IGNORE_CASE).replace(out) { m ->
+            val code = m.groupValues[1].toIntOrNull(16) ?: return@replace m.value
+            codePointToStringOrNull(code) ?: m.value
+        }
+        return out
+    }
+
+    private fun codePointToStringOrNull(codePoint: Int): String? {
+        if (codePoint < 0 || codePoint > 0x10FFFF) return null
+        return if (codePoint <= 0xFFFF) {
+            codePoint.toChar().toString()
+        } else {
+            // Create surrogate pair
+            val cpPrime = codePoint - 0x10000
+            val high = 0xD800 + (cpPrime shr 10)
+            val low = 0xDC00 + (cpPrime and 0x3FF)
+            charArrayOf(high.toChar(), low.toChar()).concatToString()
+        }
     }
 }
