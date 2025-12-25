@@ -45,7 +45,7 @@ class IntakeViewModel(
     private val labelService = LabelService(intakeRepo, portionService)
     private val openFoodFactsSearch = OpenFoodFactsSearch()
     private val openFoodFactsResults = mutableMapOf<Long, OffItem>()
-    private var openFoodFactsTempId = -1L
+    private var openFoodFactsTempId = -200000L
     private val albertHeijnSearch = AlbertHeijnSearch()
     private val albertHeijnResults = mutableMapOf<Long, OffItem>()
     private var albertHeijnTempId = -100000L
@@ -60,6 +60,8 @@ class IntakeViewModel(
         _state.value = _state.value.copy(query = value)
         openFoodFactsResults.clear()
         albertHeijnResults.clear()
+        albertHeijnTempId = -100000L
+        openFoodFactsTempId = -200000L
         // Clear sectioned online results when query changes
         _state.value = _state.value.copy(
             ahFoods = emptyList(),
