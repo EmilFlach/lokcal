@@ -15,7 +15,7 @@ import kotlinx.serialization.json.Json
 class OpenFoodFactsSearch(
     private val client: HttpClient = defaultClient
 ) {
-    suspend fun search(query: String): List<OffItem> {
+    suspend fun search(query: String): List<OnlineFoodItem> {
         if (query.isBlank()) return emptyList()
         // If the query is a GTIN-13 (EAN-13) barcode, use the product endpoint (single item)
         val isGtin13 = query.length == 13 && query.all { it.isDigit() }
@@ -102,7 +102,7 @@ private data class Nutriments(
     @SerialName("energy-kcal_100g") val energyKcalPer100g: Double? = null,
 )
 
-data class OffItem(
+data class OnlineFoodItem(
     val name: String,
     val gtin13: String?,
     val energyKcalPer100g: Double?,
@@ -112,14 +112,14 @@ data class OffItem(
     val dutchName: String?,
 )
 
-private fun OffProduct.toOffItemOrNull(): OffItem? {
+private fun OffProduct.toOffItemOrNull(): OnlineFoodItem? {
     val name = productName ?: productNameNl ?: return null
     val imageUrl = selectedImages?.let { sel ->
         sel.front?.small?.values?.firstOrNull()
             ?: sel.front?.thumb?.values?.firstOrNull()
             ?: sel.front?.display?.values?.firstOrNull()
     }
-    return OffItem(
+    return OnlineFoodItem(
         name = name,
         gtin13 = id ?: code,
         energyKcalPer100g = nutriments?.energyKcalPer100g ?: 0.0,

@@ -10,11 +10,7 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,9 +24,89 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.emilflach.lokcal.Food
+import com.emilflach.lokcal.Meal
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.screens.FocusRequesters
 import com.emilflach.lokcal.ui.util.rememberKtorImageLoader
+import com.emilflach.lokcal.viewmodel.IntakeViewModel
+
+@Composable
+fun FoodIntakeListItem(
+    food: Food,
+    viewModel: IntakeViewModel,
+    index: Int,
+    size: Int,
+    requesters: FocusRequesters,
+    onDone: () -> Unit,
+    haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
+    uriHandler: androidx.compose.ui.platform.UriHandler
+) {
+    val state by viewModel.state.collectAsState()
+    val initialGrams = state.gramsById[food.id] ?: viewModel.defaultPortionGrams(food).toInt().toString()
+
+    IntakeListItem(
+        name = food.name,
+        subtitle = viewModel.subtitleForFood(food, initialGrams),
+        keyId = food.id,
+        imageUrl = food.image_url,
+        initialValue = initialGrams,
+        index = index,
+        size = size,
+        requesters = requesters,
+        onValueChange = { viewModel.setGrams(food.id, it) },
+        onAddClick = {
+            viewModel.addFoodByGrams(food.id, initialGrams) { onDone() }
+            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.Confirm)
+        },
+        onAddByKeyboard = {
+            viewModel.addFoodByGrams(food.id, initialGrams) { onDone() }
+        },
+        onLongPress = {
+            food.product_url?.let { uriHandler.openUri(it) }
+        },
+        inputField = { tf, requester, onValueChange, onDone ->
+            GramTextField(tf, requester, onValueChange, onDone)
+        }
+    )
+}
+
+@Composable
+fun MealIntakeListItem(
+    meal: Meal,
+    viewModel: IntakeViewModel,
+    index: Int,
+    size: Int,
+    requesters: FocusRequesters,
+    onDone: () -> Unit,
+    haptic: androidx.compose.ui.hapticfeedback.HapticFeedback
+) {
+    val keyId = -meal.id
+    val state by viewModel.state.collectAsState()
+    val initialPortions = state.gramsById[keyId] ?: "1"
+
+    IntakeListItem(
+        name = meal.name,
+        subtitle = viewModel.subtitleForMeal(meal, initialPortions),
+        keyId = keyId,
+        initialValue = initialPortions,
+        showBorder = true,
+        index = index,
+        size = size,
+        requesters = requesters,
+        onValueChange = { viewModel.setGrams(keyId, it) },
+        onAddClick = {
+            viewModel.addMealByPortions(meal.id, initialPortions) { onDone() }
+            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.Confirm)
+        },
+        onAddByKeyboard = {
+            viewModel.addMealByPortions(meal.id, initialPortions) { onDone() }
+        },
+        inputField = { tf, requester, onValueChange, onDone ->
+            PortionsTextField(tf, requester, onValueChange, onDone)
+        }
+    )
+}
 
 @Composable
 fun IntakeListItem(
@@ -44,7 +120,7 @@ fun IntakeListItem(
     index: Int,
     size: Int,
     requesters: FocusRequesters,
-    gramsById: MutableMap<Long, String>,
+    onValueChange: (String) -> Unit,
     onAddClick: () -> Unit,
     onAddByKeyboard: () -> Unit,
     onLongPress: (() -> Unit)? = null,
@@ -59,8 +135,17 @@ fun IntakeListItem(
     val colors = LocalRecipesColors.current
     val imageLoader = rememberKtorImageLoader()
 
-    var tf by rememberSaveable(keyId, stateSaver = TextFieldValue.Saver) {
+    var tf by remember(keyId) {
         mutableStateOf(TextFieldValue(text = initialValue))
+    }
+
+    // Update tf when initialValue changes from outside (e.g. from ViewModel)
+    // but only if it's not currently being edited to avoid jumping cursor?
+    // Actually, since we want the ViewModel to be the source of truth:
+    LaunchedEffect(initialValue) {
+        if (tf.text != initialValue) {
+            tf = tf.copy(text = initialValue)
+        }
     }
 
     Column(
@@ -132,7 +217,7 @@ fun IntakeListItem(
                 requesters[keyId],
                 { newTf, value ->
                     tf = newTf
-                    gramsById[keyId] = value
+                    onValueChange(value)
                 },
                 onAddByKeyboard
             )

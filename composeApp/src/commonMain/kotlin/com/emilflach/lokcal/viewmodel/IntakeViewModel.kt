@@ -15,23 +15,27 @@ class IntakeViewModel(
     initialMealType: String,
     private val dateIso: String,
 ) {
+    data class SearchSection(
+        val foods: List<Food> = emptyList(),
+        val isSearching: Boolean = false,
+        val error: String? = null,
+        val noResults: Boolean = false
+    )
+
     data class UiState(
         val query: String = "",
         val meals: List<Meal> = emptyList(),
         val foods: List<Food> = emptyList(),
         val selectedMealType: String,
         val isSearchingOnline: Boolean = false,
-        // Separate online results and loading flags
-        val ahFoods: List<Food> = emptyList(),
-        val offFoods: List<Food> = emptyList(),
-        val isSearchingAh: Boolean = false,
-        val isSearchingOff: Boolean = false,
-        // Errors and empty-state flags per section
-        val ahError: String? = null,
-        val offError: String? = null,
-        val ahNoResults: Boolean = false,
-        val offNoResults: Boolean = false,
-    )
+        val ahSection: SearchSection = SearchSection(),
+        val offSection: SearchSection = SearchSection(),
+        val gramsById: Map<Long, String> = emptyMap(),
+        val showScanner: Boolean = false,
+    ) {
+        val showOnlineSearchSections: Boolean
+            get() = ahSection.foods.isNotEmpty() || offSection.foods.isNotEmpty() || ahSection.isSearching || offSection.isSearching
+    }
 
     private val _state = MutableStateFlow(UiState(selectedMealType = initialMealType))
     val state: StateFlow<UiState> = _state.asStateFlow()
@@ -44,10 +48,10 @@ class IntakeViewModel(
     private val portionService = PortionService(intakeRepo)
     private val labelService = LabelService(intakeRepo, portionService)
     private val openFoodFactsSearch = OpenFoodFactsSearch()
-    private val openFoodFactsResults = mutableMapOf<Long, OffItem>()
+    private val openFoodFactsResults = mutableMapOf<Long, OnlineFoodItem>()
     private var openFoodFactsTempId = -200000L
     private val albertHeijnSearch = AlbertHeijnSearch()
-    private val albertHeijnResults = mutableMapOf<Long, OffItem>()
+    private val albertHeijnResults = mutableMapOf<Long, OnlineFoodItem>()
     private var albertHeijnTempId = -100000L
 
     init {
@@ -57,24 +61,28 @@ class IntakeViewModel(
     fun setQuery(value: String) {
         // Cancel any ongoing online searches when the query changes
         cancelOnlineSearch()
-        _state.value = _state.value.copy(query = value)
+        _state.value = _state.value.copy(
+            query = value,
+            gramsById = emptyMap(),
+            ahSection = SearchSection(),
+            offSection = SearchSection(),
+            isSearchingOnline = false,
+        )
         openFoodFactsResults.clear()
         albertHeijnResults.clear()
         albertHeijnTempId = -100000L
         openFoodFactsTempId = -200000L
-        // Clear sectioned online results when query changes
-        _state.value = _state.value.copy(
-            ahFoods = emptyList(),
-            offFoods = emptyList(),
-            isSearchingAh = false,
-            isSearchingOff = false,
-            isSearchingOnline = false,
-            ahError = null,
-            offError = null,
-            ahNoResults = false,
-            offNoResults = false,
-        )
         performSearch(state.value.selectedMealType)
+    }
+
+    fun setGrams(id: Long, grams: String) {
+        val newMap = _state.value.gramsById.toMutableMap()
+        newMap[id] = grams
+        _state.value = _state.value.copy(gramsById = newMap)
+    }
+
+    fun setShowScanner(show: Boolean) {
+        _state.value = _state.value.copy(showScanner = show)
     }
 
     private fun performSearch(mealType: String) {
@@ -103,7 +111,6 @@ class IntakeViewModel(
         return emptyList<Meal>() to foods
     }
 
-    // UI helpers
     fun defaultPortionGrams(food: Food) = portionService.defaultPortionForFood(food)
     fun defaultPortionGrams(meal: Meal) = portionService.defaultPortionForMeal(meal.id)
     fun parseGrams(text: String) = NumberUtils.parseDecimal(text)
@@ -128,7 +135,6 @@ class IntakeViewModel(
         intakeRepo.logOrUpdateMealIntake(mealId, portionG, mealType(), dateIso)
     }
 
-    // Moved UI business logic here
     fun addMealByPortions(mealId: Long, portionsText: String, onSuccess: () -> Unit) {
         val portionG = portionService.defaultPortionForMeal(mealId)
         val portions = NumberUtils.parseDecimal(portionsText, min = 0.0)
@@ -143,41 +149,20 @@ class IntakeViewModel(
         val grams = NumberUtils.parseDecimal(gramsText, min = 0.0).coerceAtLeast(0.0)
         if (grams <= 0.0) return
 
-        // If this is an OpenFoodFacts item (negative ID), insert it first
-        if (foodId < 0 && openFoodFactsResults.containsKey(foodId)) {
-            val it = openFoodFactsResults[foodId] ?: return
+        val sourceItem = openFoodFactsResults[foodId] ?: albertHeijnResults[foodId]
+        if (foodId < 0 && sourceItem != null) {
             try {
                 val newId = foodRepo.insertManual(
-                    name = it.name,
+                    name = sourceItem.name,
                     brandName = null,
-                    energyKcalPer100g = it.energyKcalPer100g ?: 0.0,
-                    productUrl = it.productUrl,
-                    imageUrl = it.imageUrl,
-                    gtin13 = it.gtin13,
-                    servingSize = if(it.servingSize != null)  it.servingSize.toString() else "100",
+                    energyKcalPer100g = sourceItem.energyKcalPer100g ?: 0.0,
+                    productUrl = sourceItem.productUrl,
+                    imageUrl = sourceItem.imageUrl,
+                    gtin13 = sourceItem.gtin13,
+                    servingSize = sourceItem.servingSize?.toString() ?: "100",
                     englishName = null,
-                    dutchName = it.dutchName,
-                    source = "manual",
-                )
-                logPortion(newId, grams)
-                onSuccess()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        } else if (foodId < 0 && albertHeijnResults.containsKey(foodId)) {
-            val it = albertHeijnResults[foodId] ?: return
-            try {
-                val newId = foodRepo.insertManual(
-                    name = it.name,
-                    brandName = null,
-                    energyKcalPer100g = it.energyKcalPer100g ?: 0.0,
-                    productUrl = it.productUrl,
-                    imageUrl = it.imageUrl,
-                    gtin13 = it.gtin13,
-                    servingSize = if (it.servingSize != null) it.servingSize.toString() else "100",
-                    englishName = null,
-                    dutchName = it.dutchName,
-                    source = "ah",
+                    dutchName = sourceItem.dutchName,
+                    source = if (albertHeijnResults.containsKey(foodId)) "ah" else "manual",
                 )
                 logPortion(newId, grams)
                 onSuccess()
@@ -188,7 +173,6 @@ class IntakeViewModel(
             logPortion(foodId, grams)
             onSuccess()
         }
-
     }
 
     private fun mealType() = _state.value.selectedMealType
@@ -203,14 +187,8 @@ class IntakeViewModel(
         }
         _state.value = _state.value.copy(
             isSearchingOnline = true,
-            isSearchingAh = true,
-            isSearchingOff = true,
-            ahFoods = emptyList(),
-            offFoods = emptyList(),
-            ahError = null,
-            offError = null,
-            ahNoResults = false,
-            offNoResults = false,
+            ahSection = SearchSection(isSearching = true),
+            offSection = SearchSection(isSearching = true),
         )
         // Cancel any previous job just in case
         onlineSearchJob?.cancel()
@@ -227,50 +205,26 @@ class IntakeViewModel(
                         val offTransient = offItems.map {
                             val tempId = openFoodFactsTempId--
                             openFoodFactsResults[tempId] = it
-                            Food(
-                                id = tempId,
-                                name = it.name,
-                                description = null,
-                                brand = null,
-                                category = null,
-                                energy_kcal_per_100g = it.energyKcalPer100g ?: 0.0,
-                                unit = "g",
-                                external_id = null,
-                                plural_name = null,
-                                english_name = null,
-                                dutch_name = it.dutchName,
-                                brand_name = null,
-                                serving_size = it.servingSize?.toString(),
-                                gtin13 = it.gtin13,
-                                image_url = it.imageUrl,
-                                product_url = it.productUrl,
-                                source = "off",
-                                label_id = null,
-                                created_at_source = null,
-                                updated_at_source = null,
-                                on_hand = 0L,
-                                raw_json = null,
-                                created_at = ""
-                            )
+                            it.toFood(tempId, "off")
                         }
                         _state.value = _state.value.copy(
-                            offFoods = offTransient,
-                            isSearchingOff = false,
-                            offError = null,
-                            offNoResults = offTransient.isEmpty()
+                            offSection = SearchSection(
+                                foods = offTransient,
+                                isSearching = false,
+                                noResults = offTransient.isEmpty()
+                            )
                         )
                     } catch (e: CancellationException) {
                         throw e
                     } catch (_: Throwable) {
-                        // Distinguish timeout/connectivity from other errors if desired; for now show connection error
                         _state.value = _state.value.copy(
-                            isSearchingOff = false,
-                            offError = "Could not connect to OpenFoodFacts",
+                            offSection = _state.value.offSection.copy(
+                                isSearching = false,
+                                error = "Could not connect to OpenFoodFacts"
+                            )
                         )
                     } finally {
-                        if (!_state.value.isSearchingAh) {
-                            _state.value = _state.value.copy(isSearchingOnline = false)
-                        }
+                        checkSearchFinished()
                     }
                 }
 
@@ -281,49 +235,26 @@ class IntakeViewModel(
                         val ahTransient = ahItems.map {
                             val tempId = albertHeijnTempId--
                             albertHeijnResults[tempId] = it
-                            Food(
-                                id = tempId,
-                                name = it.name,
-                                description = null,
-                                brand = null,
-                                category = null,
-                                energy_kcal_per_100g = it.energyKcalPer100g ?: 0.0,
-                                unit = "g",
-                                external_id = null,
-                                plural_name = null,
-                                english_name = null,
-                                dutch_name = it.dutchName,
-                                brand_name = null,
-                                serving_size = it.servingSize?.toString(),
-                                gtin13 = it.gtin13,
-                                image_url = it.imageUrl,
-                                product_url = it.productUrl,
-                                source = "ah",
-                                label_id = null,
-                                created_at_source = null,
-                                updated_at_source = null,
-                                on_hand = 0L,
-                                raw_json = null,
-                                created_at = ""
-                            )
+                            it.toFood(tempId, "ah")
                         }
                         _state.value = _state.value.copy(
-                            ahFoods = ahTransient,
-                            isSearchingAh = false,
-                            ahError = null,
-                            ahNoResults = ahTransient.isEmpty()
+                            ahSection = SearchSection(
+                                foods = ahTransient,
+                                isSearching = false,
+                                noResults = ahTransient.isEmpty()
+                            )
                         )
                     } catch (e: CancellationException) {
                         throw e
                     } catch (_: Throwable) {
                         _state.value = _state.value.copy(
-                            isSearchingAh = false,
-                            ahError = "Could not connect to Albert Heijn",
+                            ahSection = _state.value.ahSection.copy(
+                                isSearching = false,
+                                error = "Could not connect to Albert Heijn"
+                            )
                         )
                     } finally {
-                        if (!_state.value.isSearchingOff) {
-                            _state.value = _state.value.copy(isSearchingOnline = false)
-                        }
+                        checkSearchFinished()
                     }
                 }
 
@@ -332,36 +263,63 @@ class IntakeViewModel(
                     offJob.join()
                     ahJob.join()
                 } catch (_: CancellationException) {
-                    // Propagate cancellation handling below
                 }
             } catch (_: CancellationException) {
                 // Search was cancelled: just turn off the loading flags, keep any partial results
                 _state.value = _state.value.copy(
                     isSearchingOnline = false,
-                    isSearchingAh = false,
-                    isSearchingOff = false,
+                    ahSection = _state.value.ahSection.copy(isSearching = false),
+                    offSection = _state.value.offSection.copy(isSearching = false),
                 )
             } catch (_: Throwable) {
                 _state.value = _state.value.copy(
                     isSearchingOnline = false,
-                    isSearchingAh = false,
-                    isSearchingOff = false,
+                    ahSection = _state.value.ahSection.copy(isSearching = false),
+                    offSection = _state.value.offSection.copy(isSearching = false),
                 )
             }
         }
     }
+
+    private fun checkSearchFinished() {
+        if (!_state.value.ahSection.isSearching && !_state.value.offSection.isSearching) {
+            _state.value = _state.value.copy(isSearchingOnline = false)
+        }
+    }
+
+    private fun OnlineFoodItem.toFood(tempId: Long, source: String) = Food(
+        id = tempId,
+        name = name,
+        description = null,
+        brand = null,
+        category = null,
+        energy_kcal_per_100g = energyKcalPer100g ?: 0.0,
+        unit = "g",
+        external_id = null,
+        plural_name = null,
+        english_name = null,
+        dutch_name = dutchName,
+        brand_name = null,
+        serving_size = servingSize?.toString(),
+        gtin13 = gtin13,
+        image_url = imageUrl,
+        product_url = productUrl,
+        source = source,
+        label_id = null,
+        created_at_source = null,
+        updated_at_source = null,
+        on_hand = 0L,
+        raw_json = null,
+        created_at = ""
+    )
 
     private fun cancelOnlineSearch() {
         onlineSearchJob?.cancel()
         onlineSearchJob = null
         _state.value = _state.value.copy(
             isSearchingOnline = false,
-            isSearchingAh = false,
-            isSearchingOff = false,
-            ahError = null,
-            offError = null,
-            ahNoResults = false,
-            offNoResults = false,
+            ahSection = SearchSection(),
+            offSection = SearchSection(),
         )
     }
 }

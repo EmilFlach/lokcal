@@ -38,7 +38,7 @@ class AlbertHeijnSearch(
         }
     }
 
-    suspend fun search(query: String): List<OffItem> {
+    suspend fun search(query: String): List<OnlineFoodItem> {
         if (query.isBlank()) return emptyList()
         val url = "$BASE/zoeken?query=" + query.encodeURLQueryComponent()
         val html = client.get(url) {
@@ -55,7 +55,7 @@ class AlbertHeijnSearch(
                 async {
                     val abs = if (link.startsWith("http")) link else BASE + link
                     runCatching { scraper.scrape(abs) }.getOrNull()?.let { s ->
-                        OffItem(
+                        OnlineFoodItem(
                             name = s.name ?: abs,
                             gtin13 = s.gtin13,
                             energyKcalPer100g = s.kcalPer100g,

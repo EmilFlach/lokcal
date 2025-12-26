@@ -243,7 +243,7 @@ fun MealTimeScreen(
                                 index = index,
                                 size = totalSize,
                                 requesters = requesters,
-                                gramsById = gramsById,
+                                onValueChange = { gramsById[keyId] = it },
                                 onAddClick = {
                                     val portionsText = gramsById[keyId] ?: initialPortions
                                     viewModel.addMealSuggestion(mealId, portionsText)
@@ -273,7 +273,7 @@ fun MealTimeScreen(
                                 index = index,
                                 size = totalSize,
                                 requesters = requesters,
-                                gramsById = gramsById,
+                                onValueChange = { gramsById[keyId] = it },
                                 onAddClick = {
                                     val gramsText = gramsById[keyId] ?: initialGrams
                                     viewModel.addFoodSuggestion(foodId, gramsText)
@@ -330,7 +330,7 @@ fun MealTimeScreen(
                                 index = index,
                                 size = leftoversSize,
                                 requesters = requesters,
-                                gramsById = gramsById,
+                                onValueChange = { gramsById[keyId] = it },
                                 onAddClick = {
                                     val portionsText2 = gramsById[keyId] ?: initialPortions
                                     viewModel.addMealSuggestionFromLeftover(mealId, portionsText2, intake)
@@ -360,7 +360,7 @@ fun MealTimeScreen(
                                 index = index,
                                 size = leftoversSize,
                                 requesters = requesters,
-                                gramsById = gramsById,
+                                onValueChange = { gramsById[keyId] = it },
                                 onAddClick = {
                                     val gramsText2 = gramsById[keyId] ?: initialGrams
                                     viewModel.addFoodSuggestionFromLeftover(foodId, gramsText2, intake)
