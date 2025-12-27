@@ -9,10 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
@@ -24,11 +21,18 @@ import com.emilflach.lokcal.viewmodel.MealTimeViewModel
 fun MealTimeScreen(
     viewModel: MealTimeViewModel,
     onBack: () -> Unit,
-    onAdd: (String) -> Unit
+    onAdd: (String) -> Unit,
+    shouldHighlightLatest: Boolean = false
 ) {
     val color = LocalRecipesColors.current
     val state by viewModel.state.collectAsState()
     val requesters = remember { FocusRequesters() }
+
+    LaunchedEffect(Unit) {
+        if (shouldHighlightLatest) {
+            viewModel.loadForSelectedDate(shouldHighlightLatest = true)
+        }
+    }
 
     Scaffold(
         topBar = {

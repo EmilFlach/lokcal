@@ -27,7 +27,7 @@ fun LazyListScope.searchSection(
     section: IntakeViewModel.SearchSection,
     viewModel: IntakeViewModel,
     requesters: FocusRequesters,
-    onDone: () -> Unit
+    onDone: (itemAdded: Boolean) -> Unit
 ) {
     item {
         Text(

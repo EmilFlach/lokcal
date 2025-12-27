@@ -25,7 +25,7 @@ import com.emilflach.lokcal.viewmodel.IntakeViewModel
 @Composable
 fun IntakeScreen(
     viewModel: IntakeViewModel,
-    onDone: () -> Unit,
+    onDone: (itemAdded: Boolean) -> Unit,
     autoFocusSearch: Boolean = false,
 ) {
     val color = LocalRecipesColors.current
@@ -36,7 +36,7 @@ fun IntakeScreen(
         topBar = {
             MealTopBar(
                 title = state.selectedMealType,
-                onBack = onDone,
+                onBack = { onDone(false) },
                 showSearch = true,
                 query = state.query,
                 onQueryChange = viewModel::setQuery,

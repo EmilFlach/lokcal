@@ -25,6 +25,7 @@ class MealTimeViewModel(
         val leftoversItems: List<Intake> = emptyList(),
         val isMarkedLeftover: Boolean = false,
         val suggestionInputs: Map<Long, String> = emptyMap(),
+        val highlightedIntakeId: Long? = null,
     )
 
     private val _state = MutableStateFlow(UiState())
@@ -38,7 +39,7 @@ class MealTimeViewModel(
         loadForSelectedDate()
     }
 
-    private fun loadForSelectedDate() {
+    fun loadForSelectedDate(shouldHighlightLatest: Boolean = false) {
         val startIso = "${dateIso}T00:00:00"
         val endIso = "${dateIso}T23:59:59"
         val list = intakeRepo.getIntakeByMealAndDateRange(mealType, startIso, endIso)
@@ -79,6 +80,8 @@ class MealTimeViewModel(
 
         val isMarked = intakeRepo.isLeftoversMarkedForMealTypeOnDate(mealType, dateIso)
 
+        val highlightedId = if (shouldHighlightLatest) intakeRepo.getLatestIntakeId() else null
+
         _state.value = _state.value.copy(
             items = list,
             totalKcal = total,
@@ -86,6 +89,7 @@ class MealTimeViewModel(
             yesterdayItems = yesterdayList,
             leftoversItems = leftoversList,
             isMarkedLeftover = isMarked,
+            highlightedIntakeId = highlightedId,
         )
     }
 
@@ -109,7 +113,7 @@ class MealTimeViewModel(
         if (isLeftover) {
             intakeRepo.setLeftoverFlagById(intake.id, false)
         }
-        loadForSelectedDate()
+        loadForSelectedDate(shouldHighlightLatest = true)
     }
 
     fun deleteItem(id: Long) {
@@ -160,5 +164,9 @@ class MealTimeViewModel(
         val current = state.value.isMarkedLeftover
         if (current) intakeRepo.setLeftoversForMealTypeOnDate(mealType, dateIso, false) else intakeRepo.setLeftoversForMealTypeOnDate(mealType, dateIso, true)
         loadForSelectedDate()
+    }
+
+    fun clearHighlight() {
+        _state.value = _state.value.copy(highlightedIntakeId = null)
     }
 }

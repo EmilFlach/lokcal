@@ -40,7 +40,7 @@ fun FoodIntakeListItem(
     index: Int,
     size: Int,
     requesters: FocusRequesters,
-    onDone: () -> Unit
+    onDone: (itemAdded: Boolean) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     val initialGrams = state.gramsById[food.id] ?: viewModel.defaultPortionGrams(food).toInt().toString()
@@ -58,11 +58,11 @@ fun FoodIntakeListItem(
         requesters = requesters,
         onValueChange = { viewModel.setGrams(food.id, it) },
         onAddClick = {
-            viewModel.addFoodByGrams(food.id, initialGrams) { onDone() }
+            viewModel.addFoodByGrams(food.id, initialGrams) { onDone(true) }
             haptic.performHapticFeedback(HapticFeedbackType.Confirm)
         },
         onAddByKeyboard = {
-            viewModel.addFoodByGrams(food.id, initialGrams) { onDone() }
+            viewModel.addFoodByGrams(food.id, initialGrams) { onDone(true) }
         },
         onLongPress = {
             food.product_url?.let { uriHandler.openUri(it) }
@@ -80,7 +80,7 @@ fun MealIntakeListItem(
     index: Int,
     size: Int,
     requesters: FocusRequesters,
-    onDone: () -> Unit
+    onDone: (itemAdded: Boolean) -> Unit
 ) {
     val keyId = -meal.id
     val state by viewModel.state.collectAsState()
@@ -98,11 +98,11 @@ fun MealIntakeListItem(
         requesters = requesters,
         onValueChange = { viewModel.setGrams(keyId, it) },
         onAddClick = {
-            viewModel.addMealByPortions(meal.id, initialPortions) { onDone() }
+            viewModel.addMealByPortions(meal.id, initialPortions) { onDone(true) }
             haptic.performHapticFeedback(HapticFeedbackType.Confirm)
         },
         onAddByKeyboard = {
-            viewModel.addMealByPortions(meal.id, initialPortions) { onDone() }
+            viewModel.addMealByPortions(meal.id, initialPortions) { onDone(true) }
         },
         inputField = { tf, requester, onValueChange, onDone ->
             PortionsTextField(tf, requester, onValueChange, onDone)

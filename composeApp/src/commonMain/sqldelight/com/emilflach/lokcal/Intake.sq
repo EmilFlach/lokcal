@@ -26,7 +26,7 @@ INSERT INTO Intake(timestamp, meal_type, source_type, source_meal_id, quantity_g
 VALUES (?, ?, 'MEAL', ?, ?, ?, ?, ?);
 
 selectIntakeByMealAndDateRange:
-SELECT * FROM Intake WHERE meal_type = ? AND timestamp BETWEEN ? AND ? ORDER BY timestamp DESC;
+SELECT * FROM Intake WHERE meal_type = ? AND timestamp BETWEEN ? AND ? ORDER BY id DESC;
 
 deleteIntakeById:
 DELETE FROM Intake WHERE id = ?;
@@ -71,4 +71,7 @@ UPDATE Intake SET leftover = ? WHERE id = ?;
 -- Select all leftover intakes
 selectAllLeftovers:
 SELECT * FROM Intake WHERE leftover = 1 ORDER BY timestamp DESC;
+
+selectLatestIntakeId:
+SELECT id FROM Intake ORDER BY id DESC LIMIT 1;
 

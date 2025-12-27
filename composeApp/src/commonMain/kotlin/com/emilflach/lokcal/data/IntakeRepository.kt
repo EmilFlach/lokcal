@@ -19,6 +19,8 @@ class IntakeRepository(database: Database) {
     fun getIntakeByMealAndDateRange(mealType: String, startIso: String, endIso: String) =
         intakeQ.selectIntakeByMealAndDateRange(mealType, startIso, endIso).executeAsList()
 
+    fun getLatestIntakeId(): Long? = intakeQ.selectLatestIntakeId().executeAsOneOrNull()
+
     fun deleteIntakeById(id: Long) = intakeQ.deleteIntakeById(id)
 
     fun setLeftoversForMealTypeOnDate(mealType: String, dateIso: String, enabled: Boolean) {

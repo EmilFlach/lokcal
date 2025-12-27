@@ -1,12 +1,14 @@
 package com.emilflach.lokcal.ui.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.util.rememberKtorImageLoader
+import kotlinx.coroutines.delay
 
 @Composable
 fun MealTimeItem(
@@ -26,6 +29,8 @@ fun MealTimeItem(
     size: Int,
     imageUrl: String?,
     modifier: Modifier = Modifier,
+    highlight: Boolean = false,
+    onHighlighted: () -> Unit = {},
     onLongPress: (() -> Unit)? = null,
     quantityControls: @Composable (requester: FocusRequester) -> Unit,
 ) {
@@ -33,13 +38,30 @@ fun MealTimeItem(
     val imageLoader = rememberKtorImageLoader()
     val keyboard = LocalSoftwareKeyboardController.current
     val requester = remember(title, subtitle) { FocusRequester() }
+    var isHighlighted by remember { mutableStateOf(false) }
+    val animationDuration = 300L
+
+    LaunchedEffect(highlight) {
+        if (highlight) {
+            isHighlighted = true
+            delay(animationDuration)
+            isHighlighted = false
+            onHighlighted()
+        }
+    }
+
+    val backgroundColor by animateColorAsState(
+        targetValue = if (isHighlighted) colors.backgroundSurface1Pressed else colors.backgroundSurface1,
+        animationSpec = tween(durationMillis = animationDuration.toInt(), easing = LinearEasing),
+        label = "backgroundColor"
+    )
 
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 2.dp)
             .clip(getRoundedCornerShape(index, size))
-            .background(colors.backgroundSurface1)
+            .background(backgroundColor)
             .combinedClickable(
                 onClick = {
                     requester.requestFocus(); keyboard?.show()

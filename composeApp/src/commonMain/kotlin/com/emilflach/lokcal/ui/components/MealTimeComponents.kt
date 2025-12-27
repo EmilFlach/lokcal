@@ -140,6 +140,7 @@ fun LazyListScope.mealTimeItemsList(
         val isMeal = entry.source_meal_id != null
         val haptic = LocalHapticFeedback.current
         val uriHandler = LocalUriHandler.current
+        val state by viewModel.state.collectAsState()
 
         MealTimeItem(
             title = entry.item_name,
@@ -151,6 +152,8 @@ fun LazyListScope.mealTimeItemsList(
                 entry.source_meal_id != null -> viewModel.imageUrlForMealId(entry.source_meal_id)
                 else -> null
             },
+            highlight = state.highlightedIntakeId == entry.id,
+            onHighlighted = { viewModel.clearHighlight() },
             onLongPress = {
                 if (isMeal) {
                     entry.source_meal_id.let { viewModel.copyMealItemsIntoMealTime(it) }

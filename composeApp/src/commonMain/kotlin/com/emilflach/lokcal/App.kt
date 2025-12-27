@@ -13,7 +13,7 @@ import com.emilflach.lokcal.viewmodel.*
 
 private sealed class Screen {
     data class Main(val dateIso: String) : Screen()
-    data class MealTime(val mealType: String, val dateIso: String) : Screen()
+    data class MealTime(val mealType: String, val dateIso: String, val highlightLatest: Boolean = false) : Screen()
     data class Intake(val mealType: String, val dateIso: String) : Screen()
     data class EditMeal(val mealId: Long, val returnMealType: String, val dateIso: String) : Screen()
     // Settings flow
@@ -141,16 +141,17 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                     onBack = { screen = Screen.Main(s.dateIso); refreshToggle = !refreshToggle },
                     onAdd = { meal ->
                         screen = Screen.Intake(meal, s.dateIso)
-                    }
+                    },
+                    shouldHighlightLatest = s.highlightLatest
                 )
             }
             is Screen.Intake -> {
                 val intakeVm = remember(foodRepo, intakeRepo, s.mealType, s.dateIso) { IntakeViewModel(foodRepo, intakeRepo, s.mealType, s.dateIso) }
                 IntakeScreen(
                     viewModel = intakeVm,
-                    onDone = {
+                    onDone = { itemAdded ->
                         // Navigate back to meal time and refresh
-                        screen = Screen.MealTime(s.mealType, s.dateIso)
+                        screen = Screen.MealTime(s.mealType, s.dateIso, highlightLatest = itemAdded)
                         refreshToggle = !refreshToggle
                     },
                     autoFocusSearch = true
