@@ -19,15 +19,17 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.emilflach.lokcal.Food
 import com.emilflach.lokcal.Meal
 import com.emilflach.lokcal.theme.LocalRecipesColors
-import com.emilflach.lokcal.ui.screens.FocusRequesters
 import com.emilflach.lokcal.ui.util.rememberKtorImageLoader
 import com.emilflach.lokcal.viewmodel.IntakeViewModel
 
@@ -38,12 +40,12 @@ fun FoodIntakeListItem(
     index: Int,
     size: Int,
     requesters: FocusRequesters,
-    onDone: () -> Unit,
-    haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
-    uriHandler: androidx.compose.ui.platform.UriHandler
+    onDone: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     val initialGrams = state.gramsById[food.id] ?: viewModel.defaultPortionGrams(food).toInt().toString()
+    val haptic = LocalHapticFeedback.current
+    val uriHandler = LocalUriHandler.current
 
     IntakeListItem(
         name = food.name,
@@ -57,7 +59,7 @@ fun FoodIntakeListItem(
         onValueChange = { viewModel.setGrams(food.id, it) },
         onAddClick = {
             viewModel.addFoodByGrams(food.id, initialGrams) { onDone() }
-            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.Confirm)
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
         },
         onAddByKeyboard = {
             viewModel.addFoodByGrams(food.id, initialGrams) { onDone() }
@@ -78,12 +80,12 @@ fun MealIntakeListItem(
     index: Int,
     size: Int,
     requesters: FocusRequesters,
-    onDone: () -> Unit,
-    haptic: androidx.compose.ui.hapticfeedback.HapticFeedback
+    onDone: () -> Unit
 ) {
     val keyId = -meal.id
     val state by viewModel.state.collectAsState()
     val initialPortions = state.gramsById[keyId] ?: "1"
+    val haptic = LocalHapticFeedback.current
 
     IntakeListItem(
         name = meal.name,
@@ -97,7 +99,7 @@ fun MealIntakeListItem(
         onValueChange = { viewModel.setGrams(keyId, it) },
         onAddClick = {
             viewModel.addMealByPortions(meal.id, initialPortions) { onDone() }
-            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.Confirm)
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
         },
         onAddByKeyboard = {
             viewModel.addMealByPortions(meal.id, initialPortions) { onDone() }
@@ -138,10 +140,7 @@ fun IntakeListItem(
     var tf by remember(keyId) {
         mutableStateOf(TextFieldValue(text = initialValue))
     }
-
-    // Update tf when initialValue changes from outside (e.g. from ViewModel)
-    // but only if it's not currently being edited to avoid jumping cursor?
-    // Actually, since we want the ViewModel to be the source of truth:
+    
     LaunchedEffect(initialValue) {
         if (tf.text != initialValue) {
             tf = tf.copy(text = initialValue)

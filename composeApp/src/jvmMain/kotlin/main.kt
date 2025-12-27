@@ -14,7 +14,7 @@ fun main() = application {
         title = "Lokcal",
         alwaysOnTop = true,
         state = rememberWindowState(
-            position = WindowPosition(500.dp, 50.dp),
+            position = WindowPosition(50.dp, 50.dp),
             width = 450.dp,
             height = 1000.dp
         ),

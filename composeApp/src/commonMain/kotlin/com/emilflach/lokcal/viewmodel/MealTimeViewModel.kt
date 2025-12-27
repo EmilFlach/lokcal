@@ -24,6 +24,7 @@ class MealTimeViewModel(
         val yesterdayItems: List<Intake> = emptyList(),
         val leftoversItems: List<Intake> = emptyList(),
         val isMarkedLeftover: Boolean = false,
+        val suggestionInputs: Map<Long, String> = emptyMap(),
     )
 
     private val _state = MutableStateFlow(UiState())
@@ -78,7 +79,7 @@ class MealTimeViewModel(
 
         val isMarked = intakeRepo.isLeftoversMarkedForMealTypeOnDate(mealType, dateIso)
 
-        _state.value = UiState(
+        _state.value = _state.value.copy(
             items = list,
             totalKcal = total,
             totalKcalLabel = LabelService().kcalLabel(total),
@@ -86,6 +87,29 @@ class MealTimeViewModel(
             leftoversItems = leftoversList,
             isMarkedLeftover = isMarked,
         )
+    }
+
+    fun updateSuggestionInput(keyId: Long, text: String) {
+        _state.value = _state.value.copy(
+            suggestionInputs = _state.value.suggestionInputs + (keyId to text)
+        )
+    }
+
+    fun addSuggestion(intake: Intake, text: String, isLeftover: Boolean) {
+        if (intake.source_meal_id != null) {
+            val portions = parseDecimal(text, min = 0.0)
+            val portionG = portionForMeal(intake.source_meal_id)
+            val grams = (portions * portionG).coerceAtLeast(0.0)
+            intakeRepo.logOrUpdateMealIntake(intake.source_meal_id, grams, mealType, dateIso)
+        } else if (intake.source_food_id != null) {
+            val grams = parseDecimal(text, min = 0.0)
+            intakeRepo.logOrUpdateFoodIntake(intake.source_food_id, grams, mealType, dateIso)
+        }
+
+        if (isLeftover) {
+            intakeRepo.setLeftoverFlagById(intake.id, false)
+        }
+        loadForSelectedDate()
     }
 
     fun deleteItem(id: Long) {
@@ -130,38 +154,6 @@ class MealTimeViewModel(
         val portionGrams = portionForEntry(intake)
         val grams = (portions * portionGrams).coerceAtLeast(0.0)
         updateQuantity(entryId, grams)
-    }
-
-    fun addFoodSuggestion(foodId: Long, gramsText: String) {
-        val grams = parseDecimal(gramsText, min = 0.0)
-        intakeRepo.logOrUpdateFoodIntake(foodId, grams, mealType, dateIso)
-        loadForSelectedDate()
-    }
-
-    fun addFoodSuggestionFromLeftover(foodId: Long, gramsText: String, source: Intake) {
-        val grams = parseDecimal(gramsText, min = 0.0)
-        intakeRepo.logOrUpdateFoodIntake(foodId, grams, mealType, dateIso)
-        // Clear leftover flag only for the selected leftover item
-        intakeRepo.setLeftoverFlagById(source.id, false)
-        loadForSelectedDate()
-    }
-
-    fun addMealSuggestion(mealId: Long, portionsText: String) {
-        val portions = parseDecimal(portionsText, min = 0.0)
-        val portionG = portionForMeal(mealId)
-        val grams = (portions * portionG).coerceAtLeast(0.0)
-        intakeRepo.logOrUpdateMealIntake(mealId, grams, mealType, dateIso)
-        loadForSelectedDate()
-    }
-
-    fun addMealSuggestionFromLeftover(mealId: Long, portionsText: String, source: Intake) {
-        val portions = parseDecimal(portionsText, min = 0.0)
-        val portionG = portionForMeal(mealId)
-        val grams = (portions * portionG).coerceAtLeast(0.0)
-        intakeRepo.logOrUpdateMealIntake(mealId, grams, mealType, dateIso)
-        // Clear leftover flag only for the selected leftover item
-        intakeRepo.setLeftoverFlagById(source.id, false)
-        loadForSelectedDate()
     }
 
     fun toggleLeftovers() {

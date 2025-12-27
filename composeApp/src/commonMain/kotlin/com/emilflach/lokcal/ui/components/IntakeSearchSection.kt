@@ -1,4 +1,4 @@
-package com.emilflach.lokcal.ui.screens
+package com.emilflach.lokcal.ui.components
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -11,11 +11,8 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.hapticfeedback.HapticFeedback
-import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
-import com.emilflach.lokcal.ui.components.FoodIntakeListItem
 import com.emilflach.lokcal.viewmodel.IntakeViewModel
 
 @Stable
@@ -30,8 +27,6 @@ fun LazyListScope.searchSection(
     section: IntakeViewModel.SearchSection,
     viewModel: IntakeViewModel,
     requesters: FocusRequesters,
-    haptic: HapticFeedback,
-    uriHandler: UriHandler,
     onDone: () -> Unit
 ) {
     item {
@@ -78,9 +73,7 @@ fun LazyListScope.searchSection(
             index = index,
             size = section.foods.size,
             requesters = requesters,
-            onDone = onDone,
-            haptic = haptic,
-            uriHandler = uriHandler
+            onDone = onDone
         )
     }
 }

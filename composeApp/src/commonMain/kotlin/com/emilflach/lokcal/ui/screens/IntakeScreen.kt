@@ -14,16 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.camera.CameraManager
 import com.emilflach.lokcal.theme.LocalRecipesColors
-import com.emilflach.lokcal.ui.components.FoodIntakeListItem
-import com.emilflach.lokcal.ui.components.MealIntakeListItem
-import com.emilflach.lokcal.ui.components.MealTopBar
-import com.emilflach.lokcal.ui.components.ScannerViewContainer
+import com.emilflach.lokcal.ui.components.*
 import com.emilflach.lokcal.viewmodel.IntakeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -34,8 +29,6 @@ fun IntakeScreen(
     autoFocusSearch: Boolean = false,
 ) {
     val color = LocalRecipesColors.current
-    val haptic = LocalHapticFeedback.current
-    val uriHandler = LocalUriHandler.current
     val keyboard = LocalSoftwareKeyboardController.current
     val state by viewModel.state.collectAsState()
 
@@ -79,8 +72,6 @@ fun IntakeScreen(
                         section = state.ahSection,
                         viewModel = viewModel,
                         requesters = requesters,
-                        haptic = haptic,
-                        uriHandler = uriHandler,
                         onDone = onDone
                     )
 
@@ -91,8 +82,6 @@ fun IntakeScreen(
                         section = state.offSection,
                         viewModel = viewModel,
                         requesters = requesters,
-                        haptic = haptic,
-                        uriHandler = uriHandler,
                         onDone = onDone
                     )
                 } else {
@@ -105,8 +94,7 @@ fun IntakeScreen(
                             index = index,
                             size = totalSize,
                             requesters = requesters,
-                            onDone = onDone,
-                            haptic = haptic
+                            onDone = onDone
                         )
                     }
 
@@ -117,9 +105,7 @@ fun IntakeScreen(
                             index = state.meals.size + index,
                             size = totalSize,
                             requesters = requesters,
-                            onDone = onDone,
-                            haptic = haptic,
-                            uriHandler = uriHandler
+                            onDone = onDone
                         )
                     }
                 }
