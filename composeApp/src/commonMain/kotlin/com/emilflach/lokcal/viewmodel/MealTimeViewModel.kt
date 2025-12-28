@@ -20,7 +20,6 @@ class MealTimeViewModel(
     data class UiState(
         val items: List<Intake> = emptyList(),
         val totalKcal: Double = 0.0,
-        val totalKcalLabel: String = LabelService().kcalLabel(0.0),
         val yesterdayItems: List<Intake> = emptyList(),
         val leftoversItems: List<Intake> = emptyList(),
         val isMarkedLeftover: Boolean = false,
@@ -85,7 +84,6 @@ class MealTimeViewModel(
         _state.value = _state.value.copy(
             items = list,
             totalKcal = total,
-            totalKcalLabel = LabelService().kcalLabel(total),
             yesterdayItems = yesterdayList,
             leftoversItems = leftoversList,
             isMarkedLeftover = isMarked,

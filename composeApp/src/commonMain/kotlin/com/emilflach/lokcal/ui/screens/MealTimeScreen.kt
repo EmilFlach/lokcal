@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.*
 import com.emilflach.lokcal.viewmodel.MealTimeViewModel
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,7 +63,7 @@ fun MealTimeScreen(
                     contentPadding = PaddingValues(bottom = 80.dp)
                 ) {
                     item {
-                        MealTimeTotalKcal(state.totalKcalLabel)
+                        MealTimeTotalKcal(state.totalKcal.roundToInt())
                     }
 
                     mealTimeItemsList(

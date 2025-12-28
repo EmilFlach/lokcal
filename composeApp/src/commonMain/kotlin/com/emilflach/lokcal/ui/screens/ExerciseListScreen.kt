@@ -25,6 +25,7 @@ import com.emilflach.lokcal.ui.components.MealTimeTotalKcal
 import com.emilflach.lokcal.ui.components.MealTopBar
 import com.emilflach.lokcal.ui.components.MinuteQuantityControls
 import com.emilflach.lokcal.viewmodel.ExerciseListViewModel
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,7 +57,7 @@ fun ExerciseListScreen(
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
                 item {
-                    MealTimeTotalKcal("${state.totalKcal.toInt()} kcal")
+                    MealTimeTotalKcal(state.totalKcal.roundToInt())
                 }
 
                 itemsIndexed(state.items) { index, e ->

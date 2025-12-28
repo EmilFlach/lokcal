@@ -6,6 +6,7 @@ import com.emilflach.lokcal.data.FoodRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlin.math.roundToInt
 
 class FoodEditViewModel(
     private val repo: FoodRepository,
@@ -68,7 +69,7 @@ class FoodEditViewModel(
                     id = f.id,
                     isEdit = true,
                     name = f.name,
-                    energyText = (f.energy_kcal_per_100g).toInt().toString(),
+                    energyText = (f.energy_kcal_per_100g).roundToInt().toString(),
                     servingSize = f.serving_size ?: "",
                     brandName = f.brand_name ?: "",
                     englishName = f.english_name ?: "",
@@ -113,7 +114,7 @@ class FoodEditViewModel(
                 isImporting = false,
                 importError = null,
             )
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             _edit.value = _edit.value.copy(isImporting = false, importError = "Failed to import from URL")
         }
     }

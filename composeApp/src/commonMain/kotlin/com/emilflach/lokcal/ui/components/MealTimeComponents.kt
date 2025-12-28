@@ -115,12 +115,12 @@ fun MealTimeFab(onAdd: () -> Unit) {
 }
 
 @Composable
-fun MealTimeTotalKcal(label: String) {
+fun MealTimeTotalKcal(value: Int) {
     val color = LocalRecipesColors.current
     Column {
         Spacer(Modifier.height(16.dp))
         Text(
-            text = label,
+            text = "$value kcal",
             style = MaterialTheme.typography.headlineLarge,
             fontSize = 60.sp,
             textAlign = TextAlign.Center,

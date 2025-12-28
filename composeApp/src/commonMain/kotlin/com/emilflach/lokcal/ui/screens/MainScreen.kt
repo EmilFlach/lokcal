@@ -32,6 +32,7 @@ import com.emilflach.lokcal.viewmodel.MainViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 @Composable
 fun MainScreen(
@@ -162,17 +163,17 @@ fun MainScreen(
                                 .weight(4f)
                                 .background(colors.backgroundSurface2, MaterialTheme.shapes.medium)
                                 .padding(16.dp)
-                                .alpha(fadeAlpha.value),
+                                .alpha(fadeAlpha.value)
                         ) {
                             Column {
                                 Text(
-                                    text = if (left > 0) "kcal left" else "kcal over",
+                                    text = if (left > 0) "Remaining" else "Above goal",
                                     style = MaterialTheme.typography.titleMedium,
                                     textAlign = TextAlign.Left,
                                     modifier = Modifier.fillMaxWidth()
                                 )
                                 Text(
-                                    text = if (left > 0) "${left.toInt()}" else "${left.toInt() * -1}",
+                                    text = if (left > 0) "${left.roundToInt()}" else "${left.roundToInt() * -1}",
                                     style = MaterialTheme.typography.displayLarge,
                                     fontWeight = FontWeight.Bold,
                                     textAlign = TextAlign.Left,
@@ -198,7 +199,7 @@ fun MainScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Text(
-                                        text = "kcal burned",
+                                        text = "Burned",
                                         style = MaterialTheme.typography.titleMedium,
                                         color = colors.foregroundSupport,
                                         textAlign = TextAlign.Left
@@ -212,7 +213,7 @@ fun MainScreen(
                                     )
                                 }
                                 Text(
-                                    text = burned.toInt().toString(),
+                                    text = burned.roundToInt().toString(),
                                     style = MaterialTheme.typography.displayLarge,
                                     color = colors.foregroundSupport,
                                     textAlign = TextAlign.Left,
@@ -295,7 +296,7 @@ fun MainScreen(
                             )
                             Spacer(Modifier.height(6.dp))
                             Text(
-                                "${s.totalKcal.toInt()}",
+                                "${s.totalKcal.roundToInt()}",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                             )
