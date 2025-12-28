@@ -20,6 +20,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,7 +54,10 @@ fun MealTopBar(
     }
 
     LaunchedEffect(autoFocusSearch, searchVisible) {
-        if (autoFocusSearch && searchVisible) focusRequester.requestFocus()
+        if (autoFocusSearch && searchVisible) {
+            delay(10)
+            focusRequester.requestFocus()
+        }
     }
 
     Column(
