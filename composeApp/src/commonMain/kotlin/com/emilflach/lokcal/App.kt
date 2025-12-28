@@ -26,8 +26,6 @@ private sealed class Screen {
     data class EditMealFromList(val mealId: Long) : Screen()
     // Exercise flow
     data class ExerciseList(val dateIso: String) : Screen()
-    data class ExerciseAdd(val dateIso: String) : Screen()
-    data class EditExercise(val exerciseId: Long, val dateIso: String) : Screen()
     // Weight flow
     sealed class ReturnTo {
         data object Settings : ReturnTo()
@@ -69,14 +67,6 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
             }
             is Screen.ExerciseList -> {
                 screen = Screen.Main(s.dateIso)
-                refreshToggle = !refreshToggle
-            }
-            is Screen.ExerciseAdd -> {
-                screen = Screen.ExerciseList(s.dateIso)
-                refreshToggle = !refreshToggle
-            }
-            is Screen.EditExercise -> {
-                screen = Screen.ExerciseList(s.dateIso)
                 refreshToggle = !refreshToggle
             }
             Screen.Settings -> {
@@ -131,7 +121,7 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                             initialState is Screen.Intake && targetState is Screen.MealTime ->
                         EnterTransition.None togetherWith ExitTransition.None
 
-                    targetState is Screen.MealTime ->
+                    targetState is Screen.MealTime || targetState is Screen.ExerciseList ->
                         (scaleIn(
                             initialScale = 0.8f,
                             animationSpec = tween(200)
@@ -141,7 +131,8 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                             fadeOut(animationSpec = tween(200))
                         )
 
-                    initialState is Screen.MealTime && targetState is Screen.Main ->
+                    initialState is Screen.MealTime && targetState is Screen.Main ||
+                            initialState is Screen.ExerciseList && targetState is Screen.Main ->
                         fadeIn(animationSpec = tween(200))
                             .togetherWith(
                                 scaleOut(
@@ -251,36 +242,7 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                     }
                     ExerciseListScreen(
                         viewModel = vm,
-                        onBack = { screen = Screen.Main(s.dateIso) },
-                        onAdd = { screen = Screen.ExerciseAdd(s.dateIso) },
-                        onEdit = { id -> screen = Screen.EditExercise(id, s.dateIso) }
-                    )
-                }
-                is Screen.ExerciseAdd -> {
-                    val exVm = remember(exerciseRepo, s.dateIso) {
-                        ExerciseViewModel(
-                            exerciseRepo,
-                            s.dateIso
-                        )
-                    }
-                    ExerciseScreen(
-                        viewModel = exVm,
-                        onBack = { screen = Screen.ExerciseList(s.dateIso) },
-                        onSaved = { screen = Screen.ExerciseList(s.dateIso); refreshToggle = !refreshToggle }
-                    )
-                }
-                is Screen.EditExercise -> {
-                    val vm = remember(exerciseRepo, s.exerciseId, refreshToggle) {
-                        EditExerciseViewModel(
-                            exerciseRepo,
-                            s.exerciseId
-                        )
-                    }
-                    EditExerciseScreen(
-                        viewModel = vm,
-                        onBack = { screen = Screen.ExerciseList(s.dateIso) },
-                        onSaved = { screen = Screen.ExerciseList(s.dateIso); refreshToggle = !refreshToggle },
-                        onDeleted = { screen = Screen.ExerciseList(s.dateIso); refreshToggle = !refreshToggle }
+                        onBack = { screen = Screen.Main(s.dateIso) }
                     )
                 }
                 is Screen.WeightList -> {

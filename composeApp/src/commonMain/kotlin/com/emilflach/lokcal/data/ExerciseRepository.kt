@@ -8,9 +8,10 @@ class ExerciseRepository(private val db: Database) {
     private val q get() = db.exerciseQueries
 
     enum class Type(val dbName: String, val kcalPerHour: Double) {
+        AUTOMATIC_STEPS("AUTOMATIC_STEPS", 220.0),
         WALKING("WALKING", 200.0),
-        RUNNING("RUNNING", 740.0),
-        AUTOMATIC_STEPS("AUTOMATIC_STEPS", 220.0);
+        RUNNING("RUNNING", 740.0);
+
         companion object {
             fun fromDb(name: String): Type = entries.first { it.dbName == name }
         }

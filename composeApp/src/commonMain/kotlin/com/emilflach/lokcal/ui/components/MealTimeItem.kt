@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -13,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
@@ -27,7 +29,8 @@ fun MealTimeItem(
     subtitle: String,
     index: Int,
     size: Int,
-    imageUrl: String?,
+    imageUrl: String? = null,
+    iconName: ImageVector? = null,
     modifier: Modifier = Modifier,
     highlight: Boolean = false,
     onHighlighted: () -> Unit = {},
@@ -83,6 +86,19 @@ fun MealTimeItem(
                     .width(72.dp)
                     .clip(MaterialTheme.shapes.medium)
                     .background(colors.backgroundSurface2)
+            )
+            Spacer(Modifier.width(12.dp))
+        } else if (iconName != null) {
+            Icon(
+                imageVector = iconName,
+                contentDescription = null,
+                tint = colors.foregroundSupport,
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(72.dp)
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(colors.backgroundSurface2)
+                    .padding(horizontal = 10.dp)
             )
             Spacer(Modifier.width(12.dp))
         }

@@ -184,3 +184,67 @@ fun PortionQuantityControls(
         }
     }
 }
+
+@Composable
+fun MinuteQuantityControls(
+    requester: FocusRequester,
+    stateKey: Any,
+    initialMinutes: Double,
+    onCommitMinutes: (Double) -> Unit,
+) {
+    val haptic = LocalHapticFeedback.current
+    var text by rememberSaveable(stateKey) { mutableStateOf(initialMinutes.toInt().toString()) }
+    var tf by rememberSaveable(stateKey, stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(text = text))
+    }
+
+    fun commitFromText(text: String) {
+        val min = parseDecimal(text)
+        onCommitMinutes(min)
+    }
+
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+        MinuteTextField(
+            tf = tf,
+            requester = requester,
+            onValueChange = { newTf, value ->
+                tf = newTf
+                text = value
+                commitFromText(value)
+            },
+            onDone = {
+                commitFromText(tf.text)
+            },
+        )
+        Spacer(Modifier.weight(1f))
+        OutlinedButton(
+            onClick = {
+                val current = parseDecimal(text)
+                val next = current + 30.0
+                val nextText = next.toInt().toString()
+                tf = tf.copy(text = nextText)
+                text = nextText
+                onCommitMinutes(next)
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+            },
+        ) {
+            Icon(imageVector = Icons.Filled.Add, contentDescription = "Add 30 min")
+            Spacer(Modifier.width(4.dp))
+            Text(text = "30 min")
+        }
+        Spacer(Modifier.width(8.dp))
+        OutlinedIconButton(
+            onClick = {
+                val current = parseDecimal(text)
+                val next = (current - 30.0).coerceAtLeast(0.0)
+                val nextText = next.toInt().toString()
+                tf = tf.copy(text = nextText)
+                text = nextText
+                onCommitMinutes(next)
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+            }
+        ) {
+            Icon(imageVector = Icons.Filled.Remove, contentDescription = "Subtract 30 min")
+        }
+    }
+}

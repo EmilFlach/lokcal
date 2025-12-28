@@ -10,7 +10,6 @@ class ExerciseListViewModel(private val repo: ExerciseRepository, private val da
     data class UiState(
         val items: List<Exercise> = emptyList(),
         val totalKcal: Double = 0.0,
-        val summaryText: String = "",
     )
 
     private val _state = MutableStateFlow(UiState())
@@ -22,35 +21,44 @@ class ExerciseListViewModel(private val repo: ExerciseRepository, private val da
         return "${date}T00:00:00" to "${date}T23:59:59"
     }
 
-    private fun loadForSelectedDate() {
+    fun updateDuration(type: String, minutes: Double) {
         val (start, end) = rangeFor(dateIso)
+        val timestamp = dateIso + "T12:00:00"
         val list = repo.getByDateRange(start, end)
-        val total = list.sumOf { it.energy_kcal_total }
-        _state.value = UiState(items = list, totalKcal = total, summaryText = buildSummary(list))
-    }
-
-    fun delete(id: Long) {
-        repo.deleteById(id)
+        val existing = list.firstOrNull { it.exercise_type == type }
+        
+        if (existing == null) {
+            if (minutes > 0) {
+                repo.logExercise(ExerciseRepository.Type.fromDb(type), minutes, timestamp)
+            }
+        } else {
+            if (minutes > 0) {
+                repo.updateExercise(existing.id, ExerciseRepository.Type.fromDb(type), minutes, existing.notes)
+            } else {
+                repo.deleteById(existing.id)
+            }
+        }
         loadForSelectedDate()
     }
 
-    private fun buildSummary(list: List<Exercise>): String {
-        if (list.isEmpty()) return ""
-        // Summarize by type, e.g., "Walking 30m, Running 20m"
-        val minutesByType = list.groupBy { it.exercise_type }
-            .mapValues { (_, v) -> v.sumOf { it.duration_min } }
-        val parts = minutesByType.entries
-            .sortedByDescending { it.value }
-            .take(3)
-            .map { (type, min) ->
-                val label = when (type) {
-                    ExerciseRepository.Type.WALKING.dbName -> "Walking"
-                    ExerciseRepository.Type.RUNNING.dbName -> "Running"
-                    ExerciseRepository.Type.AUTOMATIC_STEPS.dbName -> "Step counter"
-                    else -> type
-                }
-                "$label ${min.toInt()} m"
-            }
-        return parts.joinToString(", ")
+    private fun loadForSelectedDate() {
+        val (start, end) = rangeFor(dateIso)
+        val list = repo.getByDateRange(start, end)
+        
+        // Always include all types, even if not in DB
+        val allTypes = ExerciseRepository.Type.entries
+        val uiItems = allTypes.map { type ->
+            list.firstOrNull { it.exercise_type == type.dbName } ?: Exercise(
+                id = -1, // Temporary ID for items not in DB
+                timestamp = dateIso + "T12:00:00",
+                exercise_type = type.dbName,
+                duration_min = 0.0,
+                energy_kcal_total = 0.0,
+                notes = null
+            )
+        }
+        
+        val total = list.sumOf { it.energy_kcal_total }
+        _state.value = UiState(items = uiItems, totalKcal = total)
     }
 }

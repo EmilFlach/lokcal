@@ -1,11 +1,7 @@
 package com.emilflach.lokcal.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -21,11 +17,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onPreviewKeyEvent
-import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextRange
@@ -53,6 +45,12 @@ fun IntakeTextField(
         onDone()
     }
 
+    val suffixPadding = when (unit.length) {
+        0 -> 8.dp
+        1 -> 20.dp
+        else -> 34.dp
+    }
+
     CompositionLocalProvider(
         LocalTextSelectionColors provides TextSelectionColors(
             handleColor = colors.foregroundDefault,
@@ -71,7 +69,7 @@ fun IntakeTextField(
             keyboardActions = KeyboardActions(onDone = { handleDone() }),
             cursorBrush = SolidColor(colors.foregroundDefault),
             modifier = Modifier
-                .width(64.dp)
+                .width(44.dp + suffixPadding)
                 .height(50.dp)
                 .background(colors.backgroundSurface2, MaterialTheme.shapes.small)
                 .focusRequester(requester)
@@ -91,14 +89,14 @@ fun IntakeTextField(
                 },
             decorationBox = { inner ->
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Box(Modifier.padding(end = 20.dp)) { inner() }
+                    Box(Modifier.padding(end = suffixPadding)) { inner() }
                     Text(
                         text = unit,
                         color = colors.foregroundSupport,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier
                             .align(Alignment.CenterEnd)
-                            .padding(end = 8.dp)
+                            .padding(end = 8.dp, top = 2.dp)
                     )
                 }
             }
