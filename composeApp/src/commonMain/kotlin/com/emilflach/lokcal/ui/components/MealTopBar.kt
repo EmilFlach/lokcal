@@ -1,5 +1,8 @@
 package com.emilflach.lokcal.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -8,9 +11,7 @@ import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DocumentScanner
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,8 +46,14 @@ fun MealTopBar(
     },
 ) {
     val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(autoFocusSearch) {
-        if (autoFocusSearch && showSearch) focusRequester.requestFocus()
+    var searchVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(showSearch) {
+        searchVisible = showSearch
+    }
+
+    LaunchedEffect(autoFocusSearch, searchVisible) {
+        if (autoFocusSearch && searchVisible) focusRequester.requestFocus()
     }
 
     Column(
@@ -73,7 +80,10 @@ fun MealTopBar(
             colors = colors
         )
 
-        if (showSearch) {
+        AnimatedVisibility(
+            visible = searchVisible,
+            enter = fadeIn(animationSpec = tween(250))
+        ) {
             val color = LocalRecipesColors.current
             Row {
                 TextField(
@@ -149,7 +159,6 @@ fun MealTopBar(
                         )
                     }
                 }
-
             }
         }
     }
