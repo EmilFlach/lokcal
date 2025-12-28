@@ -45,7 +45,7 @@ class IntakeRepository(database: Database) {
 
 
     // Simplified logging with automatic merging
-    fun logOrUpdateFoodIntake(foodId: Long, quantityG: Double, mealType: String, dateIso: String) {
+    fun logOrUpdateFoodIntake(foodId: Long, quantityG: Double, mealType: String, dateIso: String, refreshId: Boolean = false) {
         require(quantityG >= 0.0) { "quantityG must be >= 0" }
         
         val today = todayRange(dateIso)
@@ -55,11 +55,11 @@ class IntakeRepository(database: Database) {
         if (existing == null) {
             logFoodIntake(foodId, quantityG, nowIso(dateIso), mealType)
         } else {
-            updateIntakeQuantity(existing.id, existing.quantity_g + quantityG)
+            updateIntakeQuantity(existing.id, existing.quantity_g + quantityG, refreshId)
         }
     }
 
-    fun logOrUpdateMealIntake(mealId: Long, quantityG: Double, mealType: String, dateIso: String) {
+    fun logOrUpdateMealIntake(mealId: Long, quantityG: Double, mealType: String, dateIso: String, refreshId: Boolean = false) {
         require(quantityG >= 0.0) { "quantityG must be >= 0" }
         
         val today = todayRange(dateIso)
@@ -69,7 +69,7 @@ class IntakeRepository(database: Database) {
         if (existing == null) {
             logMealIntake(mealId, quantityG, nowIso(dateIso), mealType)
         } else {
-            updateIntakeQuantity(existing.id, existing.quantity_g + quantityG)
+            updateIntakeQuantity(existing.id, existing.quantity_g + quantityG, refreshId)
         }
     }
 
@@ -88,7 +88,7 @@ class IntakeRepository(database: Database) {
         )
     }
 
-    fun updateIntakeQuantity(id: Long, newQuantityG: Double) {
+    fun updateIntakeQuantity(id: Long, newQuantityG: Double, refreshId: Boolean = false) {
         require(newQuantityG >= 0.0) { "newQuantityG must be >= 0" }
         
         val intake = tryExecute { intakeQ.selectIntakeById(id).executeAsOne() } ?: return
@@ -97,9 +97,17 @@ class IntakeRepository(database: Database) {
             val mealId = intake.source_meal_id ?: return
             val (totalG, totalKcal) = computeMealTotals(mealId)
             val kcalForQty = if (totalG > 0) totalKcal * (newQuantityG / totalG) else 0.0
-            intakeQ.updateIntakeQuantityDirect(kcalForQty, newQuantityG, id)
+            if (refreshId) {
+                intakeQ.updateIntakeQuantityAndIdDirect(kcalForQty, newQuantityG, id)
+            } else {
+                intakeQ.updateIntakeQuantityDirect(kcalForQty, newQuantityG, id)
+            }
         } else {
-            intakeQ.updateIntakeQuantity(newQuantityG, newQuantityG, newQuantityG, id)
+            if (refreshId) {
+                intakeQ.updateIntakeQuantityAndId(newQuantityG, newQuantityG, newQuantityG, id)
+            } else {
+                intakeQ.updateIntakeQuantity(newQuantityG, newQuantityG, newQuantityG, id)
+            }
         }
     }
 
@@ -143,7 +151,7 @@ class IntakeRepository(database: Database) {
         // Delete only the food items that were saved into the meal
         list.filter { it.source_food_id != null }.forEach { deleteIntakeById(it.id) }
         // Log new meal as a single entry
-        logOrUpdateMealIntake(mealId, totalGrams, mealType, dateIso)
+        logOrUpdateMealIntake(mealId, totalGrams, mealType, dateIso, refreshId = false)
         return mealId
     }
 
@@ -252,7 +260,7 @@ class IntakeRepository(database: Database) {
         items.forEach { row ->
             val foodId = row.id // Food id from joined row
             val scaledGrams = ((row.meal_item_quantity_g * portionAmount) / totalPortions).coerceAtLeast(0.0)
-            logOrUpdateFoodIntake(foodId, scaledGrams, mealType, dateIso)
+            logOrUpdateFoodIntake(foodId, scaledGrams, mealType, dateIso, refreshId = false)
         }
 
         // 5) Remove the original meal intake entry

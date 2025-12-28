@@ -128,11 +128,11 @@ class IntakeViewModel(
     }
 
     fun logPortion(foodId: Long, portionG: Double) {
-        intakeRepo.logOrUpdateFoodIntake(foodId, portionG, mealType(), dateIso)
+        intakeRepo.logOrUpdateFoodIntake(foodId, portionG, mealType(), dateIso, refreshId = true)
     }
 
     fun logMealPortion(mealId: Long, portionG: Double) {
-        intakeRepo.logOrUpdateMealIntake(mealId, portionG, mealType(), dateIso)
+        intakeRepo.logOrUpdateMealIntake(mealId, portionG, mealType(), dateIso, refreshId = true)
     }
 
     fun addMealByPortions(mealId: Long, portionsText: String, onSuccess: () -> Unit) {

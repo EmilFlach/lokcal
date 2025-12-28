@@ -43,9 +43,25 @@ END,
     quantity_g = ?
 WHERE id = ?;
 
+updateIntakeQuantityAndId:
+UPDATE Intake
+SET energy_kcal_total = CASE
+    WHEN quantity_g > 0 THEN energy_kcal_total * (? / quantity_g)
+    WHEN source_type = 'FOOD' AND source_food_id IS NOT NULL THEN (
+        SELECT energy_kcal_per_100g FROM Food WHERE id = source_food_id
+    ) * (? / 100.0)
+    ELSE energy_kcal_total
+END,
+    quantity_g = ?,
+    id = (SELECT MAX(id) + 1 FROM Intake)
+WHERE id = ?;
+
 -- Direct setter for cases where repository recomputes kcal/qty (e.g., MEAL when previous qty was 0)
 updateIntakeQuantityDirect:
 UPDATE Intake SET energy_kcal_total = ?, quantity_g = ? WHERE id = ?;
+
+updateIntakeQuantityAndIdDirect:
+UPDATE Intake SET energy_kcal_total = ?, quantity_g = ?, id = (SELECT MAX(id) + 1 FROM Intake) WHERE id = ?;
 
 -- Helper to fetch one intake row
 selectIntakeById:
