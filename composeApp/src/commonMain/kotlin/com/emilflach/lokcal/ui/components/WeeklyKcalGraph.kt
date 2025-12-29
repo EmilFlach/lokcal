@@ -2,13 +2,15 @@ package com.emilflach.lokcal.ui.components
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush.Companion.verticalGradient
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
@@ -21,7 +23,7 @@ fun WeeklyKcalGraph(last7: List<DayDelta>, maxWidth: Dp) {
     val colors = LocalRecipesColors.current
     val graphData = remember(last7) {
         last7.map { d ->
-            val label = d.date.dayOfWeek.name.take(3)
+            val label = d.date.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.titlecase() }
             val gradient = if(d.deltaKcal < 0)
                 verticalGradient(
                     0f to Color.Transparent,
@@ -75,4 +77,19 @@ fun WeeklyKcalGraph(last7: List<DayDelta>, maxWidth: Dp) {
         labelHelperProperties = LabelHelperProperties(false),
         indicatorProperties = HorizontalIndicatorProperties(false),
     )
+    Spacer(modifier = Modifier.height(16.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        graphData.forEach { data ->
+            Text(
+                text = data.label!!,
+                style = MaterialTheme.typography.bodySmall.copy(color = colors.foregroundSupport),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.width(maxWidth / 7),
+            )
+        }
+
+    }
 }

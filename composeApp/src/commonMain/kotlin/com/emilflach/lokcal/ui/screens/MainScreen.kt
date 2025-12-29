@@ -111,10 +111,12 @@ fun MainScreen(
                         verticalAlignment = Alignment.Bottom,
                     ) {
                         Spacer(Modifier.width(16.dp))
+                        val dayOfWeek = selectedDate.dayOfWeek.name.lowercase().replaceFirstChar { it.titlecase() }
                         Text(
-                            text = if(selectDateIsToday) "Today" else selectedDate.toString(),
+                            text = if (selectDateIsToday) "Today, $selectedDate" else "$dayOfWeek, $selectedDate",
                             color = colors.foregroundSupport,
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.clickable { viewModel.setToCurrentDate() }
                         )
                         Spacer(Modifier.weight(1f))
                         IconButton(

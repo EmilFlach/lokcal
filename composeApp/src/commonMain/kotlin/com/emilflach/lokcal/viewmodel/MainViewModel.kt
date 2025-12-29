@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.emilflach.lokcal.Intake
 import com.emilflach.lokcal.data.ExerciseRepository
 import com.emilflach.lokcal.data.IntakeRepository
+import com.emilflach.lokcal.data.SettingsRepository
 import com.emilflach.lokcal.data.WeightRepository
 import com.emilflach.lokcal.health.HealthManager
 import com.emilflach.lokcal.util.currentDateIso
@@ -31,7 +32,7 @@ class MainViewModel(
     private val intakeRepo: IntakeRepository,
     private val exerciseRepo: ExerciseRepository,
     private val weightRepo: WeightRepository,
-    private val settingsRepo: com.emilflach.lokcal.data.SettingsRepository,
+    private val settingsRepo: SettingsRepository,
     initialDateIso: String
 ) {
     data class MealSummary(
@@ -89,6 +90,12 @@ class MainViewModel(
                 }
             }
         }
+    }
+
+    fun setToCurrentDate() {
+        _selectedDate.value = currentDateIso().let { LocalDate.parse(it) }
+        _selectedDateIsToday.value = _selectedDate.value.toString() == currentDateIso()
+        loadFor(_selectedDate.value)
     }
 
     fun nextDay() {
