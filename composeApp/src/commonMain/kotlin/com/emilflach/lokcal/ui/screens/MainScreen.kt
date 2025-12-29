@@ -48,7 +48,6 @@ fun MainScreen(
     val left by viewModel.leftKcal.collectAsState()
     val burned by viewModel.burnedKcal.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
-    val selectDateIsToday by viewModel.selectedDateIsToday.collectAsState()
     val showWeightPrompt by viewModel.showWeightPrompt.collectAsState()
     val last7 by viewModel.last7Deltas.collectAsState()
 
@@ -111,9 +110,9 @@ fun MainScreen(
                         verticalAlignment = Alignment.Bottom,
                     ) {
                         Spacer(Modifier.width(16.dp))
-                        val dayOfWeek = selectedDate.dayOfWeek.name.lowercase().replaceFirstChar { it.titlecase() }
+
                         Text(
-                            text = if (selectDateIsToday) "Today, $selectedDate" else "$dayOfWeek, $selectedDate",
+                            text = viewModel.formattedDate(),
                             color = colors.foregroundSupport,
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.clickable { viewModel.setToCurrentDate() }

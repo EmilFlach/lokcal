@@ -54,9 +54,6 @@ class MainViewModel(
     private val _selectedDate = MutableStateFlow(LocalDate.parse(initialDateIso))
     val selectedDate: StateFlow<LocalDate> = _selectedDate.asStateFlow()
 
-    private val _selectedDateIsToday = MutableStateFlow(initialDateIso == currentDateIso())
-    val selectedDateIsToday: StateFlow<Boolean> = _selectedDateIsToday.asStateFlow()
-
     private val _percentageLeft = MutableStateFlow(0.0)
     val percentageLeft: StateFlow<Double> = _percentageLeft.asStateFlow()
 
@@ -94,19 +91,16 @@ class MainViewModel(
 
     fun setToCurrentDate() {
         _selectedDate.value = currentDateIso().let { LocalDate.parse(it) }
-        _selectedDateIsToday.value = _selectedDate.value.toString() == currentDateIso()
         loadFor(_selectedDate.value)
     }
 
     fun nextDay() {
         _selectedDate.value = _selectedDate.value.plus(1, DateTimeUnit.DAY)
-        _selectedDateIsToday.value = _selectedDate.value.toString() == currentDateIso()
         loadFor(_selectedDate.value)
     }
 
     fun previousDay() {
         _selectedDate.value = _selectedDate.value.plus(-1, DateTimeUnit.DAY)
-        _selectedDateIsToday.value = _selectedDate.value.toString() == currentDateIso()
         loadFor(_selectedDate.value)
     }
 
@@ -178,5 +172,16 @@ class MainViewModel(
             DayDelta(date = d, deltaKcal = delta)
         }.reversed()
         _last7Deltas.value = list
+    }
+
+    fun formattedDate(): String {
+        val selectedDate = _selectedDate.value
+        val isToday = selectedDate.toString() == currentDateIso()
+
+        val weekDay =
+            if (isToday) "Today" else selectedDate.dayOfWeek.name.lowercase().replaceFirstChar { it.titlecase() }
+        val month = selectedDate.month.name.take(3).lowercase().replaceFirstChar { it.titlecase() }
+
+        return "$weekDay, ${selectedDate.day} $month ${selectedDate.year}"
     }
 }
