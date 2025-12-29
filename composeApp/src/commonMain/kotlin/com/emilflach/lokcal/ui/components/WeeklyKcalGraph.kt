@@ -2,6 +2,7 @@ package com.emilflach.lokcal.ui.components
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -9,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush.Companion.verticalGradient
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -21,18 +21,20 @@ import ir.ehsannarmani.compose_charts.models.*
 @Composable
 fun WeeklyKcalGraph(last7: List<DayDelta>, maxWidth: Dp) {
     val colors = LocalRecipesColors.current
+    val isDarkTheme = isSystemInDarkTheme()
     val graphData = remember(last7) {
         last7.map { d ->
             val label = d.date.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.titlecase() }
-            val gradient = if(d.deltaKcal < 0)
-                verticalGradient(
-                    0f to Color.Transparent,
-                    1f to colors.foregroundBrand.copy(alpha = 0.9f),
-                ) else
-                verticalGradient(
-                    0f to colors.foregroundBrand.copy(alpha = 0.9f),
-                    1f to Color.Transparent,
-                )
+
+            val colorMain = colors.foregroundBrand
+            val colorSubtle = colors.foregroundBrand.copy(alpha = if (isDarkTheme) 0.0f else 0.4f)
+
+            val gradient = if (d.deltaKcal < 0) {
+                verticalGradient(0f to colorSubtle, 1f to colorMain)
+            } else {
+                verticalGradient(0f to colorMain, 1f to colorSubtle)
+            }
+
             val value = when (d.deltaKcal) {
                 in 400.0..Double.POSITIVE_INFINITY -> 400.0
                 in 0.0..40.0 -> 40.0

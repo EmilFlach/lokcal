@@ -1,5 +1,6 @@
 package com.emilflach.lokcal.ui.components
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
@@ -17,11 +18,12 @@ import org.jetbrains.compose.resources.decodeToImageBitmap
 @Composable
 fun GradientBackground(percentageLeft: Float) {
     val colors = LocalRecipesColors.current
+    val isDarkTheme = isSystemInDarkTheme()
     val middleGradientColor = remember(percentageLeft) {
         if (percentageLeft > 0)
             colors.backgroundSurface2
         else
-            colors.backgroundDangerSubtle
+            if (isDarkTheme) colors.backgroundDangerSubtle else colors.backgroundDanger.copy(alpha = 0.3f)
     }
     var noiseBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
 
@@ -68,7 +70,7 @@ fun GradientBackground(percentageLeft: Float) {
                         drawImage(
                             image = bitmap,
                             topLeft = Offset(x.toFloat(), y.toFloat()),
-                            alpha = 0.35f,
+                            alpha = if (isDarkTheme) 0.15f else 0.01f,
                             blendMode = BlendMode.Multiply
                         )
                     }
