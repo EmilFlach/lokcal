@@ -9,7 +9,6 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -47,6 +46,7 @@ fun MainScreen(
     val percentageLeft by viewModel.percentageLeft.collectAsState()
     val left by viewModel.leftKcal.collectAsState()
     val burned by viewModel.burnedKcal.collectAsState()
+    val eaten by viewModel.eatenKcal.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
     val showWeightPrompt by viewModel.showWeightPrompt.collectAsState()
     val last7 by viewModel.last7Deltas.collectAsState()
@@ -157,16 +157,21 @@ fun MainScreen(
 
                         }
                     }
-                    Row {
+                    Row (
+                        modifier = Modifier.height(IntrinsicSize.Min)
+                    ) {
                         Surface(
                             color = Color.Transparent,
                             modifier = Modifier
                                 .weight(4f)
+                                .fillMaxHeight()
                                 .background(colors.backgroundSurface2, MaterialTheme.shapes.medium)
                                 .padding(16.dp)
                                 .alpha(fadeAlpha.value)
                         ) {
-                            Column {
+                            Column(
+                                verticalArrangement = Arrangement.Center
+                            ) {
                                 Text(
                                     text = if (left > 0) "Remaining" else "Above goal",
                                     style = MaterialTheme.typography.titleMedium,
@@ -184,42 +189,65 @@ fun MainScreen(
                             }
                         }
                         Spacer(Modifier.width(16.dp))
-                        Surface(
-                            color = Color.Transparent,
-                            modifier = Modifier
+                        Column (
+                            Modifier
                                 .weight(3f)
-                                .background(colors.backgroundSurface1, MaterialTheme.shapes.medium)
-                                .clip(MaterialTheme.shapes.medium)
-                                .clickable { onOpenExercise(selectedDate.toString()) }
-                                .padding(16.dp)
-                                .alpha(fadeAlpha.value)
+                                .fillMaxHeight(),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Column {
+                            Surface(
+                                color = Color.Transparent,
+                                modifier = Modifier
+                                    .clip(MaterialTheme.shapes.medium.copy(
+                                        bottomStart = MaterialTheme.shapes.extraSmall.bottomStart,
+                                        bottomEnd = MaterialTheme.shapes.extraSmall.bottomEnd))
+                                    .background(colors.backgroundSurface1)
+                                    .clickable { onOpenExercise(selectedDate.toString()) }
+                                    .padding(16.dp)
+                                    .alpha(fadeAlpha.value)
+                            ) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Text(
                                         text = "Burned",
-                                        style = MaterialTheme.typography.titleMedium,
+                                        style = MaterialTheme.typography.titleSmall,
                                         color = colors.foregroundSupport,
-                                        textAlign = TextAlign.Left
                                     )
                                     Spacer(Modifier.weight(1f))
-                                    Icon(
-                                        imageVector = Icons.Default.Edit,
-                                        contentDescription = "Edit burned kcal",
-                                        tint = colors.foregroundSupport,
-                                        modifier = Modifier.size(16.dp)
+                                    Text(
+                                        text = burned.roundToInt().toString(),
+                                        style = MaterialTheme.typography.titleLarge,
+                                        color = colors.foregroundSupport
                                     )
                                 }
-                                Text(
-                                    text = burned.roundToInt().toString(),
-                                    style = MaterialTheme.typography.displayLarge,
-                                    color = colors.foregroundSupport,
-                                    textAlign = TextAlign.Left,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                            }
+                            Surface(
+                                color = Color.Transparent,
+                                modifier = Modifier
+                                    .clip(MaterialTheme.shapes.medium.copy(
+                                        topStart = MaterialTheme.shapes.extraSmall.topStart,
+                                        topEnd = MaterialTheme.shapes.extraSmall.topEnd))
+                                    .background(colors.backgroundSurface1)
+                                    .padding(16.dp)
+                                    .alpha(fadeAlpha.value)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = "Eaten",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = colors.foregroundSupport
+                                    )
+                                    Spacer(Modifier.weight(1f))
+                                    Text(
+                                        text = eaten.roundToInt().toString(),
+                                        style = MaterialTheme.typography.titleLarge,
+                                        color = colors.foregroundSupport
+                                    )
+                                }
                             }
                         }
                     }

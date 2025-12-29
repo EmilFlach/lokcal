@@ -63,6 +63,9 @@ class MainViewModel(
     private val _burnedKcal = MutableStateFlow(0.0)
     val burnedKcal: StateFlow<Double> = _burnedKcal.asStateFlow()
 
+    private val _eatenKcal = MutableStateFlow(0.0)
+    val eatenKcal: StateFlow<Double> = _eatenKcal.asStateFlow()
+
     // Thursday weight prompt visibility
     private val _showWeightPrompt = MutableStateFlow(false)
     val showWeightPrompt: StateFlow<Boolean> = _showWeightPrompt.asStateFlow()
@@ -128,6 +131,7 @@ class MainViewModel(
         val totalBudget = start + burned
         val left = totalBudget - eaten
         _percentageLeft.value = (left / start).coerceIn(0.0, 1.0)
+        _eatenKcal.value = eaten
         _burnedKcal.value = burned
         _leftKcal.value = left
 
