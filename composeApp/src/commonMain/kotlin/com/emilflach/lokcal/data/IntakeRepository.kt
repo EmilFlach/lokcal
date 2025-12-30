@@ -279,4 +279,10 @@ class IntakeRepository(database: Database) {
     fun setLeftoverFlagById(id: Long, enabled: Boolean) {
         intakeQ.updateLeftoverById(if (enabled) 1 else 0, id)
     }
+
+    fun getMostEatenByWeight(startIso: String, endIso: String) =
+        intakeQ.statsMostEatenByWeight(startIso, endIso, startIso, endIso).executeAsList()
+
+    fun getDailyKcal(startIso: String, endIso: String) =
+        intakeQ.statsDailyKcal(startIso, endIso).executeAsList()
 }

@@ -22,3 +22,13 @@ UPDATE Exercise SET exercise_type = ?, duration_min = ?, energy_kcal_total = ?, 
 
 deleteExerciseById:
 DELETE FROM Exercise WHERE id = ?;
+
+-- Stats: Daily burned kcal in a date range
+statsDailyBurned:
+SELECT
+    SUBSTR(timestamp, 1, 10) AS day,
+    SUM(energy_kcal_total) AS total_burned
+FROM Exercise
+WHERE timestamp BETWEEN ? AND ?
+GROUP BY day
+ORDER BY day ASC;

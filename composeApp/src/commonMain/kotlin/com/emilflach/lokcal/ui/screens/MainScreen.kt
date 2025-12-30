@@ -9,6 +9,7 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
@@ -42,6 +43,7 @@ fun MainScreen(
     onOpenSettings: () -> Unit,
     onOpenWeightToday: () -> Unit,
     onOpenWeightList: () -> Unit,
+    onOpenStatistics: () -> Unit
 ) {
     val summaries by viewModel.summaries.collectAsState()
     val percentageLeft by viewModel.percentageLeft.collectAsState()
@@ -127,6 +129,17 @@ fun MainScreen(
                             Icon(
                                 imageVector = Icons.Default.Analytics,
                                 contentDescription = "Weight log",
+                                tint = colors.foregroundSupport,
+                            )
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        IconButton(
+                            onClick = onOpenStatistics,
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                                contentDescription = "Food statistics",
                                 tint = colors.foregroundSupport,
                             )
                         }

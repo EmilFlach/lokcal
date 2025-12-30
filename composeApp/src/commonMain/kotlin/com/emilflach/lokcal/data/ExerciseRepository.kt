@@ -45,11 +45,12 @@ class ExerciseRepository(private val db: Database) {
 
     fun deleteById(id: Long) = q.deleteExerciseById(id)
 
-    fun getById(id: Long): Exercise? = try { q.selectExerciseById(id).executeAsOne() } catch (_: Throwable) { null }
-
     fun getByDateRange(startIso: String, endIso: String): List<Exercise> =
         q.selectExerciseByDateRange(startIso, endIso).executeAsList()
 
     fun sumKcalByDate(startIso: String, endIso: String): Double =
         getByDateRange(startIso, endIso).sumOf { it.energy_kcal_total }
+
+    fun getDailyBurned(startIso: String, endIso: String) =
+        q.statsDailyBurned(startIso, endIso).executeAsList()
 }

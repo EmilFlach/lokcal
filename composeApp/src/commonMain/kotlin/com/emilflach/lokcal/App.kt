@@ -32,6 +32,8 @@ private sealed class Screen {
         data class Main(val dateIso: String) : ReturnTo()
     }
     data class WeightList(val openAdd: Boolean = false, val returnTo: ReturnTo) : Screen()
+    // Stats flow
+    data object Statistics : Screen()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -101,6 +103,10 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                     }
                 }
             }
+            Screen.Statistics -> {
+                screen = Screen.Main(currentDateIso())
+                refreshToggle = !refreshToggle
+            }
             else -> {
                 // On Main screen: allow default behavior (app can close). No-op here.
             }
@@ -157,7 +163,8 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                         onOpenExercise = { dateIso -> screen = Screen.ExerciseList(dateIso) },
                         onOpenSettings = { screen = Screen.Settings },
                         onOpenWeightToday = { screen = Screen.WeightList(openAdd = true, returnTo = Screen.ReturnTo.Main(s.dateIso)) },
-                        onOpenWeightList = { screen = Screen.WeightList(openAdd = false, returnTo = Screen.ReturnTo.Main(s.dateIso)) }
+                        onOpenWeightList = { screen = Screen.WeightList(openAdd = false, returnTo = Screen.ReturnTo.Main(s.dateIso)) },
+                        onOpenStatistics = { screen = Screen.Statistics }
                     )
                 }
                 is Screen.MealTime -> {
@@ -263,6 +270,13 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                         viewModel = vm,
                         onBack = onBackAction,
                         openAdd = s.openAdd
+                    )
+                }
+                Screen.Statistics -> {
+                    val vm = remember(intakeRepo, exerciseRepo, settingsRepo) { StatisticsViewModel(intakeRepo, exerciseRepo, settingsRepo) }
+                    StatisticsScreen(
+                        viewModel = vm,
+                        onBack = { screen = Screen.Main(currentDateIso()) }
                     )
                 }
             }

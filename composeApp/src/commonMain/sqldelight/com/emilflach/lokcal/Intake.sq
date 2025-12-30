@@ -91,3 +91,43 @@ SELECT * FROM Intake WHERE leftover = 1 ORDER BY timestamp DESC;
 selectLatestIntakeId:
 SELECT id FROM Intake ORDER BY id DESC LIMIT 1;
 
+-- Stats: Most eaten foods by weight in a date range (including foods from meals)
+statsMostEatenByWeight:
+SELECT
+    food_id,
+    item_name,
+    SUM(quantity_g) AS total_quantity_g
+FROM (
+    -- Direct food intakes
+    SELECT
+        source_food_id AS food_id,
+        item_name,
+        quantity_g
+    FROM Intake
+    WHERE source_type = 'FOOD' AND timestamp BETWEEN ? AND ?
+
+    UNION ALL
+
+    -- Food items from meal intakes
+    SELECT
+        mi.food_id,
+        f.name AS item_name,
+        (mi.quantity_g * (i.quantity_g / (SELECT COALESCE(SUM(quantity_g), 1.0) FROM MealItem WHERE meal_id = i.source_meal_id))) AS quantity_g
+    FROM Intake i
+    JOIN MealItem mi ON i.source_meal_id = mi.meal_id
+    JOIN Food f ON f.id = mi.food_id
+    WHERE i.source_type = 'MEAL' AND i.timestamp BETWEEN ? AND ?
+)
+GROUP BY food_id, item_name
+ORDER BY total_quantity_g DESC;
+
+-- Stats: Daily kcal intake in a date range
+statsDailyKcal:
+SELECT
+    SUBSTR(timestamp, 1, 10) AS day,
+    SUM(energy_kcal_total) AS total_kcal
+FROM Intake
+WHERE timestamp BETWEEN ? AND ?
+GROUP BY day
+ORDER BY day ASC;
+
