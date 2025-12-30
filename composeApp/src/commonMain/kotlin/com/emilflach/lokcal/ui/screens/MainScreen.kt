@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.outlined.Settings
@@ -47,6 +48,7 @@ fun MainScreen(
     val left by viewModel.leftKcal.collectAsState()
     val burned by viewModel.burnedKcal.collectAsState()
     val eaten by viewModel.eatenKcal.collectAsState()
+    val startingKcal by viewModel.startingKcal.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
     val showWeightPrompt by viewModel.showWeightPrompt.collectAsState()
     val last7 by viewModel.last7Deltas.collectAsState()
@@ -157,9 +159,7 @@ fun MainScreen(
 
                         }
                     }
-                    Row (
-                        modifier = Modifier.height(IntrinsicSize.Min)
-                    ) {
+                    Row(modifier = Modifier.height(IntrinsicSize.Min)) {
                         Surface(
                             color = Color.Transparent,
                             modifier = Modifier
@@ -169,12 +169,10 @@ fun MainScreen(
                                 .padding(16.dp)
                                 .alpha(fadeAlpha.value)
                         ) {
-                            Column(
-                                verticalArrangement = Arrangement.Center
-                            ) {
+                            Column {
                                 Text(
                                     text = if (left > 0) "Remaining" else "Above goal",
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleSmall,
                                     textAlign = TextAlign.Left,
                                     modifier = Modifier.fillMaxWidth()
                                 )
@@ -186,6 +184,46 @@ fun MainScreen(
                                     color = colors.foregroundDefault,
                                     modifier = Modifier.fillMaxWidth()
                                 )
+                                Spacer(Modifier.height(4.dp))
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(6.dp)
+                                        .clip(RoundedCornerShape(3.dp))
+                                        .background(colors.foregroundBrand.copy(alpha = 0.1f))
+                                ) {
+                                    val total = (startingKcal + burned).coerceAtLeast(eaten).coerceAtLeast(1.0)
+                                    val eatenRatio = (eaten / total).toFloat()
+                                    val remainingGoal = (startingKcal - eaten).coerceAtLeast(0.0)
+                                    val remainingGoalRatio = (remainingGoal / total).toFloat()
+                                    val remainingBurned = (total - eaten - remainingGoal).coerceAtLeast(0.0)
+                                    val remainingBurnedRatio = (remainingBurned / total).toFloat()
+
+                                    if (eatenRatio > 0) {
+                                        Box(
+                                            Modifier
+                                                .fillMaxHeight()
+                                                .weight(eatenRatio)
+                                                .background(colors.foregroundBrand)
+                                        )
+                                    }
+                                    if (remainingBurnedRatio > 0) {
+                                        Box(
+                                            Modifier
+                                                .fillMaxHeight()
+                                                .weight(remainingBurnedRatio)
+                                                .background(colors.foregroundBrand.copy(alpha = 0.6f))
+                                        )
+                                    }
+                                    if (remainingGoalRatio > 0) {
+                                        Box(
+                                            Modifier
+                                                .fillMaxHeight()
+                                                .weight(remainingGoalRatio)
+                                                .background(colors.foregroundBrand.copy(alpha = 0.3f))
+                                        )
+                                    }
+                                }
                             }
                         }
                         Spacer(Modifier.width(16.dp))
@@ -198,12 +236,14 @@ fun MainScreen(
                             Surface(
                                 color = Color.Transparent,
                                 modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth()
                                     .clip(MaterialTheme.shapes.medium.copy(
                                         bottomStart = MaterialTheme.shapes.extraSmall.bottomStart,
                                         bottomEnd = MaterialTheme.shapes.extraSmall.bottomEnd))
                                     .background(colors.backgroundSurface1)
                                     .clickable { onOpenExercise(selectedDate.toString()) }
-                                    .padding(16.dp)
+                                    .padding(horizontal = 16.dp)
                                     .alpha(fadeAlpha.value)
                             ) {
                                 Row(
@@ -226,11 +266,13 @@ fun MainScreen(
                             Surface(
                                 color = Color.Transparent,
                                 modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth()
                                     .clip(MaterialTheme.shapes.medium.copy(
                                         topStart = MaterialTheme.shapes.extraSmall.topStart,
                                         topEnd = MaterialTheme.shapes.extraSmall.topEnd))
                                     .background(colors.backgroundSurface1)
-                                    .padding(16.dp)
+                                    .padding(horizontal = 16.dp)
                                     .alpha(fadeAlpha.value)
                             ) {
                                 Row(

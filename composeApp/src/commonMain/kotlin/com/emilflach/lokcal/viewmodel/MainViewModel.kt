@@ -66,6 +66,9 @@ class MainViewModel(
     private val _eatenKcal = MutableStateFlow(0.0)
     val eatenKcal: StateFlow<Double> = _eatenKcal.asStateFlow()
 
+    private val _startingKcal = MutableStateFlow(0.0)
+    val startingKcal: StateFlow<Double> = _startingKcal.asStateFlow()
+
     // Thursday weight prompt visibility
     private val _showWeightPrompt = MutableStateFlow(false)
     val showWeightPrompt: StateFlow<Boolean> = _showWeightPrompt.asStateFlow()
@@ -134,6 +137,7 @@ class MainViewModel(
         _eatenKcal.value = eaten
         _burnedKcal.value = burned
         _leftKcal.value = left
+        _startingKcal.value = start
 
         // Update Thursday weight prompt visibility
         val isThursday = date.dayOfWeek.name == "THURSDAY"
