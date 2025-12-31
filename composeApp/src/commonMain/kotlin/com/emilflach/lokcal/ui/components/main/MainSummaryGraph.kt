@@ -1,4 +1,4 @@
-package com.emilflach.lokcal.ui.components
+package com.emilflach.lokcal.ui.components.main
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -14,12 +14,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
-import com.emilflach.lokcal.viewmodel.MainViewModel.DayDelta
+import com.emilflach.lokcal.viewmodel.DayDelta
 import ir.ehsannarmani.compose_charts.ColumnChart
 import ir.ehsannarmani.compose_charts.models.*
 
 @Composable
-fun WeeklyKcalGraph(last7: List<DayDelta>, maxWidth: Dp) {
+fun MainSummaryGraph(last7: List<DayDelta>, maxWidth: Dp) {
     val colors = LocalRecipesColors.current
     val isDarkTheme = isSystemInDarkTheme()
     val graphData = remember(last7) {
