@@ -9,8 +9,8 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
-import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.outlined.InsertChart
+import androidx.compose.material.icons.outlined.MonitorWeight
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -127,7 +127,7 @@ fun MainScreen(
                             modifier = Modifier.size(24.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Analytics,
+                                imageVector = Icons.Outlined.MonitorWeight,
                                 contentDescription = "Weight log",
                                 tint = colors.foregroundSupport,
                             )
@@ -138,7 +138,7 @@ fun MainScreen(
                             modifier = Modifier.size(24.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                                imageVector = Icons.Outlined.InsertChart,
                                 contentDescription = "Food statistics",
                                 tint = colors.foregroundSupport,
                             )

@@ -42,8 +42,8 @@ fun StatisticsScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Statistics", fontWeight = FontWeight.Bold) },
+            TopAppBar(
+                title = { Text("Statistics") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
