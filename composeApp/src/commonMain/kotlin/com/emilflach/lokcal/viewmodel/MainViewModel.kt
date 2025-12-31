@@ -48,6 +48,16 @@ class MainViewModel(
         val deltaKcal: Double // positive => over, negative => under
     )
 
+    data class DayState(
+        val summaries: List<MealSummary> = emptyList(),
+        val percentageLeft: Double = 0.0,
+        val leftKcal: Double = 0.0,
+        val burnedKcal: Double = 0.0,
+        val eatenKcal: Double = 0.0,
+        val startingKcal: Double = 0.0,
+        val showWeightPrompt: Boolean = false,
+    )
+
     private val _summaries = MutableStateFlow<List<MealSummary>>(emptyList())
     val summaries: StateFlow<List<MealSummary>> = _summaries.asStateFlow()
 
@@ -110,12 +120,26 @@ class MainViewModel(
         loadFor(_selectedDate.value)
     }
 
-    private fun loadFor(date: LocalDate) {
+    fun loadFor(date: LocalDate) {
+        _selectedDate.value = date
+        val state = getDayStateFor(date)
+        _summaries.value = state.summaries
+        _percentageLeft.value = state.percentageLeft
+        _eatenKcal.value = state.eatenKcal
+        _burnedKcal.value = state.burnedKcal
+        _leftKcal.value = state.leftKcal
+        _startingKcal.value = state.startingKcal
+        _showWeightPrompt.value = state.showWeightPrompt
+
+        computeLast7Deltas()
+    }
+
+    fun getDayStateFor(date: LocalDate): DayState {
         val dateIso = date.toString()
         val startIso = "${dateIso}T00:00:00"
         val endIso = "${dateIso}T23:59:59"
         val mealTypes = listOf("BREAKFAST", "LUNCH", "DINNER", "SNACK")
-        _summaries.value = mealTypes.map { type ->
+        val summaries = mealTypes.map { type ->
             val list = intakeRepo.getIntakeByMealAndDateRange(type, startIso, endIso)
             val totalKcal = list.sumOf { it.energy_kcal_total }
             MealSummary(
@@ -128,23 +152,27 @@ class MainViewModel(
         }
 
         val exercises = exerciseRepo.getByDateRange(startIso, endIso)
-        val eaten = _summaries.value.sumOf { it.totalKcal }.coerceAtLeast(0.0)
+        val eaten = summaries.sumOf { it.totalKcal }.coerceAtLeast(0.0)
         val start = settingsRepo.getStartingKcal().coerceAtLeast(0.0)
         val burned = exercises.sumOf { it.energy_kcal_total }
         val totalBudget = start + burned
         val left = totalBudget - eaten
-        _percentageLeft.value = (left / start).coerceIn(0.0, 1.0)
-        _eatenKcal.value = eaten
-        _burnedKcal.value = burned
-        _leftKcal.value = left
-        _startingKcal.value = start
+        val percentageLeft = (left / start).coerceIn(0.0, 1.0)
 
         // Update Thursday weight prompt visibility
         val isThursday = date.dayOfWeek.name == "THURSDAY"
         val hasWeight = weightRepo.getForDate(dateIso) != null
-        _showWeightPrompt.value = isThursday && !hasWeight
+        val showWeightPrompt = isThursday && !hasWeight
 
-        computeLast7Deltas()
+        return DayState(
+            summaries = summaries,
+            percentageLeft = percentageLeft,
+            leftKcal = left,
+            burnedKcal = burned,
+            eatenKcal = eaten,
+            startingKcal = start,
+            showWeightPrompt = showWeightPrompt
+        )
     }
 
     private fun buildMealSummary(list: List<Intake>): String {

@@ -3,10 +3,12 @@ package com.emilflach.lokcal.ui.screens
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerDefaults
+import androidx.compose.foundation.pager.PagerSnapDistance
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.InsertChart
@@ -19,8 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -29,12 +29,18 @@ import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.GradientBackground
 import com.emilflach.lokcal.ui.components.WeeklyKcalGraph
 import com.emilflach.lokcal.ui.components.getRoundedCornerShape
+import com.emilflach.lokcal.util.currentDateIso
 import com.emilflach.lokcal.viewmodel.MainViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
 import kotlin.math.roundToInt
+import kotlin.time.ExperimentalTime
 
+@OptIn(ExperimentalFoundationApi::class, ExperimentalTime::class)
 @Composable
 fun MainScreen(
     viewModel: MainViewModel,
@@ -55,11 +61,30 @@ fun MainScreen(
     val showWeightPrompt by viewModel.showWeightPrompt.collectAsState()
     val last7 by viewModel.last7Deltas.collectAsState()
 
-    val density = LocalDensity.current
     val colors = LocalRecipesColors.current
-    val thresholdPx = remember(density) { with(density) { 64.dp.toPx() } }
     val coroutineScope = rememberCoroutineScope()
     var animationTrigger by remember { mutableStateOf(0) }
+
+    val initialPage = 5000
+    val pagerState = rememberPagerState(initialPage = initialPage) { 10000 }
+
+    LaunchedEffect(selectedDate) {
+        val today = LocalDate.parse(currentDateIso())
+        val diff = (selectedDate.toEpochDays() - today.toEpochDays()).toInt()
+        val targetPage = initialPage + diff
+        if (pagerState.currentPage != targetPage) {
+            pagerState.scrollToPage(targetPage)
+        }
+    }
+
+    LaunchedEffect(pagerState.settledPage) {
+        val today = LocalDate.parse(currentDateIso())
+        val diff = pagerState.settledPage - initialPage
+        val targetDate = today.plus(diff, DateTimeUnit.DAY)
+        if (selectedDate != targetDate) {
+            viewModel.loadFor(targetDate) // Use loadFor to update internal state and selectedDate
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.fetchAndLogHealthData()
@@ -84,311 +109,388 @@ fun MainScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .pointerInput(Unit) {
-                    var accumX = 0f
-                    detectHorizontalDragGestures(
-                        onDragEnd = {
-                            when {
-                                accumX > thresholdPx -> viewModel.previousDay()
-                                accumX < -thresholdPx -> viewModel.nextDay()
-                            }
-                            accumX = 0f
-                        },
-                        onHorizontalDrag = { _, dragAmount ->
-                            accumX += dragAmount
-                        }
-                    )
-                }
         ) {
 
-            BoxWithConstraints(
+            SummaryContent(
+                state = MainViewModel.DayState(
+                    summaries = summaries,
+                    percentageLeft = percentageLeft,
+                    leftKcal = left,
+                    burnedKcal = burned,
+                    eatenKcal = eaten,
+                    startingKcal = startingKcal,
+                    showWeightPrompt = showWeightPrompt
+                ),
+                formattedDate = viewModel.formattedDate(),
+                onDateClick = { viewModel.setToCurrentDate() },
+                selectedDate = selectedDate,
+                last7 = last7,
+                colors = colors,
+                animationTrigger = animationTrigger,
+                onOpenExercise = onOpenExercise,
+                onOpenWeightToday = onOpenWeightToday,
+                onOpenWeightList = onOpenWeightList,
+                onOpenStatistics = onOpenStatistics,
+                onOpenSettings = onOpenSettings
+            )
+
+            HorizontalPager(
+                state = pagerState,
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                pageSpacing = 16.dp,
+                flingBehavior = PagerDefaults.flingBehavior(
+                    state = pagerState,
+                    pagerSnapDistance = PagerSnapDistance.atMost(1)
+                )
+            ) { page ->
+                val today = LocalDate.parse(currentDateIso())
+                val diff = page - initialPage
+                val date = today.plus(diff, DateTimeUnit.DAY)
+                val dayState = if (date == selectedDate) {
+                    MainViewModel.DayState(
+                        summaries = summaries,
+                        percentageLeft = percentageLeft,
+                        leftKcal = left,
+                        burnedKcal = burned,
+                        eatenKcal = eaten,
+                        startingKcal = startingKcal,
+                        showWeightPrompt = showWeightPrompt
+                    )
+                } else {
+                    remember(date) { viewModel.getDayStateFor(date) }
+                }
+
+                MealList(
+                    state = dayState,
+                    selectedDate = date,
+                    colors = colors,
+                    onOpenMeal = onOpenMeal
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SummaryContent(
+    state: MainViewModel.DayState,
+    formattedDate: String,
+    onDateClick: () -> Unit,
+    selectedDate: LocalDate,
+    last7: List<MainViewModel.DayDelta>,
+    colors: com.emilflach.lokcal.theme.RecipesColors,
+    animationTrigger: Int,
+    onOpenExercise: (String) -> Unit,
+    onOpenWeightToday: () -> Unit,
+    onOpenWeightList: () -> Unit,
+    onOpenStatistics: () -> Unit,
+    onOpenSettings: () -> Unit
+) {
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .background(colors.backgroundPage, MaterialTheme.shapes.medium)
+            .padding(16.dp)
+    ) {
+        Column {
+            Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .background(colors.backgroundPage, MaterialTheme.shapes.medium)
-                    .padding(16.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.Bottom,
-                    ) {
-                        Spacer(Modifier.width(16.dp))
+                Spacer(Modifier.width(14.dp))
+                Text(
+                    text = formattedDate,
+                    color = colors.foregroundSupport,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.clickable { onDateClick() }
+                )
+                Spacer(Modifier.weight(1f))
+                IconButton(
+                    onClick = onOpenWeightList,
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.MonitorWeight,
+                        contentDescription = "Weight log",
+                        tint = colors.foregroundSupport,
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
+                IconButton(
+                    onClick = onOpenStatistics,
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.InsertChart,
+                        contentDescription = "Food statistics",
+                        tint = colors.foregroundSupport,
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
+                IconButton(
+                    onClick = onOpenSettings,
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Settings,
+                        contentDescription = "Settings",
+                        tint = colors.foregroundSupport,
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
 
+            }
+            Spacer(Modifier.height(12.dp))
+
+            val fadeAlpha = remember { Animatable(1f) }
+            LaunchedEffect(animationTrigger) {
+                if (animationTrigger > 0) {
+                    fadeAlpha.animateTo(
+                        targetValue = 0.5f,
+                        animationSpec = tween(durationMillis = 200, easing = LinearEasing)
+                    )
+                    fadeAlpha.animateTo(
+                        targetValue = 1f,
+                        animationSpec = tween(durationMillis = 300, easing = LinearEasing)
+                    )
+
+                }
+            }
+            Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+                Surface(
+                    color = Color.Transparent,
+                    modifier = Modifier
+                        .weight(4f)
+                        .fillMaxHeight()
+                        .background(colors.backgroundSurface2, MaterialTheme.shapes.medium)
+                        .padding(16.dp)
+                        .alpha(fadeAlpha.value)
+                ) {
+                    Column {
                         Text(
-                            text = viewModel.formattedDate(),
-                            color = colors.foregroundSupport,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.clickable { viewModel.setToCurrentDate() }
+                            text = if (state.leftKcal > 0) "Remaining" else "Above goal",
+                            style = MaterialTheme.typography.titleSmall,
+                            textAlign = TextAlign.Left,
+                            modifier = Modifier.fillMaxWidth()
                         )
-                        Spacer(Modifier.weight(1f))
-                        IconButton(
-                            onClick = onOpenWeightList,
-                            modifier = Modifier.size(24.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.MonitorWeight,
-                                contentDescription = "Weight log",
-                                tint = colors.foregroundSupport,
-                            )
-                        }
-                        Spacer(Modifier.width(12.dp))
-                        IconButton(
-                            onClick = onOpenStatistics,
-                            modifier = Modifier.size(24.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.InsertChart,
-                                contentDescription = "Food statistics",
-                                tint = colors.foregroundSupport,
-                            )
-                        }
-                        Spacer(Modifier.width(12.dp))
-                        IconButton(
-                            onClick = onOpenSettings,
-                            modifier = Modifier.size(24.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Settings,
-                                contentDescription = "Settings",
-                                tint = colors.foregroundSupport,
-                            )
-                        }
-                        Spacer(Modifier.width(12.dp))
-                    }
-                    Spacer(Modifier.height(12.dp))
-
-                    val fadeAlpha = remember { Animatable(1f) }
-                    LaunchedEffect(animationTrigger) {
-                        if (animationTrigger > 0) {
-                            fadeAlpha.animateTo(
-                                targetValue = 0.5f,
-                                animationSpec = tween(durationMillis = 200, easing = LinearEasing)
-                            )
-                            fadeAlpha.animateTo(
-                                targetValue = 1f,
-                                animationSpec = tween(durationMillis = 300, easing = LinearEasing)
-                            )
-
-                        }
-                    }
-                    Row(modifier = Modifier.height(IntrinsicSize.Min)) {
-                        Surface(
-                            color = Color.Transparent,
-                            modifier = Modifier
-                                .weight(4f)
-                                .fillMaxHeight()
-                                .background(colors.backgroundSurface2, MaterialTheme.shapes.medium)
-                                .padding(16.dp)
-                                .alpha(fadeAlpha.value)
-                        ) {
-                            Column {
-                                Text(
-                                    text = if (left > 0) "Remaining" else "Above goal",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    textAlign = TextAlign.Left,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                Text(
-                                    text = if (left > 0) "${left.roundToInt()}" else "${left.roundToInt() * -1}",
-                                    style = MaterialTheme.typography.displayLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Left,
-                                    color = colors.foregroundDefault,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                Spacer(Modifier.height(4.dp))
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(6.dp)
-                                        .clip(RoundedCornerShape(3.dp))
-                                        .background(colors.foregroundBrand.copy(alpha = 0.1f))
-                                ) {
-                                    val total = (startingKcal + burned).coerceAtLeast(eaten).coerceAtLeast(1.0)
-                                    val eatenRatio = (eaten / total).toFloat()
-                                    val remainingGoal = (startingKcal - eaten).coerceAtLeast(0.0)
-                                    val remainingGoalRatio = (remainingGoal / total).toFloat()
-                                    val remainingBurned = (total - eaten - remainingGoal).coerceAtLeast(0.0)
-                                    val remainingBurnedRatio = (remainingBurned / total).toFloat()
-
-                                    if (eatenRatio > 0) {
-                                        Box(
-                                            Modifier
-                                                .fillMaxHeight()
-                                                .weight(eatenRatio)
-                                                .background(colors.foregroundBrand)
-                                        )
-                                    }
-                                    if (remainingBurnedRatio > 0) {
-                                        Box(
-                                            Modifier
-                                                .fillMaxHeight()
-                                                .weight(remainingBurnedRatio)
-                                                .background(colors.foregroundBrand.copy(alpha = 0.6f))
-                                        )
-                                    }
-                                    if (remainingGoalRatio > 0) {
-                                        Box(
-                                            Modifier
-                                                .fillMaxHeight()
-                                                .weight(remainingGoalRatio)
-                                                .background(colors.foregroundBrand.copy(alpha = 0.3f))
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        Spacer(Modifier.width(16.dp))
-                        Column (
-                            Modifier
-                                .weight(3f)
-                                .fillMaxHeight(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Surface(
-                                color = Color.Transparent,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxWidth()
-                                    .clip(MaterialTheme.shapes.medium.copy(
-                                        bottomStart = MaterialTheme.shapes.extraSmall.bottomStart,
-                                        bottomEnd = MaterialTheme.shapes.extraSmall.bottomEnd))
-                                    .background(colors.backgroundSurface1)
-                                    .clickable { onOpenExercise(selectedDate.toString()) }
-                                    .padding(horizontal = 16.dp)
-                                    .alpha(fadeAlpha.value)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    Text(
-                                        text = "Burned",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        color = colors.foregroundSupport,
-                                    )
-                                    Spacer(Modifier.weight(1f))
-                                    Text(
-                                        text = burned.roundToInt().toString(),
-                                        style = MaterialTheme.typography.titleLarge,
-                                        color = colors.foregroundSupport
-                                    )
-                                }
-                            }
-                            Surface(
-                                color = Color.Transparent,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxWidth()
-                                    .clip(MaterialTheme.shapes.medium.copy(
-                                        topStart = MaterialTheme.shapes.extraSmall.topStart,
-                                        topEnd = MaterialTheme.shapes.extraSmall.topEnd))
-                                    .background(colors.backgroundSurface1)
-                                    .padding(horizontal = 16.dp)
-                                    .alpha(fadeAlpha.value)
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    Text(
-                                        text = "Eaten",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        color = colors.foregroundSupport
-                                    )
-                                    Spacer(Modifier.weight(1f))
-                                    Text(
-                                        text = eaten.roundToInt().toString(),
-                                        style = MaterialTheme.typography.titleLarge,
-                                        color = colors.foregroundSupport
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    Spacer(Modifier.height(16.dp))
-                    WeeklyKcalGraph(last7, this@BoxWithConstraints.maxWidth)
-                    if (showWeightPrompt) {
-                        Spacer(Modifier.height(16.dp))
-                        Surface(
-                            color = colors.backgroundBrand,
+                        Text(
+                            text = if (state.leftKcal > 0) "${state.leftKcal.roundToInt()}" else "${state.leftKcal.roundToInt() * -1}",
+                            style = MaterialTheme.typography.displayLarge,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Left,
+                            color = colors.foregroundDefault,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(colors.backgroundPage)
-                                .clip(MaterialTheme.shapes.large)
-                                .clickable { onOpenWeightToday() }
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp))
+                                .background(colors.foregroundBrand.copy(alpha = 0.1f))
                         ) {
-                            Column(Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
-                                Text("It's Thursday, log your weight!", style = MaterialTheme.typography.titleMedium)
+                            val total = (state.startingKcal + state.burnedKcal).coerceAtLeast(state.eatenKcal).coerceAtLeast(1.0)
+                            val eatenRatio = (state.eatenKcal / total).toFloat()
+                            val remainingGoal = (state.startingKcal - state.eatenKcal).coerceAtLeast(0.0)
+                            val remainingGoalRatio = (remainingGoal / total).toFloat()
+                            val remainingBurned = (total - state.eatenKcal - remainingGoal).coerceAtLeast(0.0)
+                            val remainingBurnedRatio = (remainingBurned / total).toFloat()
+
+                            if (eatenRatio > 0) {
+                                Box(
+                                    Modifier
+                                        .fillMaxHeight()
+                                        .weight(eatenRatio)
+                                        .background(colors.foregroundBrand)
+                                )
                             }
+                            if (remainingBurnedRatio > 0) {
+                                Box(
+                                    Modifier
+                                        .fillMaxHeight()
+                                        .weight(remainingBurnedRatio)
+                                        .background(colors.foregroundBrand.copy(alpha = 0.6f))
+                                )
+                            }
+                            if (remainingGoalRatio > 0) {
+                                Box(
+                                    Modifier
+                                        .fillMaxHeight()
+                                        .weight(remainingGoalRatio)
+                                        .background(colors.foregroundBrand.copy(alpha = 0.3f))
+                                )
+                            }
+                        }
+                    }
+                }
+                Spacer(Modifier.width(16.dp))
+                Column(
+                    Modifier
+                        .weight(3f)
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Surface(
+                        color = Color.Transparent,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .clip(
+                                MaterialTheme.shapes.medium.copy(
+                                    bottomStart = MaterialTheme.shapes.extraSmall.bottomStart,
+                                    bottomEnd = MaterialTheme.shapes.extraSmall.bottomEnd
+                                )
+                            )
+                            .background(colors.backgroundSurface1)
+                            .clickable { onOpenExercise(selectedDate.toString()) }
+                            .padding(horizontal = 16.dp)
+                            .alpha(fadeAlpha.value)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = "Burned",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = colors.foregroundSupport,
+                            )
+                            Spacer(Modifier.weight(1f))
+                            Text(
+                                text = state.burnedKcal.roundToInt().toString(),
+                                style = MaterialTheme.typography.titleLarge,
+                                color = colors.foregroundSupport
+                            )
+                        }
+                    }
+                    Surface(
+                        color = Color.Transparent,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .clip(
+                                MaterialTheme.shapes.medium.copy(
+                                    topStart = MaterialTheme.shapes.extraSmall.topStart,
+                                    topEnd = MaterialTheme.shapes.extraSmall.topEnd
+                                )
+                            )
+                            .background(colors.backgroundSurface1)
+                            .padding(horizontal = 16.dp)
+                            .alpha(fadeAlpha.value)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = "Eaten",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = colors.foregroundSupport
+                            )
+                            Spacer(Modifier.weight(1f))
+                            Text(
+                                text = state.eatenKcal.roundToInt().toString(),
+                                style = MaterialTheme.typography.titleLarge,
+                                color = colors.foregroundSupport
+                            )
                         }
                     }
                 }
             }
-
-
-
-            Spacer(Modifier.weight(1f))
-
-            summaries.forEach { s ->
+            Spacer(Modifier.height(16.dp))
+            WeeklyKcalGraph(last7, this@BoxWithConstraints.maxWidth)
+            if (state.showWeightPrompt) {
+                Spacer(Modifier.height(16.dp))
                 Surface(
-                    color = Color.Transparent,
+                    color = colors.backgroundBrand,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 2.dp)
-                        .clip(getRoundedCornerShape(index = summaries.indexOf(s), summaries.size))
                         .background(colors.backgroundPage)
-                        .clickable { onOpenMeal(s.mealType, selectedDate.toString()) }
+                        .clip(MaterialTheme.shapes.large)
+                        .clickable { onOpenWeightToday() }
                 ) {
-                    Row(Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 24.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = s.mealIcon,
-                                    contentDescription = null,
-                                    tint = if(s.totalKcal > 0 ) colors.foregroundBrand else colors.foregroundDefault
-                                )
-                                Spacer(Modifier.width(8.dp))
-                                Text(
-                                    s.mealType.lowercase().replaceFirstChar { it.titlecase() },
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                            }
-                            if (s.summaryText.isNotEmpty()) {
-                                Spacer(Modifier.height(6.dp))
-                                Text(
-                                    text = s.summaryText,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = colors.foregroundSupport,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-                        Column(modifier = Modifier.width(80.dp), horizontalAlignment = Alignment.End){
-                            Text(
-                                "kcal",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = colors.foregroundSupport,
-                            )
-                            Spacer(Modifier.height(6.dp))
-                            Text(
-                                "${s.totalKcal.roundToInt()}",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                            )
-
-                        }
+                    Column(Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
+                        Text("It's Thursday, log your weight!", style = MaterialTheme.typography.titleMedium)
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun MealList(
+    state: MainViewModel.DayState,
+    selectedDate: LocalDate,
+    colors: com.emilflach.lokcal.theme.RecipesColors,
+    onOpenMeal: (String, String) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.Bottom
+    ) {
+        state.summaries.forEach { s ->
+            Surface(
+                color = Color.Transparent,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 2.dp)
+                    .clip(getRoundedCornerShape(index = state.summaries.indexOf(s), state.summaries.size))
+                    .background(colors.backgroundPage)
+                    .clickable { onOpenMeal(s.mealType, selectedDate.toString()) }
+            ) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 24.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = s.mealIcon,
+                                contentDescription = null,
+                                tint = if (s.totalKcal > 0) colors.foregroundBrand else colors.foregroundDefault
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                s.mealType.lowercase().replaceFirstChar { it.titlecase() },
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                        if (s.summaryText.isNotEmpty()) {
+                            Spacer(Modifier.height(6.dp))
+                            Text(
+                                text = s.summaryText,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = colors.foregroundSupport,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                    Column(modifier = Modifier.width(80.dp), horizontalAlignment = Alignment.End) {
+                        Text(
+                            "kcal",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.foregroundSupport,
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            "${s.totalKcal.roundToInt()}",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.height(16.dp))
     }
 }
