@@ -96,7 +96,8 @@ statsMostEatenByWeight:
 SELECT
     food_id,
     item_name,
-    SUM(quantity_g) AS total_quantity_g
+    SUM(quantity_g) AS total_quantity_g,
+    COUNT(*) AS intake_count
 FROM (
     -- Direct food intakes
     SELECT
@@ -130,4 +131,36 @@ FROM Intake
 WHERE timestamp BETWEEN ? AND ?
 GROUP BY day
 ORDER BY day ASC;
+
+countDaysWithInformation:
+SELECT COUNT(DISTINCT day)
+FROM (
+    SELECT SUBSTR(timestamp, 1, 10) AS day FROM Intake
+    UNION
+    SELECT SUBSTR(timestamp, 1, 10) AS day FROM Exercise
+);
+
+getDaysWithInformation:
+SELECT DISTINCT day
+FROM (
+    SELECT SUBSTR(timestamp, 1, 10) AS day FROM Intake
+    UNION
+    SELECT SUBSTR(timestamp, 1, 10) AS day FROM Exercise
+)
+ORDER BY day ASC;
+
+getTotalKcalEaten:
+SELECT SUM(energy_kcal_total)
+FROM Intake
+WHERE timestamp BETWEEN ? AND ?;
+
+getTotalWeightEatenG:
+SELECT SUM(quantity_g)
+FROM Intake
+WHERE timestamp BETWEEN ? AND ?;
+
+getCountTrackedIntakes:
+SELECT COUNT(*)
+FROM Intake
+WHERE timestamp BETWEEN ? AND ?;
 

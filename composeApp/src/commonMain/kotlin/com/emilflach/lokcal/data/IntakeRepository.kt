@@ -285,4 +285,19 @@ class IntakeRepository(database: Database) {
 
     fun getDailyKcal(startIso: String, endIso: String) =
         intakeQ.statsDailyKcal(startIso, endIso).executeAsList()
+
+    fun countDaysWithInformation() =
+        intakeQ.countDaysWithInformation().executeAsOne()
+
+    fun getDaysWithInformation() =
+        intakeQ.getDaysWithInformation().executeAsList()
+
+    fun getTotalKcalEaten(startIso: String, endIso: String) =
+        intakeQ.getTotalKcalEaten(startIso, endIso).executeAsOne().SUM ?: 0.0
+
+    fun getTotalWeightEatenG(startIso: String, endIso: String) =
+        intakeQ.getTotalWeightEatenG(startIso, endIso).executeAsOne().SUM ?: 0.0
+
+    fun getCountTrackedIntakes(startIso: String, endIso: String) =
+        intakeQ.getCountTrackedIntakes(startIso, endIso).executeAsOne()
 }

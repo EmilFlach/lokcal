@@ -3,7 +3,6 @@ package com.emilflach.lokcal.ui.screens
 import androidx.compose.animation.core.EaseInOutCubic
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -37,7 +36,10 @@ fun StatisticsScreen(
 ) {
     val mostEaten by viewModel.mostEaten.collectAsState()
     val dailyKcal by viewModel.dailyKcal.collectAsState()
-    val selectedMonths by viewModel.selectedMonths.collectAsState()
+    val chart by viewModel.chart.collectAsState()
+    val daysFilled by viewModel.daysFilled.collectAsState()
+    val insights by viewModel.insights.collectAsState()
+    val graphMode by viewModel.graphMode.collectAsState()
     val colors = LocalRecipesColors.current
 
     Scaffold(
@@ -62,27 +64,82 @@ fun StatisticsScreen(
                 .padding(padding)
                 .padding(horizontal = 16.dp)
         ) {
-            PeriodSelector(selectedMonths) { viewModel.setPeriod(it) }
-
-            Spacer(Modifier.height(16.dp))
-
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 16.dp)
             ) {
+                item {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        color = colors.backgroundSurface1
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    "Days filled",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = colors.foregroundSupport
+                                )
+                                Text(
+                                    "$daysFilled days",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = colors.foregroundDefault
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(16.dp))
+                }
                 if (dailyKcal.isNotEmpty()) {
                     item {
                         Column {
-                            Text(
-                                "Kcal intake over time",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(Modifier.height(24.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    when (graphMode) {
+                                        StatisticsViewModel.GraphMode.BURNED -> "Burned kcal"
+                                        StatisticsViewModel.GraphMode.EATEN -> "Eaten kcal"
+                                        StatisticsViewModel.GraphMode.BALANCE -> "Remaining kcal"
+                                    },
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Row {
+                                    StatisticsViewModel.GraphMode.entries.forEach { mode ->
+                                        TextButton(
+                                            onClick = { viewModel.setGraphMode(mode) },
+                                            colors = ButtonDefaults.textButtonColors(
+                                                contentColor = if (graphMode == mode) colors.foregroundBrand else colors.foregroundSupport
+                                            )
+                                        ) {
+                                            Text(
+                                                when (mode) {
+                                                    StatisticsViewModel.GraphMode.BALANCE -> "Remaining"
+                                                    StatisticsViewModel.GraphMode.BURNED -> "Burned"
+                                                    StatisticsViewModel.GraphMode.EATEN -> "Eaten"
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            Spacer(Modifier.height(8.dp))
 
-                            val values = dailyKcal.map { it.delta }
-                            val minKcal = values.minOrNull() ?: 0.0
-                            val maxKcal = values.maxOrNull() ?: 0.0
+                            val values = when (graphMode) {
+                                StatisticsViewModel.GraphMode.BURNED -> dailyKcal.map { it.burned }
+                                StatisticsViewModel.GraphMode.EATEN -> dailyKcal.map { it.eaten }
+                                StatisticsViewModel.GraphMode.BALANCE -> dailyKcal.map { it.delta }
+                            }
+                            val minVal = values.minOrNull() ?: 0.0
+                            val maxVal = values.maxOrNull() ?: 0.0
                             val graphTextStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.foregroundSupport)
 
                             Box(
@@ -92,15 +149,29 @@ fun StatisticsScreen(
                             ) {
                                 LineChart(
                                     modifier = Modifier.fillMaxSize(),
-                                    minValue = minKcal.coerceIn(Double.NEGATIVE_INFINITY, 0.0),
-                                    maxValue = maxKcal.coerceAtLeast(0.0),
-                                    data = remember(values) {
+                                    minValue = minVal.coerceIn(Double.NEGATIVE_INFINITY, 0.0),
+                                    maxValue = maxVal.coerceAtLeast(1.0),
+                                    data = remember(values, graphMode) {
                                         listOf(
                                             Line(
-                                                label = "Kcal",
+                                                label = when (graphMode) {
+                                                    StatisticsViewModel.GraphMode.BURNED -> "Burned"
+                                                    StatisticsViewModel.GraphMode.EATEN -> "Eaten"
+                                                    StatisticsViewModel.GraphMode.BALANCE -> "Balance"
+                                                },
                                                 values = values,
-                                                color = SolidColor(colors.foregroundBrand),
-                                                firstGradientFillColor = colors.foregroundBrand.copy(alpha = .5f),
+                                                color = SolidColor(
+                                                    when (graphMode) {
+                                                        StatisticsViewModel.GraphMode.BURNED -> colors.foregroundSuccess
+                                                        StatisticsViewModel.GraphMode.EATEN -> colors.foregroundWarning
+                                                        StatisticsViewModel.GraphMode.BALANCE -> colors.foregroundBrand
+                                                    }
+                                                ),
+                                                firstGradientFillColor = (when (graphMode) {
+                                                    StatisticsViewModel.GraphMode.BURNED -> colors.foregroundSuccess
+                                                    StatisticsViewModel.GraphMode.EATEN -> colors.foregroundWarning
+                                                    StatisticsViewModel.GraphMode.BALANCE -> colors.foregroundBrand
+                                                }).copy(alpha = .5f),
                                                 secondGradientFillColor = Color.Transparent,
                                                 strokeAnimationSpec = tween(200, easing = EaseInOutCubic),
                                                 gradientAnimationSpec = tween(200, easing = EaseInOutCubic),
@@ -122,11 +193,12 @@ fun StatisticsScreen(
                                         color = SolidColor(colors.foregroundSupport.copy(alpha = 0.5f)),
                                         thickness = 2.dp
                                     ),
-                                    animationMode = AnimationMode.Together(),
+                                    curvedEdges = true,
+                                    animationMode = AnimationMode.Together { it * 2L },
                                 )
 
                                 Text(
-                                    text = if (minKcal < 0) "${minKcal.toInt()} kcal" else "0 kcal",
+                                    text = if (minVal < 0) "${minVal.toInt()} kcal" else "0 kcal",
                                     style = graphTextStyle,
                                     modifier = Modifier
                                         .align(Alignment.BottomStart)
@@ -136,7 +208,7 @@ fun StatisticsScreen(
                                         .padding(horizontal = 8.dp, vertical = 2.dp),
                                 )
                                 Text(
-                                    text = if (maxKcal > 0) "+${maxKcal.toInt()} kcal" else "0 kcal",
+                                    text = if (maxVal > 0) "${maxVal.toInt()} kcal" else "0 kcal",
                                     style = graphTextStyle,
                                     modifier = Modifier
                                         .align(Alignment.TopStart)
@@ -172,6 +244,51 @@ fun StatisticsScreen(
                                         .padding(horizontal = 8.dp, vertical = 2.dp)
                                 )
                             }
+                            Spacer(Modifier.height(16.dp))
+                            RangeSlider(
+                                value = chart.startIndex.toFloat()..chart.endIndex.toFloat(),
+                                onValueChange = { range ->
+                                    viewModel.onChartRangeChanged(range.start.toInt(), range.endInclusive.toInt())
+                                },
+                                valueRange = 0f..(chart.allDays.size - 1).toFloat(),
+                                steps = if (chart.allDays.size > 2) chart.allDays.size - 2 else 0,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = SliderDefaults.colors(
+                                    thumbColor = colors.foregroundBrand,
+                                    activeTrackColor = colors.foregroundBrand,
+                                    inactiveTrackColor = colors.foregroundSupport.copy(alpha = 0.2f)
+                                )
+                            )
+                        }
+                        Spacer(Modifier.height(32.dp))
+                    }
+                }
+
+                insights?.let { ins ->
+                    item {
+                        Text(
+                            "Insights",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(colors.backgroundSurface1)
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            InsightRow("Total weight eaten", "${ins.totalKgEaten.roundToOneDecimal()} kg")
+                            InsightRow("Tracked intakes", "${ins.intakeCount}")
+                            InsightRow("Total kcal eaten", "${ins.totalKcalEaten.toInt()} kcal")
+                            InsightRow("Total kcal burned", "${ins.totalKcalBurned.toInt()} kcal")
+                            InsightRow(
+                                "Budget balance",
+                                "${if (ins.totalDelta > 0) "+" else ""}${ins.totalDelta.toInt()} kcal",
+                                color = if (ins.totalDelta > 0) colors.foregroundDanger else colors.foregroundSuccess
+                            )
                         }
                         Spacer(Modifier.height(32.dp))
                     }
@@ -188,9 +305,19 @@ fun StatisticsScreen(
 
                 itemsIndexed(mostEaten) { index, item ->
                     ListItem(
-                        headlineContent = { Text(
-                            item.item_name,
-                            style = MaterialTheme.typography.bodyMedium) },
+                        headlineContent = {
+                            Text(
+                                item.item_name,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        },
+                        supportingContent = {
+                            Text(
+                                "Tracked ${item.intake_count} times",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = colors.foregroundSupport
+                            )
+                        },
                         trailingContent = {
                             val weightG = item.total_quantity_g ?: 0.0
                             Text(
@@ -198,10 +325,12 @@ fun StatisticsScreen(
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         },
-                        modifier = Modifier.clip(getRoundedCornerShape(
-                            index = index,
-                            size = mostEaten.size
-                        ))
+                        modifier = Modifier.clip(
+                            getRoundedCornerShape(
+                                index = index,
+                                size = mostEaten.size
+                            )
+                        )
                     )
                     Spacer(Modifier.height(4.dp))
                 }
@@ -211,44 +340,14 @@ fun StatisticsScreen(
 }
 
 @Composable
-fun PeriodSelector(selectedMonths: Int, onSelect: (Int) -> Unit) {
-    val colors = LocalRecipesColors.current
+private fun InsightRow(label: String, value: String, color: Color = LocalRecipesColors.current.foregroundDefault) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(colors.backgroundSurface2)
-            .padding(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        listOf(1, 3, 6, 12).forEach { months ->
-            val isSelected = selectedMonths == months
-            val label = when (months) {
-                1 -> "1m"
-                3 -> "3m"
-                6 -> "6m"
-                12 -> "1y"
-                else -> "${months}m"
-            }
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(if (isSelected) colors.foregroundBrand else Color.Transparent)
-                    .clickable { onSelect(months) }
-                    .padding(vertical = 8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = label,
-                    color = if (isSelected) Color.White else colors.foregroundDefault,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        }
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = LocalRecipesColors.current.foregroundSupport)
+        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = color)
     }
 }
-
 
 private fun Double.roundToOneDecimal(): Double = (this * 10).toInt() / 10.0
