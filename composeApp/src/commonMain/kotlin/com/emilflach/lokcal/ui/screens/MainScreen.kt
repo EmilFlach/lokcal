@@ -34,8 +34,8 @@ fun MainScreen(
         }
     }
 
-    LaunchedEffect(pagerState.settledPage) {
-        viewModel.onPageSelected(pagerState.settledPage)
+    LaunchedEffect(pagerState.currentPage) {
+        viewModel.onPageSelected(pagerState.currentPage)
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -68,6 +68,7 @@ fun MainScreen(
                     state = pagerState,
                     pagerSnapDistance = PagerSnapDistance.atMost(1)
                 ),
+                beyondViewportPageCount = 1,
                 modifier = Modifier.weight(1f)
             ) { page ->
                 val date = remember(page) { viewModel.getDateForPage(page) }

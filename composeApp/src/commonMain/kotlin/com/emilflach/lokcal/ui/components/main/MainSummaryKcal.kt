@@ -1,5 +1,7 @@
 package com.emilflach.lokcal.ui.components.main
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,6 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -28,6 +31,19 @@ fun MainSummaryKcal(
     onOpenExercise: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val animatedEaten by animateFloatAsState(
+        targetValue = state.eatenKcal.toFloat(),
+        animationSpec = tween(durationMillis = 500)
+    )
+    val animatedBurned by animateFloatAsState(
+        targetValue = state.burnedKcal.toFloat(),
+        animationSpec = tween(durationMillis = 500)
+    )
+    val animatedStarting by animateFloatAsState(
+        targetValue = state.startingKcal.toFloat(),
+        animationSpec = tween(durationMillis = 500)
+    )
+
     Row(modifier = modifier.height(IntrinsicSize.Min)) {
         Surface(
             color = Color.Transparent,
@@ -61,12 +77,12 @@ fun MainSummaryKcal(
                         .clip(RoundedCornerShape(3.dp))
                         .background(colors.foregroundBrand.copy(alpha = 0.1f))
                 ) {
-                    val total = (state.startingKcal + state.burnedKcal).coerceAtLeast(state.eatenKcal).coerceAtLeast(1.0)
-                    val eatenRatio = (state.eatenKcal / total).toFloat()
-                    val remainingGoal = (state.startingKcal - state.eatenKcal).coerceAtLeast(0.0)
-                    val remainingGoalRatio = (remainingGoal / total).toFloat()
-                    val remainingBurned = (total - state.eatenKcal - remainingGoal).coerceAtLeast(0.0)
-                    val remainingBurnedRatio = (remainingBurned / total).toFloat()
+                    val total = (animatedStarting + animatedBurned).coerceAtLeast(animatedEaten).coerceAtLeast(1.0f)
+                    val eatenRatio = (animatedEaten / total)
+                    val remainingGoal = (animatedStarting - animatedEaten).coerceAtLeast(0.0f)
+                    val remainingGoalRatio = (remainingGoal / total)
+                    val remainingBurned = (total - animatedEaten - remainingGoal).coerceAtLeast(0.0f)
+                    val remainingBurnedRatio = (remainingBurned / total)
 
                     if (eatenRatio > 0) {
                         Box(
