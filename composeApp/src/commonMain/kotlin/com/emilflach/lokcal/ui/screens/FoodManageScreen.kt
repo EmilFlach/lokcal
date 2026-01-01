@@ -39,6 +39,7 @@ fun FoodManageScreen(
     val coroutineScope = rememberCoroutineScope()
     val search by viewModel.search.collectAsState()
     val foods by viewModel.foods.collectAsState()
+    val frequencies by viewModel.itemFrequencies.collectAsState()
     val missingImages by viewModel.missingImages.collectAsState()
     val selectedTab by viewModel.selectedTab.collectAsState()
 
@@ -190,7 +191,8 @@ fun FoodManageScreen(
                                 supportingContent = {
                                     val kcal = food.energy_kcal_per_100g
                                     val servingSize = food.serving_size
-                                    Text("${kcal.toInt()} kcal • ${servingSize}g")
+                                    val freq = frequencies["FOOD" to food.id] ?: 0
+                                    Text("${kcal.toInt()} kcal • ${servingSize}g • $freq times")
                                 },
                                 modifier = Modifier.clip(
                                     getRoundedCornerShape(

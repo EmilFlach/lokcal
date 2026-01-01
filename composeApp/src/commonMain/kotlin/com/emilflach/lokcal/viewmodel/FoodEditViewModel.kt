@@ -1,5 +1,6 @@
 package com.emilflach.lokcal.viewmodel
 
+import com.emilflach.lokcal.AllItemFrequencies
 import com.emilflach.lokcal.Food
 import com.emilflach.lokcal.ItemsMissingImage
 import com.emilflach.lokcal.data.AlbertHeijnScraper
@@ -28,6 +29,9 @@ class FoodEditViewModel(
 
     private val _foods = MutableStateFlow<List<Food>>(emptyList())
     val foods: StateFlow<List<Food>> = _foods.asStateFlow()
+
+    private val _itemFrequencies = MutableStateFlow<Map<Pair<String, Long>, Long>>(emptyMap())
+    val itemFrequencies: StateFlow<Map<Pair<String, Long>, Long>> = _itemFrequencies.asStateFlow()
 
     private val _missingImages = MutableStateFlow<List<ItemsMissingImage>>(emptyList())
     val missingImages: StateFlow<List<ItemsMissingImage>> = _missingImages.asStateFlow()
@@ -79,6 +83,27 @@ class FoodEditViewModel(
         // initial load
         reloadFoods()
         loadMissingImages()
+        loadFrequencies()
+    }
+
+    fun refresh() {
+        reloadFoods()
+        loadMissingImages()
+        loadFrequencies()
+    }
+
+    fun loadFrequencies() {
+        scope.launch {
+            val freqs = intakeRepo.getAllItemFrequencies()
+            _itemFrequencies.value = freqs.associate { item: AllItemFrequencies ->
+                val id = when (item.source_type) {
+                    "FOOD" -> item.source_food_id
+                    "MEAL" -> item.source_meal_id
+                    else -> null
+                }
+                (item.source_type to (id ?: -1L)) to item.frequency
+            }
+        }
     }
 
     fun setSelectedTab(tab: Tab) {
@@ -91,7 +116,7 @@ class FoodEditViewModel(
     }
 
     fun loadMissingImages() {
-        _missingImages.value = intakeRepo.getItemsMissingImage()
+        _missingImages.value = intakeRepo.getItemsMissingImage().filter { it.source_type == "FOOD" }
     }
 
     fun reloadFoods() {
