@@ -45,53 +45,53 @@ fun MainSummaryGraph(last7: List<DayDelta>, maxWidth: Dp) {
             Bars.Data(label = label, value = value, color = gradient)
         }
     }
-    ColumnChart(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(80.dp),
-        data = listOf(
-            Bars(
-                label = "Last 7",
-                values = graphData
-            )
-        ),
-        barProperties = BarProperties(
-            cornerRadius = Bars.Data.Radius.Rectangle(
-                topRight = 6.dp,
-                topLeft = 6.dp,
-                bottomLeft = 3.dp,
-                bottomRight = 3.dp
-            ),
-            spacing = 3.dp,
-            thickness = ((maxWidth - (6 * 3).dp) / 7),
-        ),
-        minValue = (graphData.minOfOrNull { it.value } ?: 0.0).coerceIn(-400.0, 0.0),
-        maxValue = graphData.maxOfOrNull { it.value } ?: 0.0.coerceIn(0.0, 400.0),
-        animationDelay = 0,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium,
-        ),
-        animationMode = AnimationMode.Together { it * 25L },
-        dividerProperties = DividerProperties(false),
-        gridProperties = GridProperties(false),
-        labelProperties = LabelProperties(false),
-        labelHelperProperties = LabelHelperProperties(false),
-        indicatorProperties = HorizontalIndicatorProperties(false),
-    )
-    Spacer(modifier = Modifier.height(16.dp))
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-        graphData.forEach { data ->
-            Text(
-                text = data.label!!,
-                style = MaterialTheme.typography.bodySmall.copy(color = colors.foregroundSupport),
-                textAlign = TextAlign.Center,
-                modifier = Modifier.width(maxWidth / 7),
-            )
-        }
 
-    }
+        ColumnChart(
+            modifier = Modifier
+                .offset(x = (-1).dp) // The chart has a 1.dp offset for some reason
+                .height(80.dp),
+            data = listOf(
+                Bars(
+                    label = "Last 7",
+                    values = graphData
+                )
+            ),
+            barProperties = BarProperties(
+                cornerRadius = Bars.Data.Radius.Rectangle(
+                    topRight = 6.dp,
+                    topLeft = 6.dp,
+                    bottomLeft = 3.dp,
+                    bottomRight = 3.dp
+                ),
+                spacing = 3.dp,
+                thickness = ((maxWidth - (6 * 3).dp) / 7), // Divide thickness for the max width, minus the spacing
+            ),
+            minValue = (graphData.minOfOrNull { it.value } ?: 0.0).coerceIn(-400.0, 0.0),
+            maxValue = graphData.maxOfOrNull { it.value } ?: 0.0.coerceIn(0.0, 400.0),
+            animationDelay = 0,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMedium,
+            ),
+            animationMode = AnimationMode.Together { it * 25L },
+            dividerProperties = DividerProperties(false),
+            gridProperties = GridProperties(false),
+            labelProperties = LabelProperties(false),
+            labelHelperProperties = LabelHelperProperties(false),
+            indicatorProperties = HorizontalIndicatorProperties(false),
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth().offset(x = 0.5.dp), // Magic number to fix label alignment
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            graphData.forEach {data ->
+                Text(
+                    text = data.label!!,
+                    style = MaterialTheme.typography.bodySmall.copy(color = colors.foregroundSupport),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.width((maxWidth / 7) - 2.dp), // Magic number to fix label alignment
+                )
+            }
+        }
 }
