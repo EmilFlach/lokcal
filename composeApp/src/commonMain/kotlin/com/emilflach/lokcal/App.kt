@@ -50,13 +50,16 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
     var screen by remember { mutableStateOf<Screen>(Screen.Main(currentDateIso())) }
     var refreshToggle by remember { mutableStateOf(false) }
 
+    val foodVm = remember(foodRepo, intakeRepo) { FoodEditViewModel(foodRepo, intakeRepo) }
+    val mealsListVm = remember(intakeRepo, mealRepo) { MealsListViewModel(intakeRepo, mealRepo) }
+
     val recipesColors = LocalRecipesColors.current
 
     Surface(
         color = recipesColors.backgroundPage,
         contentColor = recipesColors.foregroundDefault
     ) {
-        val foodVm = remember(foodRepo, intakeRepo, refreshToggle) { FoodEditViewModel(foodRepo, intakeRepo) }
+
 
         AnimatedContent(
             targetState = screen,
@@ -149,8 +152,8 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                         viewModel = foodVm,
                         foodId = s.foodId,
                         onBack = { screen = Screen.FoodManage },
-                        onSaved = { screen = Screen.FoodManage; refreshToggle = !refreshToggle },
-                        onDeleted = { screen = Screen.FoodManage; refreshToggle = !refreshToggle }
+                        onSaved = { foodVm.refresh(); screen = Screen.FoodManage; refreshToggle = !refreshToggle },
+                        onDeleted = { foodVm.refresh(); screen = Screen.FoodManage; refreshToggle = !refreshToggle }
                     )
                 }
                 Screen.Settings -> {
@@ -163,8 +166,9 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                     )
                 }
                 Screen.MealsList -> {
+
                     MealsListScreen(
-                        repo = intakeRepo,
+                        viewModel = mealsListVm,
                         onBack = { screen = Screen.Settings },
                         onOpenMeal = { id -> screen = Screen.EditMealFromList(id) }
                     )
@@ -173,8 +177,8 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                     val editVm = remember(intakeRepo, s.mealId) { EditMealViewModel(mealRepo, s.mealId) }
                     EditMealScreen(
                         viewModel = editVm,
-                        onBack = { screen = Screen.MealsList; refreshToggle = !refreshToggle },
-                        onDeleted = { screen = Screen.MealsList; refreshToggle = !refreshToggle }
+                        onBack = { mealsListVm.refresh(); screen = Screen.MealsList; refreshToggle = !refreshToggle },
+                        onDeleted = { mealsListVm.refresh(); screen = Screen.MealsList; refreshToggle = !refreshToggle }
                     )
                 }
                 is Screen.ExerciseList -> {
