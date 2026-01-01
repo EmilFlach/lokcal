@@ -72,7 +72,7 @@ fun MainSummaryGraph(last7: List<DayDelta>, maxWidth: Dp) {
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessMedium,
         ),
-        animationMode = AnimationMode.Together { it * 20L },
+        animationMode = AnimationMode.Together { it * 25L },
         dividerProperties = DividerProperties(false),
         gridProperties = GridProperties(false),
         labelProperties = LabelProperties(false),

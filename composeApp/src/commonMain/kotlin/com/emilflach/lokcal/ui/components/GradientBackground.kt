@@ -1,8 +1,5 @@
 package com.emilflach.lokcal.ui.components
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,20 +20,10 @@ fun GradientBackground(percentageLeft: Float) {
     val colors = LocalRecipesColors.current
     val isDarkTheme = isSystemInDarkTheme()
 
-    val animatedPercentageLeft by animateFloatAsState(
-        targetValue = percentageLeft,
-        animationSpec = tween(durationMillis = 500)
-    )
-
     val targetMiddleColor = if (percentageLeft > 0)
         colors.backgroundSurface2
     else
         if (isDarkTheme) colors.backgroundDangerSubtle else colors.backgroundDanger.copy(alpha = 0.3f)
-
-    val middleGradientColor by animateColorAsState(
-        targetValue = targetMiddleColor,
-        animationSpec = tween(durationMillis = 500)
-    )
 
     var noiseBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
 
@@ -44,11 +31,10 @@ fun GradientBackground(percentageLeft: Float) {
         noiseBitmap = Res.readBytes("drawable/noise.png").decodeToImageBitmap()
     }
 
-
     Box(modifier = Modifier
         .fillMaxSize()
         .drawBehind {
-            val transitionPosition = (size.height * 1.5f * animatedPercentageLeft.coerceIn(0.15f, 0.95f))
+            val transitionPosition = (size.height * 1.5f * percentageLeft.coerceIn(0.15f, 0.95f))
             val circleRadius = size.width * 1.5f
             val circleX = size.width / 2
 
@@ -56,7 +42,7 @@ fun GradientBackground(percentageLeft: Float) {
                 brush = Brush.verticalGradient(
                     colorStops = arrayOf(
                         0.0f to colors.backgroundPage,
-                        animatedPercentageLeft.coerceIn(0f, 0.85f) * 1.5f to colors.backgroundPage,
+                        percentageLeft.coerceIn(0f, 0.85f) * 1.5f to colors.backgroundPage,
                         1.0f to colors.backgroundSurface2
                     )
                 ),
@@ -65,7 +51,7 @@ fun GradientBackground(percentageLeft: Float) {
             drawCircle(
                 brush = Brush.radialGradient(
                     colors = listOf(
-                        middleGradientColor,
+                        targetMiddleColor,
                         Color.Transparent,
                     ),
                     center = Offset(circleX, transitionPosition),

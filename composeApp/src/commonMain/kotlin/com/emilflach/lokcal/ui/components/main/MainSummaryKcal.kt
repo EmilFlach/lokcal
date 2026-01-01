@@ -33,15 +33,15 @@ fun MainSummaryKcal(
 ) {
     val animatedEaten by animateFloatAsState(
         targetValue = state.eatenKcal.toFloat(),
-        animationSpec = tween(durationMillis = 500)
+        animationSpec = tween(durationMillis = 180)
     )
     val animatedBurned by animateFloatAsState(
         targetValue = state.burnedKcal.toFloat(),
-        animationSpec = tween(durationMillis = 500)
+        animationSpec = tween(durationMillis = 180)
     )
     val animatedStarting by animateFloatAsState(
         targetValue = state.startingKcal.toFloat(),
-        animationSpec = tween(durationMillis = 500)
+        animationSpec = tween(durationMillis = 180)
     )
 
     Row(modifier = modifier.height(IntrinsicSize.Min)) {
