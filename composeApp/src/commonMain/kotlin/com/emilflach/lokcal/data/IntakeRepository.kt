@@ -301,5 +301,7 @@ class IntakeRepository(database: Database) {
     fun getCountTrackedIntakes(startIso: String, endIso: String) =
         intakeQ.getCountTrackedIntakes(startIso, endIso).executeAsOne()
 
+    fun getAllItemFrequencies() = intakeQ.allItemFrequencies().executeAsList()
+
     fun getItemsMissingImage() = intakeQ.itemsMissingImage().executeAsList()
 }

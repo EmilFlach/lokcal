@@ -164,6 +164,15 @@ SELECT COUNT(*)
 FROM Intake
 WHERE timestamp BETWEEN ? AND ?;
 
+allItemFrequencies:
+SELECT
+    source_type,
+    source_food_id,
+    source_meal_id,
+    COUNT(*) AS frequency
+FROM Intake
+GROUP BY source_type, source_food_id, source_meal_id;
+
 itemsMissingImage:
 SELECT
     source_type,
