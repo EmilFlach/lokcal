@@ -51,7 +51,7 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
     var refreshToggle by remember { mutableStateOf(false) }
 
     val foodVm = remember(foodRepo, intakeRepo) { FoodEditViewModel(foodRepo, intakeRepo) }
-    val mealsListVm = remember(intakeRepo, mealRepo) { MealsListViewModel(intakeRepo, mealRepo) }
+    val mealsListVm = remember(intakeRepo, mealRepo) { MealsListViewModel(intakeRepo) }
 
     val recipesColors = LocalRecipesColors.current
 

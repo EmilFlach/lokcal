@@ -4,15 +4,13 @@ import com.emilflach.lokcal.AllItemFrequencies
 import com.emilflach.lokcal.ItemsMissingImage
 import com.emilflach.lokcal.Meal
 import com.emilflach.lokcal.data.IntakeRepository
-import com.emilflach.lokcal.data.MealRepository
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class MealsListViewModel(
-    private val intakeRepo: IntakeRepository,
-    private val mealRepo: MealRepository,
+    private val intakeRepo: IntakeRepository
 ) {
     enum class Tab {
         ALL, MISSING_IMAGES
