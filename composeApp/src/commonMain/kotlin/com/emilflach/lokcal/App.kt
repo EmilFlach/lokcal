@@ -133,7 +133,7 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                     )
                 }
                 is Screen.EditMeal -> {
-                    val editVm = remember(intakeRepo, s.mealId) { EditMealViewModel(mealRepo, s.mealId) }
+                    val editVm = remember(intakeRepo, s.mealId) { EditMealViewModel(mealRepo, foodRepo, intakeRepo, s.mealId) }
                     EditMealScreen(
                         viewModel = editVm,
                         onBack = { screen = Screen.MealTime(s.returnMealType, s.dateIso); refreshToggle = !refreshToggle },
@@ -174,7 +174,7 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                     )
                 }
                 is Screen.EditMealFromList -> {
-                    val editVm = remember(intakeRepo, s.mealId) { EditMealViewModel(mealRepo, s.mealId) }
+                    val editVm = remember(intakeRepo, s.mealId) { EditMealViewModel(mealRepo, foodRepo, intakeRepo, s.mealId) }
                     EditMealScreen(
                         viewModel = editVm,
                         onBack = { mealsListVm.refresh(); screen = Screen.MealsList; refreshToggle = !refreshToggle },

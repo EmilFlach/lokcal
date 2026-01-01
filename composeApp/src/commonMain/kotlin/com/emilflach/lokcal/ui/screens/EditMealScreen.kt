@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -18,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.GramQuantityControls
 import com.emilflach.lokcal.ui.components.MealTimeItem
+import com.emilflach.lokcal.ui.dialogs.StealImageDialog
 import com.emilflach.lokcal.viewmodel.EditMealViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -81,7 +83,12 @@ fun EditMealScreen(
                 onValueChange = viewModel::setImageUrl,
                 singleLine = true,
                 label = { Text("Image URL") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = {
+                    IconButton(onClick = { viewModel.openStealDialog() }) {
+                        Icon(Icons.Default.ContentCopy, contentDescription = "Steal image URL")
+                    }
+                }
             )
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(
@@ -126,6 +133,16 @@ fun EditMealScreen(
                     Spacer(Modifier.height(2.dp))
                 }
             }
+        }
+
+        if (state.showStealDialog) {
+            StealImageDialog(
+                onDismissRequest = { viewModel.closeStealDialog() },
+                searchQuery = state.stealSearchQuery,
+                onSearchQueryChange = { viewModel.setStealSearchQuery(it) },
+                results = state.stealResults,
+                onItemSelected = { viewModel.stealImage(it) }
+            )
         }
     }
 }

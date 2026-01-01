@@ -6,6 +6,7 @@ import com.emilflach.lokcal.ItemsMissingImage
 import com.emilflach.lokcal.data.AlbertHeijnScraper
 import com.emilflach.lokcal.data.FoodRepository
 import com.emilflach.lokcal.data.IntakeRepository
+import com.emilflach.lokcal.ui.dialogs.StealImageItem
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -55,6 +56,10 @@ class FoodEditViewModel(
         val urlInput: String = "",
         val isImporting: Boolean = false,
         val importError: String? = null,
+        // Steal image state
+        val showStealDialog: Boolean = false,
+        val stealSearchQuery: String = "",
+        val stealResults: List<StealImageItem> = emptyList(),
     )
 
     private val _edit = MutableStateFlow(EditState())
@@ -202,6 +207,34 @@ class FoodEditViewModel(
     fun updateImageUrl(v: String) { _edit.value = _edit.value.copy(imageUrl = v) }
     fun updateGtin13(v: String) { _edit.value = _edit.value.copy(gtin13 = v.filter { it.isDigit() }) }
     fun updateSource(v: String) { _edit.value = _edit.value.copy(source = v) }
+    
+    // Steal image logic
+    private var stealSearchJob: Job? = null
+    fun openStealDialog() {
+        _edit.value = _edit.value.copy(showStealDialog = true, stealSearchQuery = "", stealResults = emptyList())
+    }
+    fun closeStealDialog() { _edit.value = _edit.value.copy(showStealDialog = false) }
+    fun setStealSearchQuery(q: String) {
+        _edit.value = _edit.value.copy(stealSearchQuery = q)
+        stealSearchJob?.cancel()
+        stealSearchJob = scope.launch {
+            val query = q.trim()
+            if (query.length < 2) {
+                _edit.value = _edit.value.copy(stealResults = emptyList())
+                return@launch
+            }
+            val foods = repo.search(query).map {
+                StealImageItem(it.id, it.name, it.image_url, "FOOD")
+            }
+            val meals = intakeRepo.searchMeals(query).map {
+                StealImageItem(it.id, it.name, it.image_url, "MEAL")
+            }
+            _edit.value = _edit.value.copy(stealResults = (foods + meals).sortedBy { it.name.lowercase() })
+        }
+    }
+    fun stealImage(item: StealImageItem) {
+        _edit.value = _edit.value.copy(imageUrl = item.imageUrl ?: "", showStealDialog = false)
+    }
 
     fun save(): Long? {
         val s = _edit.value

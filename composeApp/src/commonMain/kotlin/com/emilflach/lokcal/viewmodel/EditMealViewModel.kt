@@ -2,16 +2,18 @@ package com.emilflach.lokcal.viewmodel
 
 import com.emilflach.lokcal.Food
 import com.emilflach.lokcal.Meal
-import com.emilflach.lokcal.data.LabelService
-import com.emilflach.lokcal.data.MealRepository
-import com.emilflach.lokcal.data.PortionService
+import com.emilflach.lokcal.data.*
+import com.emilflach.lokcal.ui.dialogs.StealImageItem
 import com.emilflach.lokcal.util.NumberUtils
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class EditMealViewModel(
     private val repo: MealRepository,
+    private val foodRepo: FoodRepository,
+    private val intakeRepo: IntakeRepository,
     private val mealId: Long,
 ) {
     // Services for portion defaults and labels
@@ -30,6 +32,10 @@ class EditMealViewModel(
         val imageUrl: String = "",
         val totalPortions: String = "1",
         val items: List<ItemUi> = emptyList(),
+        // Steal image state
+        val showStealDialog: Boolean = false,
+        val stealSearchQuery: String = "",
+        val stealResults: List<StealImageItem> = emptyList(),
     )
 
     private val _state = MutableStateFlow(UiState())
@@ -97,5 +103,35 @@ class EditMealViewModel(
 
     fun subtitleForFood(food: Food, initialGrams: Double): String {
         return labelService.subtitleForFood(food, initialGrams)
+    }
+
+    // Steal image logic
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var stealSearchJob: Job? = null
+    fun openStealDialog() {
+        updateState { copy(showStealDialog = true, stealSearchQuery = "", stealResults = emptyList()) }
+    }
+    fun closeStealDialog() { updateState { copy(showStealDialog = false) } }
+    fun setStealSearchQuery(q: String) {
+        updateState { copy(stealSearchQuery = q) }
+        stealSearchJob?.cancel()
+        stealSearchJob = scope.launch {
+            val query = q.trim()
+            if (query.length < 2) {
+                updateState { copy(stealResults = emptyList()) }
+                return@launch
+            }
+            val foods = foodRepo.search(query).map {
+                StealImageItem(it.id, it.name, it.image_url, "FOOD")
+            }
+            val meals = intakeRepo.searchMeals(query).map {
+                StealImageItem(it.id, it.name, it.image_url, "MEAL")
+            }
+            updateState { copy(stealResults = (foods + meals).sortedBy { it.name.lowercase() }) }
+        }
+    }
+    fun stealImage(item: StealImageItem) {
+        updateState { copy(imageUrl = item.imageUrl ?: "", showStealDialog = false) }
+        persistMeta()
     }
 }
