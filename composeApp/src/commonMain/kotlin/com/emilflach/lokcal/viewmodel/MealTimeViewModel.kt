@@ -160,7 +160,10 @@ class MealTimeViewModel(
 
     fun toggleLeftovers() {
         val current = state.value.isMarkedLeftover
-        if (current) intakeRepo.setLeftoversForMealTypeOnDate(mealType, dateIso, false) else intakeRepo.setLeftoversForMealTypeOnDate(mealType, dateIso, true)
+        if (current)
+            intakeRepo.setLeftoversForMealTypeOnDate(mealType, dateIso, false)
+        else
+            intakeRepo.setLeftoversForMealTypeOnDate(mealType, dateIso, true)
         loadForSelectedDate()
     }
 
