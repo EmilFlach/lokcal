@@ -1,8 +1,11 @@
 package com.emilflach.lokcal.viewmodel
 
 import com.emilflach.lokcal.Food
+import com.emilflach.lokcal.ItemsMissingImage
 import com.emilflach.lokcal.data.AlbertHeijnScraper
 import com.emilflach.lokcal.data.FoodRepository
+import com.emilflach.lokcal.data.IntakeRepository
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -10,13 +13,24 @@ import kotlin.math.roundToInt
 
 class FoodEditViewModel(
     private val repo: FoodRepository,
+    private val intakeRepo: IntakeRepository,
 ) {
+    enum class Tab {
+        ALL, MISSING_IMAGES
+    }
+
+    private val _selectedTab = MutableStateFlow(Tab.ALL)
+    val selectedTab: StateFlow<Tab> = _selectedTab.asStateFlow()
+
     // Manage/list state
     private val _search = MutableStateFlow("")
     val search: StateFlow<String> = _search.asStateFlow()
 
     private val _foods = MutableStateFlow<List<Food>>(emptyList())
     val foods: StateFlow<List<Food>> = _foods.asStateFlow()
+
+    private val _missingImages = MutableStateFlow<List<ItemsMissingImage>>(emptyList())
+    val missingImages: StateFlow<List<ItemsMissingImage>> = _missingImages.asStateFlow()
 
     // Edit state
     data class EditState(
@@ -42,11 +56,33 @@ class FoodEditViewModel(
     private val _edit = MutableStateFlow(EditState())
     val edit: StateFlow<EditState> = _edit.asStateFlow()
 
+    private val _allListState = MutableStateFlow<Map<Int, Int>>(emptyMap())
+    val allListState = _allListState.asStateFlow()
+
+    private val _missingListState = MutableStateFlow<Map<Int, Int>>(emptyMap())
+    val missingListState = _missingListState.asStateFlow()
+
+    fun saveListState(tab: Tab, index: Int, offset: Int) {
+        if (tab == Tab.ALL) {
+            _allListState.value = mapOf(index to offset)
+        } else {
+            _missingListState.value = mapOf(index to offset)
+        }
+    }
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var searchJob: Job? = null
+
     private val scraper by lazy { AlbertHeijnScraper() }
 
     init {
         // initial load
         reloadFoods()
+        loadMissingImages()
+    }
+
+    fun setSelectedTab(tab: Tab) {
+        _selectedTab.value = tab
     }
 
     fun setSearch(value: String) {
@@ -54,9 +90,21 @@ class FoodEditViewModel(
         reloadFoods()
     }
 
+    fun loadMissingImages() {
+        _missingImages.value = intakeRepo.getItemsMissingImage()
+    }
+
     fun reloadFoods() {
-        val q = _search.value.trim()
-        _foods.value = if (q.isBlank()) repo.getAll().sortedBy { it.name.lowercase() } else repo.search(q)
+        searchJob?.cancel()
+        searchJob = scope.launch {
+            val q = _search.value.trim()
+            val result = if (q.isBlank()) {
+                repo.getAll().sortedBy { it.name.lowercase() }
+            } else {
+                repo.search(q)
+            }
+            _foods.value = result
+        }
     }
 
     fun startEditing(foodId: Long?) {

@@ -23,6 +23,7 @@ import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.*
 import com.emilflach.lokcal.viewmodel.IntakeViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -33,6 +34,8 @@ fun IntakeScreen(
 ) {
     val color = LocalRecipesColors.current
     val keyboard = LocalSoftwareKeyboardController.current
+    val coroutineScope = rememberCoroutineScope()
+    val listState = rememberLazyListState()
     val state by viewModel.state.collectAsState()
 
     var showItems by remember { mutableStateOf(false) }
@@ -51,6 +54,11 @@ fun IntakeScreen(
                 showSearch = true,
                 query = state.query,
                 onQueryChange = viewModel::setQuery,
+                onClearQuery = {
+                    coroutineScope.launch {
+                        listState.scrollToItem(0)
+                    }
+                },
                 autoFocusSearch = autoFocusSearch,
                 onScanBarcode = {
                     keyboard?.hide()
@@ -75,7 +83,8 @@ fun IntakeScreen(
 
             LazyColumn(
                 contentPadding = PaddingValues(vertical = 16.dp),
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                state = listState
             ) {
                 if (state.showOnlineSearchSections) {
                     searchSection(

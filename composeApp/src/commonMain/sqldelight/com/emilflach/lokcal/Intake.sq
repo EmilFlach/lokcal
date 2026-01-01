@@ -164,3 +164,29 @@ SELECT COUNT(*)
 FROM Intake
 WHERE timestamp BETWEEN ? AND ?;
 
+itemsMissingImage:
+SELECT
+    source_type,
+    source_food_id,
+    source_meal_id,
+    item_name,
+    MAX(image_url) AS image_url,
+    COUNT(*) AS frequency
+FROM (
+    SELECT
+        i.source_type,
+        i.source_food_id,
+        i.source_meal_id,
+        i.item_name,
+        CASE
+            WHEN i.source_type = 'FOOD' THEN f.image_url
+            WHEN i.source_type = 'MEAL' THEN m.image_url
+        END AS image_url
+    FROM Intake i
+    LEFT JOIN Food f ON i.source_food_id = f.id
+    LEFT JOIN Meal m ON i.source_meal_id = m.id
+)
+WHERE (image_url IS NULL OR image_url = '')
+GROUP BY source_type, source_food_id, source_meal_id, item_name
+ORDER BY frequency DESC;
+

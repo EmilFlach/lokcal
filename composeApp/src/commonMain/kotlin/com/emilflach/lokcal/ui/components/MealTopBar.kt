@@ -30,6 +30,7 @@ fun MealTopBar(
     showSearch: Boolean,
     query: String = "",
     onQueryChange: (String) -> Unit = {},
+    onClearQuery: () -> Unit = {},
     autoFocusSearch: Boolean = false,
     onSearchOnline: () -> Unit = {},
     onScanBarcode: () -> Unit = {},
@@ -104,6 +105,7 @@ fun MealTopBar(
                     trailingIcon = {
                         IconButton(onClick = {
                             onQueryChange("")
+                            onClearQuery()
                             focusRequester.requestFocus()
                         }, modifier = Modifier.padding(end = 8.dp)) {
                             Icon(
