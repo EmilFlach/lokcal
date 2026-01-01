@@ -6,14 +6,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.backup.BackupManager
 import com.emilflach.lokcal.data.SettingsRepository
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
@@ -24,6 +26,10 @@ fun SettingsScreen(
 ) {
     val colors = LocalRecipesColors.current
     val scope = rememberCoroutineScope()
+
+    BackHandler {
+        onBack()
+    }
 
 
     Scaffold(

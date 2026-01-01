@@ -11,13 +11,15 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun FoodEditScreen(
     viewModel: com.emilflach.lokcal.viewmodel.FoodEditViewModel,
@@ -27,6 +29,10 @@ fun FoodEditScreen(
     onDeleted: () -> Unit,
 ) {
     val colors = LocalRecipesColors.current
+
+    BackHandler {
+        onBack()
+    }
 
     // Initialize edit state when entering screen
     LaunchedEffect(foodId) {

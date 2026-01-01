@@ -11,14 +11,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.GramQuantityControls
 import com.emilflach.lokcal.ui.components.MealTimeItem
 import com.emilflach.lokcal.viewmodel.EditMealViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun EditMealScreen(
     viewModel: EditMealViewModel,
@@ -27,6 +29,10 @@ fun EditMealScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val colors = LocalRecipesColors.current
+
+    BackHandler {
+        onBack()
+    }
 
     Scaffold(
         topBar = {

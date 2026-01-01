@@ -11,7 +11,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.Meal
@@ -19,7 +21,7 @@ import com.emilflach.lokcal.data.IntakeRepository
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.getRoundedCornerShape
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun MealsListScreen(
     repo: IntakeRepository,
@@ -27,6 +29,10 @@ fun MealsListScreen(
     onOpenMeal: (Long) -> Unit,
 ) {
     val colors = LocalRecipesColors.current
+
+    BackHandler {
+        onBack()
+    }
     val mealsState = remember { mutableStateOf(emptyList<Meal>()) }
 
     LaunchedEffect(Unit) {

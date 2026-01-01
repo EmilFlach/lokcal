@@ -15,7 +15,9 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -35,7 +37,7 @@ import ir.ehsannarmani.compose_charts.models.DrawStyle.Stroke
 import kotlinx.coroutines.delay
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun WeightListScreen(
     viewModel: WeightListViewModel,
@@ -43,6 +45,10 @@ fun WeightListScreen(
     openAdd: Boolean = false,
 ) {
     val colors = LocalRecipesColors.current
+
+    BackHandler {
+        onBack()
+    }
     val haptic = LocalHapticFeedback.current
     val items by viewModel.items.collectAsState()
     val showAddDialog by viewModel.showAddDialog.collectAsState()

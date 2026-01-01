@@ -10,14 +10,16 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.*
 import com.emilflach.lokcal.viewmodel.MealTimeViewModel
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun MealTimeScreen(
     viewModel: MealTimeViewModel,
@@ -26,6 +28,10 @@ fun MealTimeScreen(
     shouldHighlightLatest: Boolean = false
 ) {
     val color = LocalRecipesColors.current
+
+    BackHandler {
+        onBack()
+    }
     val state by viewModel.state.collectAsState()
     val requesters = remember { FocusRequesters() }
 

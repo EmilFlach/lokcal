@@ -16,7 +16,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.data.ExerciseRepository
 import com.emilflach.lokcal.theme.LocalRecipesColors
@@ -27,7 +29,7 @@ import com.emilflach.lokcal.ui.components.MinuteQuantityControls
 import com.emilflach.lokcal.viewmodel.ExerciseListViewModel
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun ExerciseListScreen(
     viewModel: ExerciseListViewModel,
@@ -35,6 +37,10 @@ fun ExerciseListScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val colors = LocalRecipesColors.current
+
+    BackHandler {
+        onBack()
+    }
 
     Scaffold(
         topBar = {

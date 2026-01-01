@@ -9,7 +9,6 @@ import com.emilflach.lokcal.data.*
 import com.emilflach.lokcal.theme.AppTheme
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.screens.*
-import com.emilflach.lokcal.util.SystemBackHandler
 import com.emilflach.lokcal.util.currentDateIso
 import com.emilflach.lokcal.viewmodel.*
 
@@ -51,74 +50,14 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
     var screen by remember { mutableStateOf<Screen>(Screen.Main(currentDateIso())) }
     var refreshToggle by remember { mutableStateOf(false) }
 
-    // Handle Android system back: navigate back from Intake/Detail to previous
-    SystemBackHandler(enabled = true) {
-        when (val s = screen) {
-            is Screen.Intake -> {
-                // Go back to meal time from intake
-                screen = Screen.MealTime(s.mealType, s.dateIso)
-                refreshToggle = !refreshToggle
-            }
-            is Screen.EditMeal -> {
-                screen = Screen.MealTime(s.returnMealType, s.dateIso)
-                refreshToggle = !refreshToggle
-            }
-            is Screen.MealTime -> {
-                screen = Screen.Main(s.dateIso)
-                refreshToggle = !refreshToggle
-            }
-            is Screen.ExerciseList -> {
-                screen = Screen.Main(s.dateIso)
-                refreshToggle = !refreshToggle
-            }
-            Screen.Settings -> {
-                screen = Screen.Main(currentDateIso())
-                refreshToggle = !refreshToggle
-            }
-            Screen.MealsList -> {
-                screen = Screen.Settings
-                refreshToggle = !refreshToggle
-            }
-            Screen.FoodManage -> {
-                screen = Screen.Settings
-                refreshToggle = !refreshToggle
-            }
-            is Screen.FoodEdit -> {
-                screen = Screen.FoodManage
-                refreshToggle = !refreshToggle
-            }
-            is Screen.EditMealFromList -> {
-                screen = Screen.MealsList
-                refreshToggle = !refreshToggle
-            }
-            is Screen.WeightList -> {
-                when (val r = s.returnTo) {
-                    is Screen.ReturnTo.Settings -> {
-                        screen = Screen.Settings
-                    }
-                    is Screen.ReturnTo.Main -> {
-                        screen = Screen.Main(r.dateIso)
-                        // Refresh to update Thursday banner based on potential new weight
-                        refreshToggle = !refreshToggle
-                    }
-                }
-            }
-            Screen.Statistics -> {
-                screen = Screen.Main(currentDateIso())
-                refreshToggle = !refreshToggle
-            }
-            else -> {
-                // On Main screen: allow default behavior (app can close). No-op here.
-            }
-        }
-    }
-
     val recipesColors = LocalRecipesColors.current
 
     Surface(
         color = recipesColors.backgroundPage,
         contentColor = recipesColors.foregroundDefault
     ) {
+        val foodVm = remember(foodRepo, intakeRepo, refreshToggle) { FoodEditViewModel(foodRepo, intakeRepo) }
+
         AnimatedContent(
             targetState = screen,
             transitionSpec = {
@@ -199,7 +138,6 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                     )
                 }
                 Screen.FoodManage -> {
-                    val foodVm = remember(foodRepo, refreshToggle) { FoodEditViewModel(foodRepo) }
                     FoodManageScreen(
                         viewModel = foodVm,
                         onBack = { screen = Screen.Settings },
@@ -207,7 +145,6 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                     )
                 }
                 is Screen.FoodEdit -> {
-                    val foodVm = remember(foodRepo, refreshToggle) { FoodEditViewModel(foodRepo) }
                     FoodEditScreen(
                         viewModel = foodVm,
                         foodId = s.foodId,

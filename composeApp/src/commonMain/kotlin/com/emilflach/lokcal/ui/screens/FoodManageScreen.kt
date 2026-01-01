@@ -27,7 +27,7 @@ import com.emilflach.lokcal.ui.util.rememberKtorImageLoader
 import com.emilflach.lokcal.viewmodel.FoodEditViewModel
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun FoodManageScreen(
     viewModel: FoodEditViewModel,
@@ -61,6 +61,16 @@ fun FoodManageScreen(
         initialFirstVisibleItemScrollOffset = missingListStateData.values.firstOrNull() ?: 0
     )
 
+    BackHandler {
+        onBack()
+    }
+
+    LaunchedEffect(missingListState) {
+        snapshotFlow { missingListState.firstVisibleItemIndex to missingListState.firstVisibleItemScrollOffset }
+            .collect { (index, offset) ->
+                viewModel.saveListState(FoodEditViewModel.Tab.MISSING_IMAGES, index, offset)
+            }
+    }
 
     Scaffold(
         topBar = {

@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
@@ -37,6 +38,10 @@ fun IntakeScreen(
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
     val state by viewModel.state.collectAsState()
+
+    BackHandler {
+        onDone(false)
+    }
 
     var showItems by remember { mutableStateOf(false) }
     LaunchedEffect(state.meals, state.foods) {

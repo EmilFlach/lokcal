@@ -15,7 +15,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -28,12 +30,15 @@ import ir.ehsannarmani.compose_charts.LineChart
 import ir.ehsannarmani.compose_charts.models.*
 import ir.ehsannarmani.compose_charts.models.DrawStyle.Stroke
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun StatisticsScreen(
     viewModel: StatisticsViewModel,
     onBack: () -> Unit
 ) {
+    BackHandler {
+        onBack()
+    }
     val mostEaten by viewModel.mostEaten.collectAsState()
     val dailyKcal by viewModel.dailyKcal.collectAsState()
     val chart by viewModel.chart.collectAsState()
