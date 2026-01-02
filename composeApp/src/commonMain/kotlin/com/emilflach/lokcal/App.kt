@@ -19,10 +19,10 @@ private sealed class Screen {
     data class EditMeal(val mealId: Long, val returnMealType: String, val dateIso: String) : Screen()
     // Settings flow
     data object Settings : Screen()
-    data object MealsList : Screen()
-    data object FoodManage : Screen()
-    data class FoodEdit(val foodId: Long?) : Screen()
-    data class EditMealFromList(val mealId: Long) : Screen()
+    data class MealsList(val viewModel: MealsListViewModel) : Screen()
+    data class FoodManage(val viewModel: FoodEditViewModel) : Screen()
+    data class FoodEdit(val foodId: Long?, val viewModel: FoodEditViewModel) : Screen()
+    data class EditMealFromList(val mealId: Long, val viewModel: MealsListViewModel) : Screen()
     // Exercise flow
     data class ExerciseList(val dateIso: String) : Screen()
     // Weight flow
@@ -49,17 +49,12 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
 
     var screen by remember { mutableStateOf<Screen>(Screen.Main(currentDateIso())) }
     var refreshToggle by remember { mutableStateOf(false) }
-
-    val foodVm = remember(foodRepo, intakeRepo) { FoodEditViewModel(foodRepo, intakeRepo) }
-    val mealsListVm = remember(intakeRepo, mealRepo) { MealsListViewModel(intakeRepo) }
-
-    val recipesColors = LocalRecipesColors.current
+    val colors = LocalRecipesColors.current
 
     Surface(
-        color = recipesColors.backgroundPage,
-        contentColor = recipesColors.foregroundDefault
+        color = colors.backgroundPage,
+        contentColor = colors.foregroundDefault
     ) {
-
 
         AnimatedContent(
             targetState = screen,
@@ -140,45 +135,44 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                         onDeleted = { screen = Screen.MealTime(s.returnMealType, s.dateIso); refreshToggle = !refreshToggle }
                     )
                 }
-                Screen.FoodManage -> {
+                is Screen.FoodManage -> {
                     FoodManageScreen(
-                        viewModel = foodVm,
+                        viewModel = s.viewModel,
                         onBack = { screen = Screen.Settings },
-                        onOpenEdit = { id -> screen = Screen.FoodEdit(id) }
+                        onOpenEdit = { id -> screen = Screen.FoodEdit(id, s.viewModel) }
                     )
                 }
                 is Screen.FoodEdit -> {
                     FoodEditScreen(
-                        viewModel = foodVm,
+                        viewModel = s.viewModel,
                         foodId = s.foodId,
-                        onBack = { screen = Screen.FoodManage },
-                        onSaved = { foodVm.refresh(); screen = Screen.FoodManage; refreshToggle = !refreshToggle },
-                        onDeleted = { foodVm.refresh(); screen = Screen.FoodManage; refreshToggle = !refreshToggle }
+                        onBack = { screen = Screen.FoodManage(s.viewModel) },
+                        onSaved = { s.viewModel.refresh(); screen = Screen.FoodManage(s.viewModel); refreshToggle = !refreshToggle },
+                        onDeleted = { s.viewModel.refresh(); screen = Screen.FoodManage(s.viewModel); refreshToggle = !refreshToggle }
                     )
                 }
                 Screen.Settings -> {
                     SettingsScreen(
                         onBack = { screen = Screen.Main(currentDateIso()) },
-                        onOpenMealsList = { screen = Screen.MealsList },
+                        onOpenMealsList = { screen = Screen.MealsList(MealsListViewModel(intakeRepo)) },
                         onOpenWeightList = { screen = Screen.WeightList(returnTo = Screen.ReturnTo.Settings) },
-                        onOpenFoodManage = { screen = Screen.FoodManage },
+                        onOpenFoodManage = { screen = Screen.FoodManage(FoodEditViewModel(foodRepo, intakeRepo)) },
                         settingsRepo = settingsRepo
                     )
                 }
-                Screen.MealsList -> {
-
+                is Screen.MealsList -> {
                     MealsListScreen(
-                        viewModel = mealsListVm,
+                        viewModel = s.viewModel,
                         onBack = { screen = Screen.Settings },
-                        onOpenMeal = { id -> screen = Screen.EditMealFromList(id) }
+                        onOpenMeal = { id -> screen = Screen.EditMealFromList(id, s.viewModel) }
                     )
                 }
                 is Screen.EditMealFromList -> {
                     val editVm = remember(intakeRepo, s.mealId) { EditMealViewModel(mealRepo, foodRepo, intakeRepo, s.mealId) }
                     EditMealScreen(
                         viewModel = editVm,
-                        onBack = { mealsListVm.refresh(); screen = Screen.MealsList; refreshToggle = !refreshToggle },
-                        onDeleted = { mealsListVm.refresh(); screen = Screen.MealsList; refreshToggle = !refreshToggle }
+                        onBack = { s.viewModel.refresh(); screen = Screen.MealsList(s.viewModel); refreshToggle = !refreshToggle },
+                        onDeleted = { s.viewModel.refresh(); screen = Screen.MealsList(s.viewModel); refreshToggle = !refreshToggle }
                     )
                 }
                 is Screen.ExerciseList -> {
