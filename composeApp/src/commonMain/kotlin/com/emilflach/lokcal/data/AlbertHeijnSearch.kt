@@ -40,7 +40,7 @@ class AlbertHeijnSearch(
 
     suspend fun search(query: String): List<OnlineFoodItem> {
         if (query.isBlank()) return emptyList()
-        val url = "$BASE/zoeken?query=" + query.encodeURLQueryComponent()
+        val url = "$BASE/zoeken?query=" + query.encodeURLParameter()
         val html = client.get(url) {
             accept(ContentType.Text.Html)
             header(HttpHeaders.Referrer, BASE)

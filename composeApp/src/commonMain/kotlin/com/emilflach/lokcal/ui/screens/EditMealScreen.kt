@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.ImageSearch
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -15,12 +16,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.GramQuantityControls
 import com.emilflach.lokcal.ui.components.MealTimeItem
 import com.emilflach.lokcal.ui.dialogs.StealImageDialog
 import com.emilflach.lokcal.viewmodel.EditMealViewModel
+import io.ktor.http.*
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -31,6 +34,7 @@ fun EditMealScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val colors = LocalRecipesColors.current
+    val uriHandler = LocalUriHandler.current
 
     BackHandler {
         onBack()
@@ -85,8 +89,16 @@ fun EditMealScreen(
                 label = { Text("Image URL") },
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
-                    IconButton(onClick = { viewModel.openStealDialog() }) {
-                        Icon(Icons.Default.ContentCopy, contentDescription = "Steal image URL")
+                    Row {
+                        IconButton(onClick = {
+                            val url = "https://www.google.com/search?q=${state.name.encodeURLParameter()}&udm=2&tbs=isz:i"
+                            uriHandler.openUri(url)
+                        }) {
+                            Icon(Icons.Default.ImageSearch, contentDescription = "Google Image Search")
+                        }
+                        IconButton(onClick = { viewModel.openStealDialog() }) {
+                            Icon(Icons.Default.ContentCopy, contentDescription = "Steal image URL")
+                        }
                     }
                 }
             )
