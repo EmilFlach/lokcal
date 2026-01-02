@@ -147,6 +147,7 @@ fun LazyListScope.mealTimeItemsList(
             subtitle = subtitle,
             index = items.indexOf(entry),
             size = items.size,
+            isMeal = isMeal,
             imageUrl = when {
                 entry.source_food_id != null -> viewModel.imageUrlForFoodId(entry.source_food_id)
                 entry.source_meal_id != null -> viewModel.imageUrlForMealId(entry.source_meal_id)
@@ -240,7 +241,7 @@ fun LazyListScope.mealTimeSuggestionsSection(
                 keyId = keyId,
                 imageUrl = viewModel.imageUrlForMealId(mealId),
                 initialValue = initialPortions,
-                showBorder = true,
+                isMeal = true,
                 addButtonDescription = "Add",
                 index = index,
                 size = items.size,

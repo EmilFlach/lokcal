@@ -29,6 +29,7 @@ fun MealTimeItem(
     subtitle: String,
     index: Int,
     size: Int,
+    isMeal: Boolean = false,
     imageUrl: String? = null,
     iconName: ImageVector? = null,
     modifier: Modifier = Modifier,
@@ -111,12 +112,27 @@ fun MealTimeItem(
                 modifier = Modifier.padding(end = 8.dp),
             )
             Spacer(Modifier.height(4.dp))
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = colors.foregroundSupport,
-                modifier = Modifier.padding(end = 8.dp),
-            )
+            Row {
+                if(isMeal) {
+                    Text(
+                        text = "Meal",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.foregroundBrand
+                    )
+                    Text(
+                        text = " • ",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.foregroundSupport
+                    )
+                }
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.foregroundSupport,
+                    modifier = Modifier.padding(end = 8.dp),
+                )
+            }
+
             Spacer(Modifier.height(12.dp))
 
             quantityControls(requester)

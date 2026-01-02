@@ -14,10 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
@@ -90,9 +87,10 @@ fun MealIntakeListItem(
     IntakeListItem(
         name = meal.name,
         subtitle = viewModel.subtitleForMeal(meal, initialPortions),
+        imageUrl = meal.image_url,
         keyId = keyId,
         initialValue = initialPortions,
-        showBorder = true,
+        isMeal = true,
         index = index,
         size = size,
         requesters = requesters,
@@ -117,7 +115,7 @@ fun IntakeListItem(
     imageUrl: String? = null,
     keyId: Long,
     initialValue: String,
-    showBorder: Boolean = false,
+    isMeal: Boolean = false,
     addButtonDescription: String = "Add",
     index: Int,
     size: Int,
@@ -153,20 +151,6 @@ fun IntakeListItem(
             .padding(vertical = 2.dp)
             .clip(getRoundedCornerShape(index, size))
             .background(colors.backgroundSurface1)
-            .let { modifier ->
-                if (showBorder) {
-                    modifier.drawBehind {
-                        val borderWidth = 2.dp.toPx()
-                        drawRect(
-                            color = colors.backgroundBrand,
-                            topLeft = Offset(0f, 0f),
-                            size = Size(borderWidth, this.size.height)
-                        )
-                    }
-                } else {
-                    modifier
-                }
-            }
             .combinedClickable(
                 onClick = {
                     requesters.request(keyId)
@@ -203,11 +187,26 @@ fun IntakeListItem(
                     style = MaterialTheme.typography.bodyLarge,
                     color = colors.foregroundDefault
                 )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colors.foregroundSupport
-                )
+                Row {
+                    if(isMeal) {
+                        Text(
+                            text = "Meal",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.foregroundBrand
+                        )
+                        Text(
+                            text = " • ",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.foregroundSupport
+                        )
+                    }
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.foregroundSupport
+                    )
+                }
+
                 Spacer(Modifier.height(4.dp))
             }
 
