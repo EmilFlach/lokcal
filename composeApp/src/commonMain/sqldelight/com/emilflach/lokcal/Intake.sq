@@ -166,12 +166,16 @@ WHERE timestamp BETWEEN ? AND ?;
 
 allItemFrequencies:
 SELECT
-    source_type,
-    source_food_id,
-    source_meal_id,
+    i.source_type,
+    i.source_food_id,
+    i.source_meal_id,
     COUNT(*) AS frequency
-FROM Intake
-GROUP BY source_type, source_food_id, source_meal_id;
+FROM Intake i
+LEFT JOIN Food f ON i.source_food_id = f.id
+LEFT JOIN Meal m ON i.source_meal_id = m.id
+WHERE (i.source_type = 'FOOD' AND f.id IS NOT NULL)
+   OR (i.source_type = 'MEAL' AND m.id IS NOT NULL)
+GROUP BY i.source_type, i.source_food_id, i.source_meal_id;
 
 itemsMissingImage:
 SELECT
@@ -194,6 +198,8 @@ FROM (
     FROM Intake i
     LEFT JOIN Food f ON i.source_food_id = f.id
     LEFT JOIN Meal m ON i.source_meal_id = m.id
+    WHERE (i.source_type = 'FOOD' AND f.id IS NOT NULL)
+       OR (i.source_type = 'MEAL' AND m.id IS NOT NULL)
 )
 WHERE (image_url IS NULL OR image_url = '')
 GROUP BY source_type, source_food_id, source_meal_id, item_name
