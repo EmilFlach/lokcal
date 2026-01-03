@@ -105,7 +105,7 @@ fun MainSummaryKcal(
                             Modifier
                                 .fillMaxHeight()
                                 .weight(remainingGoalRatio)
-                                .background(colors.foregroundBrand.copy(alpha = 0.3f))
+                                .background(colors.foregroundSupport.copy(alpha = 0.3f))
                         )
                     }
                 }
