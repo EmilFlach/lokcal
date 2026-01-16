@@ -185,9 +185,11 @@ fun MealsListScreen(
                                 headlineContent = { Text(meal.name) },
                                 supportingContent = {
                                     val portions = meal.total_portions
-                                    val (kcal, grams) = remember(meal.id) {
-                                        viewModel.computeMealTotals(meal.id)
+                                    var totals by remember(meal.id) { mutableStateOf(0.0 to 0.0) }
+                                    LaunchedEffect(meal.id) {
+                                        totals = viewModel.computeMealTotals(meal.id)
                                     }
+                                    val (grams, kcal) = totals
                                     val freq = frequencies["MEAL" to meal.id] ?: 0
                                     Text("${portions.toInt()} portions, $kcal kcal, ${grams.toInt()}g • $freq times")
                                 },

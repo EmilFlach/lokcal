@@ -17,7 +17,7 @@ class LabelService(private val intakeRepo: IntakeRepository? = null, private val
         return subtitleKcalPortions(kcal = kcal, grams = grams, portionGrams = portionG)
     }
 
-    fun subtitleForMeal(mealId: Long, grams: Double): String {
+    suspend fun subtitleForMeal(mealId: Long, grams: Double): String {
         requireNotNull(intakeRepo) { "subtitleForMeal requires IntakeRepository" }
         requireNotNull(portionService) { "subtitleForMeal requires PortionService" }
         val (totalG, totalKcal) = intakeRepo.computeMealTotals(mealId)
@@ -26,7 +26,7 @@ class LabelService(private val intakeRepo: IntakeRepository? = null, private val
         return subtitleKcalPortions(kcal = kcal, grams = grams, portionGrams = portionG)
     }
 
-    fun subtitleForIntake(intake: Intake): String {
+    suspend fun subtitleForIntake(intake: Intake): String {
         requireNotNull(intakeRepo) { "subtitleForIntake requires IntakeRepository" }
         requireNotNull(portionService) { "subtitleForMeal requires PortionService" }
         val portionG = portionService.defaultPortionForIntake(intake)

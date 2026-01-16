@@ -1,5 +1,8 @@
 package com.emilflach.lokcal.data
 
+import app.cash.sqldelight.async.coroutines.awaitAsList
+import app.cash.sqldelight.async.coroutines.awaitAsOne
+import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import com.emilflach.lokcal.Database
 import com.emilflach.lokcal.Intake
 import com.emilflach.lokcal.Meal
@@ -12,18 +15,18 @@ class IntakeRepository(database: Database) {
     private val intakeQ = database.intakeQueries
 
     // Basic queries
-    fun getFoodById(id: Long) = tryExecute { foodQ.selectById(id).executeAsOne() }
-    fun getMealById(id: Long) = tryExecute { mealQ.mealSelectById(id).executeAsOne() }
-    fun getFrequentFoods(mealType: String, limit: Long) = intakeQ.frequentFoods(mealType, limit).executeAsList()
+    suspend fun getFoodById(id: Long) = try { foodQ.selectById(id).awaitAsOne() } catch (_: Exception) { null }
+    suspend fun getMealById(id: Long) = try { mealQ.mealSelectById(id).awaitAsOne() } catch (_: Exception) { null }
+    suspend fun getFrequentFoods(mealType: String, limit: Long) = intakeQ.frequentFoods(mealType, limit).awaitAsList()
 
-    fun getIntakeByMealAndDateRange(mealType: String, startIso: String, endIso: String) =
-        intakeQ.selectIntakeByMealAndDateRange(mealType, startIso, endIso).executeAsList()
+    suspend fun getIntakeByMealAndDateRange(mealType: String, startIso: String, endIso: String) =
+        intakeQ.selectIntakeByMealAndDateRange(mealType, startIso, endIso).awaitAsList()
 
-    fun getLatestIntakeId(): Long? = intakeQ.selectLatestIntakeId().executeAsOneOrNull()
+    suspend fun getLatestIntakeId(): Long? = intakeQ.selectLatestIntakeId().awaitAsOneOrNull()
 
-    fun deleteIntakeById(id: Long) = intakeQ.deleteIntakeById(id)
+    suspend fun deleteIntakeById(id: Long) = intakeQ.deleteIntakeById(id)
 
-    fun setLeftoversForMealTypeOnDate(mealType: String, dateIso: String, enabled: Boolean) {
+    suspend fun setLeftoversForMealTypeOnDate(mealType: String, dateIso: String, enabled: Boolean) {
         val (start, end) = todayRange(dateIso)
         val todays = getIntakeByMealAndDateRange(mealType, start, end)
         todays.forEach { row ->
@@ -31,21 +34,21 @@ class IntakeRepository(database: Database) {
         }
     }
 
-    fun isLeftoversMarkedForMealTypeOnDate(mealType: String, dateIso: String): Boolean {
+    suspend fun isLeftoversMarkedForMealTypeOnDate(mealType: String, dateIso: String): Boolean {
         val (start, end) = todayRange(dateIso)
         val todays = getIntakeByMealAndDateRange(mealType, start, end)
         return todays.any { it.leftover != 0L }
     }
 
-    fun getAllLeftoverIntakesExcludingDate(dateIso: String? = null): List<Intake> {
-        val all = intakeQ.selectAllLeftovers().executeAsList()
+    suspend fun getAllLeftoverIntakesExcludingDate(dateIso: String? = null): List<Intake> {
+        val all = intakeQ.selectAllLeftovers().awaitAsList()
         if(dateIso == null) return all
         return all.filterNot { it.timestamp.startsWith(dateIso) }
     }
 
 
     // Simplified logging with automatic merging
-    fun logOrUpdateFoodIntake(foodId: Long, quantityG: Double, mealType: String, dateIso: String, refreshId: Boolean = false) {
+    suspend fun logOrUpdateFoodIntake(foodId: Long, quantityG: Double, mealType: String, dateIso: String, refreshId: Boolean = false) {
         require(quantityG >= 0.0) { "quantityG must be >= 0" }
         
         val today = todayRange(dateIso)
@@ -59,7 +62,7 @@ class IntakeRepository(database: Database) {
         }
     }
 
-    fun logOrUpdateMealIntake(mealId: Long, quantityG: Double, mealType: String, dateIso: String, refreshId: Boolean = false) {
+    suspend fun logOrUpdateMealIntake(mealId: Long, quantityG: Double, mealType: String, dateIso: String, refreshId: Boolean = false) {
         require(quantityG >= 0.0) { "quantityG must be >= 0" }
         
         val today = todayRange(dateIso)
@@ -73,8 +76,8 @@ class IntakeRepository(database: Database) {
         }
     }
 
-    private fun logFoodIntake(foodId: Long, quantityG: Double, timestamp: String, mealType: String) {
-        val food = foodQ.selectById(foodId).executeAsOne()
+    private suspend fun logFoodIntake(foodId: Long, quantityG: Double, timestamp: String, mealType: String) {
+        val food = foodQ.selectById(foodId).awaitAsOne()
         val kcal = food.energy_kcal_per_100g * quantityG / 100.0
         
         intakeQ.logFoodIntake(
@@ -88,10 +91,10 @@ class IntakeRepository(database: Database) {
         )
     }
 
-    fun updateIntakeQuantity(id: Long, newQuantityG: Double, refreshId: Boolean = false) {
+    suspend fun updateIntakeQuantity(id: Long, newQuantityG: Double, refreshId: Boolean = false) {
         require(newQuantityG >= 0.0) { "newQuantityG must be >= 0" }
         
-        val intake = tryExecute { intakeQ.selectIntakeById(id).executeAsOne() } ?: return
+        val intake = try { intakeQ.selectIntakeById(id).awaitAsOne() } catch (_: Exception) { null } ?: return
         
         if (intake.source_type == "MEAL") {
             val mealId = intake.source_meal_id ?: return
@@ -103,16 +106,21 @@ class IntakeRepository(database: Database) {
                 intakeQ.updateIntakeQuantityDirect(kcalForQty, newQuantityG, id)
             }
         } else {
+            val foodId = intake.source_food_id ?: return
+            val food = try { foodQ.selectById(foodId).awaitAsOne() } catch (_: Exception) { null } ?: return
+            val kcalPer100g = food.energy_kcal_per_100g
+            val totalKcal = (kcalPer100g * newQuantityG) / 100.0
+            
             if (refreshId) {
-                intakeQ.updateIntakeQuantityAndId(newQuantityG, newQuantityG, newQuantityG, id)
+                intakeQ.updateIntakeQuantityAndId(newQuantityG, totalKcal, newQuantityG, id)
             } else {
-                intakeQ.updateIntakeQuantity(newQuantityG, newQuantityG, newQuantityG, id)
+                intakeQ.updateIntakeQuantity(newQuantityG, totalKcal, newQuantityG, id)
             }
         }
     }
 
     // Meal operations
-    fun createMeal(name: String, totalPortions: Double, items: List<Pair<Long, Double>>): Long {
+    suspend fun createMeal(name: String, totalPortions: Double, items: List<Pair<Long, Double>>): Long {
         require(totalPortions > 0) { "totalPortions must be > 0" }
         var mealId = 0L
         mealQ.transaction {
@@ -126,22 +134,22 @@ class IntakeRepository(database: Database) {
         return mealId
     }
 
-    fun computeMealTotals(mealId: Long): Pair<Double, Double> {
-        val row = mealQ.mealTotals(mealId).executeAsOne()
+    suspend fun computeMealTotals(mealId: Long): Pair<Double, Double> {
+        val row = mealQ.mealTotals(mealId).awaitAsOne()
         return row.total_g to row.total_kcal
     }
 
-    fun getMealPortionGrams(mealId: Long): Double {
-        val portions = tryExecute { mealQ.mealSelectPortionsById(mealId).executeAsOne() } ?: 1.0
+    suspend fun getMealPortionGrams(mealId: Long): Double {
+        val portions = try { mealQ.mealSelectPortionsById(mealId).awaitAsOne() } catch (_: Exception) { null } ?: 1.0
         val (totalG, _) = computeMealTotals(mealId)
         return if (portions > 0) totalG / portions else totalG
     }
 
-    fun getMealPortions(mealId: Long): Double {
-        return tryExecute { mealQ.mealSelectPortionsById(mealId).executeAsOne() } ?: 1.0
+    suspend fun getMealPortions(mealId: Long): Double {
+        return try { mealQ.mealSelectPortionsById(mealId).awaitAsOne() } catch (_: Exception) { null } ?: 1.0
     }
 
-    fun saveCurrentMealFromIntakes(mealType: String, name: String, totalPortions: Double, dateIso: String): Long {
+    suspend fun saveCurrentMealFromIntakes(mealType: String, name: String, totalPortions: Double, dateIso: String): Long {
         val today = todayRange(dateIso)
         val list = getIntakeByMealAndDateRange(mealType, today.first, today.second)
         val items = list.filter { it.source_food_id != null }.map { it.source_food_id!! to it.quantity_g }
@@ -155,8 +163,8 @@ class IntakeRepository(database: Database) {
         return mealId
     }
 
-    private fun logMealIntake(mealId: Long, quantityG: Double, timestamp: String, mealType: String) {
-        val meal = tryExecute { mealQ.mealSelectById(mealId).executeAsOne() }
+    private suspend fun logMealIntake(mealId: Long, quantityG: Double, timestamp: String, mealType: String) {
+        val meal = try { mealQ.mealSelectById(mealId).awaitAsOne() } catch (_: Exception) { null }
         val (totalG, totalKcal) = computeMealTotals(mealId)
         val kcalForQty = if (totalG > 0 && quantityG > 0) totalKcal * (quantityG / totalG) else totalKcal
         
@@ -182,7 +190,7 @@ class IntakeRepository(database: Database) {
      *   exact/prefix results to avoid noisy matches; otherwise rank by exact, prefix, containsPos, name.
      * - No fuzzy (Levenshtein) fallback for meals to prevent broad/irrelevant results.
      */
-    fun searchMeals(query: String): List<Meal> {
+    suspend fun searchMeals(query: String): List<Meal> {
         val q = query.trim()
         if (q.isEmpty()) return emptyList()
         val qLower = q.lowercase()
@@ -197,7 +205,7 @@ class IntakeRepository(database: Database) {
         if (tokens.size >= 2) {
             val primary = SearchUtils.longestToken(tokens) ?: tokens.first()
             val likePrimary = "%$primary%"
-            val initial = mealQ.mealSearchByAny(likePrimary).executeAsList()
+            val initial = mealQ.mealSearchByAny(likePrimary).awaitAsList()
             val filtered = initial.filter { m ->
                 SearchUtils.tokensPresent(fields(m), tokens)
             }
@@ -213,7 +221,7 @@ class IntakeRepository(database: Database) {
         }
 
         val like = "%$qLower%"
-        val candidates = mealQ.mealSearchByAny(like,).executeAsList()
+        val candidates = mealQ.mealSearchByAny(like,).awaitAsList()
         if (candidates.isEmpty()) return emptyList()
 
         // For very short queries (<= 3), avoid overly broad results by keeping only prefix/exact matches
@@ -236,13 +244,13 @@ class IntakeRepository(database: Database) {
         )
     }
 
-    fun listAllMeals(): List<Meal> {
+    suspend fun listAllMeals(): List<Meal> {
         // Using LIKE with wildcards to return all meals ordered by name
-        return mealQ.mealSearchByAny("%%").executeAsList()
+        return mealQ.mealSearchByAny("%%").awaitAsList()
     }
 
     // Expand a logged meal into separate food intakes and remove the original meal entry
-    fun copyMealItemsIntoMealTime(mealId: Long, mealType: String, dateIso: String) {
+    suspend fun copyMealItemsIntoMealTime(mealId: Long, mealType: String, dateIso: String) {
         val (start, end) = todayRange(dateIso)
         // 1) Find the specific intake entry for this mealId in the given mealType today
         val entries = getIntakeByMealAndDateRange(mealType, start, end)
@@ -254,7 +262,7 @@ class IntakeRepository(database: Database) {
         val totalPortions = getMealPortions(mealId)
 
         // 3) Fetch meal items with their base grams
-        val items = mealQ.mealItemsForMealFull(mealId).executeAsList()
+        val items = mealQ.mealItemsForMealFull(mealId).awaitAsList()
 
         // 4) Add each as a FOOD intake with grams scaled by portionAmount (merge with existing if present)
         items.forEach { row ->
@@ -276,32 +284,32 @@ class IntakeRepository(database: Database) {
     }
 
     // Flip leftover for a specific intake row
-    fun setLeftoverFlagById(id: Long, enabled: Boolean) {
+    suspend fun setLeftoverFlagById(id: Long, enabled: Boolean) {
         intakeQ.updateLeftoverById(if (enabled) 1 else 0, id)
     }
 
-    fun getMostEatenByWeight(startIso: String, endIso: String) =
-        intakeQ.statsMostEatenByWeight(startIso, endIso, startIso, endIso).executeAsList()
+    suspend fun getMostEatenByWeight(startIso: String, endIso: String) =
+        intakeQ.statsMostEatenByWeight(startIso, endIso, startIso, endIso).awaitAsList()
 
-    fun getDailyKcal(startIso: String, endIso: String) =
-        intakeQ.statsDailyKcal(startIso, endIso).executeAsList()
+    suspend fun getDailyKcal(startIso: String, endIso: String) =
+        intakeQ.statsDailyKcal(startIso, endIso).awaitAsList()
 
-    fun countDaysWithInformation() =
-        intakeQ.countDaysWithInformation().executeAsOne()
+    suspend fun countDaysWithInformation() =
+        intakeQ.countDaysWithInformation().awaitAsOne()
 
-    fun getDaysWithInformation() =
-        intakeQ.getDaysWithInformation().executeAsList()
+    suspend fun getDaysWithInformation() =
+        intakeQ.getDaysWithInformation().awaitAsList()
 
-    fun getTotalKcalEaten(startIso: String, endIso: String) =
-        intakeQ.getTotalKcalEaten(startIso, endIso).executeAsOne().SUM ?: 0.0
+    suspend fun getTotalKcalEaten(startIso: String, endIso: String) =
+        intakeQ.getTotalKcalEaten(startIso, endIso).awaitAsOne().SUM ?: 0.0
 
-    fun getTotalWeightEatenG(startIso: String, endIso: String) =
-        intakeQ.getTotalWeightEatenG(startIso, endIso).executeAsOne().SUM ?: 0.0
+    suspend fun getTotalWeightEatenG(startIso: String, endIso: String) =
+        intakeQ.getTotalWeightEatenG(startIso, endIso).awaitAsOne().SUM ?: 0.0
 
-    fun getCountTrackedIntakes(startIso: String, endIso: String) =
-        intakeQ.getCountTrackedIntakes(startIso, endIso).executeAsOne()
+    suspend fun getCountTrackedIntakes(startIso: String, endIso: String) =
+        intakeQ.getCountTrackedIntakes(startIso, endIso).awaitAsOne()
 
-    fun getAllItemFrequencies() = intakeQ.allItemFrequencies().executeAsList()
+    suspend fun getAllItemFrequencies() = intakeQ.allItemFrequencies().awaitAsList()
 
-    fun getItemsMissingImage() = intakeQ.itemsMissingImage().executeAsList()
+    suspend fun getItemsMissingImage() = intakeQ.itemsMissingImage().awaitAsList()
 }

@@ -1,12 +1,14 @@
 package com.emilflach.lokcal.data
 
 import android.content.Context
+import app.cash.sqldelight.async.coroutines.synchronous
+import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
+import app.cash.sqldelight.db.SqlSchema
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
-import com.emilflach.lokcal.Database
 
 actual class SqlDriverFactory(private val context: Context) {
-    actual fun createDriver(): SqlDriver {
+    actual suspend fun createDriver(schema: SqlSchema<QueryResult.AsyncValue<Unit>>): SqlDriver {
         // Provide Android asset-based JSON loader for initial seeding
         IngredientSeeder.provideJsonText = {
             try {
@@ -15,6 +17,6 @@ actual class SqlDriverFactory(private val context: Context) {
                 null
             }
         }
-        return AndroidSqliteDriver(Database.Schema, context, "lokcal.db")
+        return AndroidSqliteDriver(schema.synchronous(), context, "lokcal.db")
     }
 }

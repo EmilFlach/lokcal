@@ -1,5 +1,7 @@
 package com.emilflach.lokcal.data
 
+import app.cash.sqldelight.async.coroutines.awaitAsList
+import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import com.emilflach.lokcal.Database
 import com.emilflach.lokcal.WeightLog
 import com.emilflach.lokcal.util.currentDateIso
@@ -7,16 +9,16 @@ import com.emilflach.lokcal.util.currentDateIso
 class WeightRepository(database: Database) {
     private val q = database.weightQueries
 
-    fun getAll(): List<WeightLog> = q.selectAllDesc().executeAsList()
+    suspend fun getAll(): List<WeightLog> = q.selectAllDesc().awaitAsList()
 
-    fun setForToday(kg: Double) {
+    suspend fun setForToday(kg: Double) {
         val date = currentDateIso()
         q.insertOrReplace(date, kg)
     }
 
-    fun deleteById(id: Long) {
+    suspend fun deleteById(id: Long) {
         q.deleteById(id)
     }
 
-    fun getForDate(dateIso: String): WeightLog? = q.selectByDate(dateIso).executeAsOneOrNull()
+    suspend fun getForDate(dateIso: String): WeightLog? = q.selectByDate(dateIso).awaitAsOneOrNull()
 }

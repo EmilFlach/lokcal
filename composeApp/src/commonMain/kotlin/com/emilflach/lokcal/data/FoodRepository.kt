@@ -1,5 +1,8 @@
 package com.emilflach.lokcal.data
 
+import app.cash.sqldelight.async.coroutines.awaitAsList
+import app.cash.sqldelight.async.coroutines.awaitAsOne
+import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import com.emilflach.lokcal.Database
 import com.emilflach.lokcal.Food
 import com.emilflach.lokcal.util.SearchUtils
@@ -8,11 +11,11 @@ import com.emilflach.lokcal.util.levenshtein
 class FoodRepository(database: Database) {
     private val queries = database.foodQueries
 
-    fun getAll(): List<Food> = queries.selectAll().executeAsList()
+    suspend fun getAll(): List<Food> = queries.selectAll().awaitAsList()
 
-    fun getById(id: Long): Food? = queries.selectById(id).executeAsOneOrNull()
+    suspend fun getById(id: Long): Food? = queries.selectById(id).awaitAsOneOrNull()
 
-    fun updateDetails(
+    suspend fun updateDetails(
         id: Long,
         name: String,
         brandName: String?,
@@ -40,7 +43,7 @@ class FoodRepository(database: Database) {
         )
     }
 
-    fun insertManual(
+    suspend fun insertManual(
         name: String,
         brandName: String?,
         energyKcalPer100g: Double,
@@ -65,11 +68,11 @@ class FoodRepository(database: Database) {
                 dutch_name = dutchName,
                 source = source
             )
-            queries.selectLastInsertRowId().executeAsOne()
+            queries.selectLastInsertRowId().awaitAsOne()
         }
     }
 
-    fun delete(id: Long) {
+    suspend fun delete(id: Long) {
         queries.deleteById(id)
     }
 
@@ -85,7 +88,7 @@ class FoodRepository(database: Database) {
      * - Fuzzy fallback (Levenshtein over all rows) is only used when LIKE finds nothing AND query length >= 4.
      *   This guard avoids the previous issue where very short queries could show almost everything.
      */
-    fun search(query: String): List<Food> {
+    suspend fun search(query: String): List<Food> {
         val q = query.trim()
         if (q.isEmpty()) return emptyList()
         val qLower = q.lowercase()
@@ -93,7 +96,7 @@ class FoodRepository(database: Database) {
         // If the query looks like a GTIN-13 (EAN-13) barcode, try exact match on gtin13 first
         val digitsOnly = q.filter { it.isDigit() }
         if (digitsOnly.length == 13) {
-            val byBarcode = queries.selectByGtin13(digitsOnly).executeAsList()
+            val byBarcode = queries.selectByGtin13(digitsOnly).awaitAsList()
             if (byBarcode.isNotEmpty()) return byBarcode
         }
 
@@ -126,7 +129,7 @@ class FoodRepository(database: Database) {
         if (tokens.size >= 2) {
             val primary = SearchUtils.longestToken(tokens) ?: tokens.first()
             val likePrimary = "%$primary%"
-            val initial = queries.searchByAny(likePrimary, likePrimary, likePrimary, likePrimary).executeAsList()
+            val initial = queries.searchByAny(likePrimary, likePrimary, likePrimary, likePrimary).awaitAsList()
             fun tokensPosSum(f: Food): Int = SearchUtils.tokensPosSum(fields(f), tokens)
             val filtered = initial.filter { f ->
                 SearchUtils.tokensPresent(fields(f), tokens)
@@ -146,7 +149,7 @@ class FoodRepository(database: Database) {
 
         val like = "%$qLower%"
         // Fetch candidates across multiple fields (case-insensitive)
-        val candidatesLike = queries.searchByAny(like, like, like, like).executeAsList()
+        val candidatesLike = queries.searchByAny(like, like, like, like).awaitAsList()
 
         // If LIKE found candidates, use the existing relevance ordering
         if (candidatesLike.isNotEmpty()) {
@@ -170,7 +173,7 @@ class FoodRepository(database: Database) {
         ).take(100)
     }
 
-    fun insert(name: String, description: String?) {
+    suspend fun insert(name: String, description: String?) {
         queries.insert(name = name, description = description)
     }
 }

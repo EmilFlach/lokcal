@@ -1,5 +1,6 @@
 package com.emilflach.lokcal.data
 
+import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import com.emilflach.lokcal.Database
 
 /**
@@ -13,12 +14,12 @@ class SettingsRepository(database: Database) {
         private const val DEFAULT_STARTING_KCAL = 1690.0
     }
 
-    fun getStartingKcal(): Double {
-        val v = try { meta.getMeta(KEY_STARTING_KCAL).executeAsOneOrNull() } catch (_: Throwable) { null }
+    suspend fun getStartingKcal(): Double {
+        val v = try { meta.getMeta(KEY_STARTING_KCAL).awaitAsOneOrNull() } catch (_: Throwable) { null }
         return v?.toDoubleOrNull() ?: DEFAULT_STARTING_KCAL
     }
 
-    fun setStartingKcal(value: Double) {
+    suspend fun setStartingKcal(value: Double) {
         require(value > 0.0) { "Starting kcal must be > 0" }
         try {
             meta.setMeta(KEY_STARTING_KCAL, value.toString())

@@ -84,7 +84,9 @@ class MealsListViewModel(
     }
 
     fun loadMissingImages() {
-        _missingImages.value = intakeRepo.getItemsMissingImage().filter { it.source_type == "MEAL" }
+        scope.launch {
+            _missingImages.value = intakeRepo.getItemsMissingImage().filter { it.source_type == "MEAL" }
+        }
     }
 
     fun reloadMeals() {
@@ -100,7 +102,7 @@ class MealsListViewModel(
         }
     }
 
-    fun computeMealTotals(mealId: Long): Pair<Double, Double> {
+    suspend fun computeMealTotals(mealId: Long): Pair<Double, Double> {
         return intakeRepo.computeMealTotals(mealId)
     }
 }

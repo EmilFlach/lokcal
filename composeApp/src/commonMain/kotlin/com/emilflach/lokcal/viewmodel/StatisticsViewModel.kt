@@ -5,15 +5,20 @@ import com.emilflach.lokcal.data.ExerciseRepository
 import com.emilflach.lokcal.data.IntakeRepository
 import com.emilflach.lokcal.data.SettingsRepository
 import com.emilflach.lokcal.util.currentDateIso
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class StatisticsViewModel(
     private val intakeRepo: IntakeRepository,
     private val exerciseRepo: ExerciseRepository,
     private val settingsRepo: SettingsRepository
 ) {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     data class DailyDelta(
         val day: String,
         val eaten: Double,
@@ -62,15 +67,17 @@ class StatisticsViewModel(
     val graphMode: StateFlow<GraphMode> = _graphMode.asStateFlow()
 
     init {
-        val days: List<String> = intakeRepo.getDaysWithInformation()
-        val today: String = currentDateIso()
-        val filteredDays: List<String> = days.filter { d -> d != today }
-        
-        val start = (filteredDays.size - 30).coerceAtLeast(0)
-        val end = (filteredDays.size - 1).coerceAtLeast(-1)
-        
-        _chart.value = ChartState(allDays = filteredDays, startIndex = start, endIndex = end)
-        loadStats()
+        scope.launch {
+            val days: List<String> = intakeRepo.getDaysWithInformation()
+            val today: String = currentDateIso()
+            val filteredDays: List<String> = days.filter { d -> d != today }
+            
+            val start = (filteredDays.size - 30).coerceAtLeast(0)
+            val end = (filteredDays.size - 1).coerceAtLeast(-1)
+            
+            _chart.value = ChartState(allDays = filteredDays, startIndex = start, endIndex = end)
+            loadStats()
+        }
     }
 
     fun onChartRangeChanged(start: Int, end: Int) {
@@ -89,53 +96,55 @@ class StatisticsViewModel(
     }
 
     private fun loadStats() {
-        val currentChart = _chart.value
-        val displayedDays = currentChart.displayedDays
-        if (displayedDays.isEmpty()) {
-            _mostEaten.value = emptyList()
-            _dailyKcal.value = emptyList()
-            _insights.value = null
+        scope.launch {
+            val currentChart = _chart.value
+            val displayedDays = currentChart.displayedDays
+            if (displayedDays.isEmpty()) {
+                _mostEaten.value = emptyList()
+                _dailyKcal.value = emptyList()
+                _insights.value = null
+                _daysFilled.value = intakeRepo.countDaysWithInformation()
+                return@launch
+            }
+
+            val startDate = displayedDays.first()
+            val endDate = displayedDays.last()
+            
+            val startIso = "${startDate}T00:00:00"
+            val endIso = "${endDate}T23:59:59"
+
+            val eatenPerDay = intakeRepo.getDailyKcal(startIso, endIso)
+            val burnedPerDay = exerciseRepo.getDailyBurned(startIso, endIso)
+            val startingKcal = settingsRepo.getStartingKcal().coerceAtLeast(0.0)
+
+            // Merge datasets based on displayedDays to ensure we show all days in range even if no data
+            val sortedDays = displayedDays
+            val deltas = sortedDays.map { day ->
+                val eaten = eatenPerDay.find { it.day == day }?.total_kcal ?: 0.0
+                val burned = burnedPerDay.find { it.day == day }?.total_burned ?: 0.0
+                val delta = (eaten - (startingKcal + burned))
+                DailyDelta(day = day, eaten = eaten, burned = burned, delta = delta)
+            }
+
+            _mostEaten.value = intakeRepo.getMostEatenByWeight(startIso, endIso)
+            _dailyKcal.value = deltas
             _daysFilled.value = intakeRepo.countDaysWithInformation()
-            return
+
+            val totalKcalEaten = intakeRepo.getTotalKcalEaten(startIso, endIso)
+            val totalKcalBurned = exerciseRepo.sumKcalByDate(startIso, endIso)
+            val totalKgEaten = intakeRepo.getTotalWeightEatenG(startIso, endIso) / 1000.0
+            val intakeCount = intakeRepo.getCountTrackedIntakes(startIso, endIso)
+
+            val totalBudget = (startingKcal * sortedDays.size) + totalKcalBurned
+            val totalDelta = totalKcalEaten - totalBudget
+
+            _insights.value = Insights(
+                totalKgEaten = totalKgEaten,
+                intakeCount = intakeCount,
+                totalKcalEaten = totalKcalEaten,
+                totalKcalBurned = totalKcalBurned,
+                totalDelta = totalDelta
+            )
         }
-
-        val startDate = displayedDays.first()
-        val endDate = displayedDays.last()
-        
-        val startIso = "${startDate}T00:00:00"
-        val endIso = "${endDate}T23:59:59"
-
-        val eatenPerDay = intakeRepo.getDailyKcal(startIso, endIso)
-        val burnedPerDay = exerciseRepo.getDailyBurned(startIso, endIso)
-        val startingKcal = settingsRepo.getStartingKcal().coerceAtLeast(0.0)
-
-        // Merge datasets based on displayedDays to ensure we show all days in range even if no data
-        val sortedDays = displayedDays
-        val deltas = sortedDays.map { day ->
-            val eaten = eatenPerDay.find { it.day == day }?.total_kcal ?: 0.0
-            val burned = burnedPerDay.find { it.day == day }?.total_burned ?: 0.0
-            val delta = (eaten - (startingKcal + burned))
-            DailyDelta(day = day, eaten = eaten, burned = burned, delta = delta)
-        }
-
-        _mostEaten.value = intakeRepo.getMostEatenByWeight(startIso, endIso)
-        _dailyKcal.value = deltas
-        _daysFilled.value = intakeRepo.countDaysWithInformation()
-
-        val totalKcalEaten = intakeRepo.getTotalKcalEaten(startIso, endIso)
-        val totalKcalBurned = exerciseRepo.sumKcalByDate(startIso, endIso)
-        val totalKgEaten = intakeRepo.getTotalWeightEatenG(startIso, endIso) / 1000.0
-        val intakeCount = intakeRepo.getCountTrackedIntakes(startIso, endIso)
-
-        val totalBudget = (startingKcal * sortedDays.size) + totalKcalBurned
-        val totalDelta = totalKcalEaten - totalBudget
-
-        _insights.value = Insights(
-            totalKgEaten = totalKgEaten,
-            intakeCount = intakeCount,
-            totalKcalEaten = totalKcalEaten,
-            totalKcalBurned = totalKcalBurned,
-            totalDelta = totalDelta
-        )
     }
 }

@@ -45,8 +45,7 @@ fun FoodEditScreen(
     val isEdit = state.isEdit
 
     fun save() {
-        val id = viewModel.save()
-        if (id != null) onSaved()
+        viewModel.save(onSaved)
     }
 
     val scope = rememberCoroutineScope()
@@ -63,8 +62,7 @@ fun FoodEditScreen(
                 actions = {
                     if (isEdit) {
                         IconButton(onClick = {
-                            viewModel.delete()
-                            onDeleted()
+                            viewModel.delete(onDeleted)
                         }) {
                             Icon(Icons.Default.Delete, contentDescription = "Delete")
                         }

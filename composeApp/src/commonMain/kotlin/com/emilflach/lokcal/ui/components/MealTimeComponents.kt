@@ -22,7 +22,6 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.emilflach.lokcal.Intake
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.util.NumberUtils
 import com.emilflach.lokcal.util.NumberUtils.sanitizeDecimalInput
@@ -132,11 +131,11 @@ fun MealTimeTotalKcal(value: Int) {
 }
 
 fun LazyListScope.mealTimeItemsList(
-    items: List<Intake>,
+    items: List<MealTimeViewModel.IntakeUiState>,
     viewModel: MealTimeViewModel
 ) {
-    items(items, key = { it.id }) { entry ->
-        val subtitle = viewModel.subtitleForIntake(entry)
+    items(items, key = { it.intake.id }) { ui ->
+        val entry = ui.intake
         val isMeal = entry.source_meal_id != null
         val haptic = LocalHapticFeedback.current
         val uriHandler = LocalUriHandler.current
@@ -144,26 +143,19 @@ fun LazyListScope.mealTimeItemsList(
 
         MealTimeItem(
             title = entry.item_name,
-            subtitle = subtitle,
-            index = items.indexOf(entry),
+            subtitle = ui.subtitle,
+            index = items.indexOf(ui),
             size = items.size,
             isMeal = isMeal,
-            imageUrl = when {
-                entry.source_food_id != null -> viewModel.imageUrlForFoodId(entry.source_food_id)
-                entry.source_meal_id != null -> viewModel.imageUrlForMealId(entry.source_meal_id)
-                else -> null
-            },
+            imageUrl = ui.imageUrl,
             highlight = state.highlightedIntakeId == entry.id,
             onHighlighted = { viewModel.clearHighlight() },
             onLongPress = {
                 if (isMeal) {
                     entry.source_meal_id.let { viewModel.copyMealItemsIntoMealTime(it) }
                 } else {
-                    entry.source_food_id?.let {
-                        val productUrl = viewModel.productUrlForFoodId(it)
-                        productUrl?.let { url ->
-                            uriHandler.openUri(uri = url)
-                        }
+                    ui.productUrl?.let { url ->
+                        uriHandler.openUri(uri = url)
                     }
                 }
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -174,7 +166,7 @@ fun LazyListScope.mealTimeItemsList(
                         requester = requester,
                         stateKey = entry.id,
                         initialGrams = entry.quantity_g,
-                        portionGrams = viewModel.portionForEntry(entry),
+                        portionGrams = ui.portionGrams,
                         onCommitPortions = { portions ->
                             viewModel.updateQuantityByPortions(entry.id, portions)
                         },
@@ -185,7 +177,7 @@ fun LazyListScope.mealTimeItemsList(
                         requester = requester,
                         stateKey = entry.id,
                         initialGrams = entry.quantity_g,
-                        portionGrams = viewModel.portionForEntry(entry),
+                        portionGrams = ui.portionGrams,
                         onCommitGrams = { g ->
                             viewModel.updateQuantity(entry.id, g)
                         },
@@ -200,7 +192,7 @@ fun LazyListScope.mealTimeItemsList(
 
 fun LazyListScope.mealTimeSuggestionsSection(
     title: String,
-    items: List<Intake>,
+    items: List<MealTimeViewModel.SuggestionUiState>,
     viewModel: MealTimeViewModel,
     requesters: FocusRequesters,
     isLeftoverSection: Boolean = false,
@@ -218,7 +210,8 @@ fun LazyListScope.mealTimeSuggestionsSection(
         Spacer(Modifier.height(8.dp))
     }
 
-    itemsIndexed(items = items) { index, intake ->
+    itemsIndexed(items = items) { index, ui ->
+        val intake = ui.intake
         val haptic = LocalHapticFeedback.current
         val uriHandler = LocalUriHandler.current
         val state by viewModel.state.collectAsState()
@@ -226,20 +219,24 @@ fun LazyListScope.mealTimeSuggestionsSection(
         if (intake.source_meal_id != null) {
             val mealId = intake.source_meal_id
             val keyId = -mealId - keyPrefix
-            val portionG = viewModel.portionForMeal(mealId)
+            val portionG = ui.portionGrams
             val portions = if (portionG > 0.0) intake.quantity_g / portionG else 0.0
             
             val initialPortions = state.suggestionInputs[keyId] ?: NumberUtils.formatPortions(portions)
             val portionsText = state.suggestionInputs[keyId] ?: initialPortions
             val portionsVal = NumberUtils.parseDecimal(portionsText)
             val liveGrams = (portionsVal * portionG).coerceAtLeast(0.0)
-            val subtitle = viewModel.subtitleForMealSuggestion(mealId, liveGrams)
+            
+            var subtitle by remember(mealId, liveGrams) { mutableStateOf("") }
+            LaunchedEffect(mealId, liveGrams) {
+                subtitle = viewModel.subtitleForMealSuggestion(mealId, liveGrams)
+            }
 
             IntakeListItem(
                 name = intake.item_name,
                 subtitle = subtitle,
                 keyId = keyId,
-                imageUrl = viewModel.imageUrlForMealId(mealId),
+                imageUrl = ui.imageUrl,
                 initialValue = initialPortions,
                 isMeal = true,
                 addButtonDescription = "Add",
@@ -266,13 +263,17 @@ fun LazyListScope.mealTimeSuggestionsSection(
             val initialGrams = state.suggestionInputs[keyId] ?: intake.quantity_g.toInt().toString()
             val gramsText = state.suggestionInputs[keyId] ?: initialGrams
             val gramsVal = NumberUtils.parseDecimal(gramsText)
-            val subtitle = viewModel.subtitleForFoodSuggestion(foodId, gramsVal)
+            
+            var subtitle by remember(foodId, gramsVal) { mutableStateOf("") }
+            LaunchedEffect(foodId, gramsVal) {
+                subtitle = viewModel.subtitleForFoodSuggestion(foodId, gramsVal)
+            }
 
             IntakeListItem(
                 name = intake.item_name,
                 subtitle = subtitle,
                 keyId = keyId,
-                imageUrl = viewModel.imageUrlForFoodId(foodId),
+                imageUrl = ui.imageUrl,
                 initialValue = initialGrams,
                 addButtonDescription = "Add",
                 index = index,
@@ -289,7 +290,7 @@ fun LazyListScope.mealTimeSuggestionsSection(
                     viewModel.addSuggestion(intake, text, isLeftoverSection)
                 },
                 onLongPress = {
-                    viewModel.productUrlForFoodId(foodId)?.let { url ->
+                    ui.productUrl?.let { url ->
                         uriHandler.openUri(url)
                     }
                 },

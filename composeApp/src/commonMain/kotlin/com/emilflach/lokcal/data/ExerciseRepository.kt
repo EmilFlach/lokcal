@@ -1,5 +1,6 @@
 package com.emilflach.lokcal.data
 
+import app.cash.sqldelight.async.coroutines.awaitAsList
 import com.emilflach.lokcal.Database
 import com.emilflach.lokcal.Exercise
 import com.emilflach.lokcal.util.currentDateIso
@@ -17,21 +18,21 @@ class ExerciseRepository(private val db: Database) {
         }
     }
 
-    fun logExercise(type: Type, minutes: Double, timestamp: String, notes: String? = null) {
+    suspend fun logExercise(type: Type, minutes: Double, timestamp: String, notes: String? = null) {
         require(minutes >= 0.0) { "minutes must be >= 0" }
         val kcalPerMinute = type.kcalPerHour / 60.0
         val total = kcalPerMinute * minutes
         q.logExercise(timestamp = timestamp, exercise_type = type.dbName, duration_min = minutes, energy_kcal_total = total, notes = notes)
     }
 
-    fun updateExercise(id: Long, type: Type, minutes: Double, notes: String?) {
+    suspend fun updateExercise(id: Long, type: Type, minutes: Double, notes: String?) {
         require(minutes >= 0.0) { "minutes must be >= 0" }
         val kcalPerMinute = type.kcalPerHour / 60.0
         val total = kcalPerMinute * minutes
         q.updateExercise(exercise_type = type.dbName, duration_min = minutes, energy_kcal_total = total, notes = notes, id = id)
     }
 
-    fun logAutomaticSteps(steps: Int) {
+    suspend fun logAutomaticSteps(steps: Int) {
         val minutes = if(steps > 0) steps / 100.0 else 0.0
         val timestamp = currentDateIso() + "T12:00:00"
         val type = Type.AUTOMATIC_STEPS
@@ -43,14 +44,14 @@ class ExerciseRepository(private val db: Database) {
         }
     }
 
-    fun deleteById(id: Long) = q.deleteExerciseById(id)
+    suspend fun deleteById(id: Long) = q.deleteExerciseById(id)
 
-    fun getByDateRange(startIso: String, endIso: String): List<Exercise> =
-        q.selectExerciseByDateRange(startIso, endIso).executeAsList()
+    suspend fun getByDateRange(startIso: String, endIso: String): List<Exercise> =
+        q.selectExerciseByDateRange(startIso, endIso).awaitAsList()
 
-    fun sumKcalByDate(startIso: String, endIso: String): Double =
+    suspend fun sumKcalByDate(startIso: String, endIso: String): Double =
         getByDateRange(startIso, endIso).sumOf { it.energy_kcal_total }
 
-    fun getDailyBurned(startIso: String, endIso: String) =
-        q.statsDailyBurned(startIso, endIso).executeAsList()
+    suspend fun getDailyBurned(startIso: String, endIso: String) =
+        q.statsDailyBurned(startIso, endIso).awaitAsList()
 }

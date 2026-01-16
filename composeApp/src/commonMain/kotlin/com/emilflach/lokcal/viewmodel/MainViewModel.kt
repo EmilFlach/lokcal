@@ -100,16 +100,18 @@ class MainViewModel(
     }
 
     fun loadFor(date: LocalDate) {
-        val dayState = getDayStateFor(date)
-        val last7 = computeLast7Deltas(date)
-        _uiState.value = _uiState.value.copy(
-            selectedDate = date,
-            dayState = dayState,
-            last7Deltas = last7
-        )
+        viewModelScope.launch {
+            val dayState = getDayStateFor(date)
+            val last7 = computeLast7Deltas(date)
+            _uiState.value = _uiState.value.copy(
+                selectedDate = date,
+                dayState = dayState,
+                last7Deltas = last7
+            )
+        }
     }
 
-    fun getDayStateFor(date: LocalDate): DayState {
+    suspend fun getDayStateFor(date: LocalDate): DayState {
         val dateIso = date.toString()
         val startIso = "${dateIso}T00:00:00"
         val endIso = "${dateIso}T23:59:59"
@@ -132,7 +134,7 @@ class MainViewModel(
         val burned = exercises.sumOf { it.energy_kcal_total }
         val totalBudget = start + burned
         val left = totalBudget - eaten
-        val percentageLeft = (left / start).coerceIn(0.0, 1.0)
+        val percentageLeft = if (start > 0) (left / start).coerceIn(0.0, 1.0) else 0.0
 
         // Update Thursday weight prompt visibility
         val isThursday = date.dayOfWeek.name == "THURSDAY"
@@ -166,7 +168,7 @@ class MainViewModel(
         else -> Icons.Filled.Restaurant
     }
 
-    private fun computeLast7Deltas(today: LocalDate): List<DayDelta> {
+    private suspend fun computeLast7Deltas(today: LocalDate): List<DayDelta> {
         val startKcal = settingsRepo.getStartingKcal().coerceAtLeast(0.0)
         val mealTypes = listOf("BREAKFAST", "LUNCH", "DINNER", "SNACK")
         return (1..7).map { offset ->
