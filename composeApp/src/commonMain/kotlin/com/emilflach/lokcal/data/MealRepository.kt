@@ -1,5 +1,7 @@
 package com.emilflach.lokcal.data
 
+import app.cash.sqldelight.async.coroutines.awaitAsList
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import com.emilflach.lokcal.Database
 import com.emilflach.lokcal.Food
 
@@ -7,7 +9,7 @@ class MealRepository(database: Database) {
     private val mealQ = database.mealsQueries
 
     // Basic queries
-    fun getMealById(id: Long) = tryExecute { mealQ.mealSelectById(id).executeAsOne() }
+    suspend fun getMealById(id: Long) = try { mealQ.mealSelectById(id).awaitAsOne() } catch (_: Exception) { null }
 
     // Meal editing
     data class MealEditorItem(
@@ -16,8 +18,8 @@ class MealRepository(database: Database) {
         val quantityG: Double,
     )
 
-    fun getMealItemsWithFood(mealId: Long): List<MealEditorItem> {
-        return mealQ.mealItemsForMealFull(mealId).executeAsList().map { row ->
+    suspend fun getMealItemsWithFood(mealId: Long): List<MealEditorItem> {
+        return mealQ.mealItemsForMealFull(mealId).awaitAsList().map { row ->
             MealEditorItem(
                 mealItemId = row.meal_item_id,
                 food = Food(
@@ -50,16 +52,16 @@ class MealRepository(database: Database) {
         }
     }
 
-    fun updateMealMeta(id: Long, name: String, imageUrl: String?, totalPortions: Double) =
+    suspend fun updateMealMeta(id: Long, name: String, imageUrl: String?, totalPortions: Double) =
         mealQ.updateMealMeta(name, imageUrl, totalPortions, id)
 
-    fun updateMealItemQuantity(itemId: Long, grams: Double) {
+    suspend fun updateMealItemQuantity(itemId: Long, grams: Double) {
         require(grams >= 0.0) { "grams must be >= 0" }
         mealQ.updateMealItemQuantity(grams, itemId)
     }
 
-    fun deleteMeal(mealId: Long) = mealQ.deleteMealById(mealId)
-    fun deleteMealItem(itemId: Long) = mealQ.deleteMealItemById(itemId)
+    suspend fun deleteMeal(mealId: Long) = mealQ.deleteMealById(mealId)
+    suspend fun deleteMealItem(itemId: Long) = mealQ.deleteMealItemById(itemId)
 
     private fun <T> tryExecute(block: () -> T): T? = try { block() } catch (_: Exception) { null }
 }

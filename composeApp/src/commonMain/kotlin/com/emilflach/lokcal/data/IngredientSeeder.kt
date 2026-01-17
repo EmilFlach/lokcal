@@ -1,5 +1,6 @@
 package com.emilflach.lokcal.data
 
+import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import com.emilflach.lokcal.Database
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -16,9 +17,9 @@ object IngredientSeeder {
     // Optional platform override to supply JSON text (e.g., Android assets)
     var provideJsonText: (() -> String?)? = null
 
-    fun seedIfNeeded(database: Database) {
+    suspend fun seedIfNeeded(database: Database) {
         val metaQ = database.metaQueries
-        val already = metaQ.getMeta(META_KEY).executeAsOneOrNull()
+        val already = metaQ.getMeta(META_KEY).awaitAsOneOrNull()
         if (already != null) return
 
         val jsonText = provideJsonText?.invoke() ?: loadIngredientsJsonText() ?: return

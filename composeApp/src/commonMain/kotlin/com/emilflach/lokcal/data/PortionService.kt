@@ -11,10 +11,10 @@ class PortionService(private val intakeRepo: IntakeRepository? = null) {
     fun defaultPortionForFood(food: Food): Double =
         defaultPortion(food.serving_size)
 
-    fun defaultPortionForMeal(mealId: Long): Double =
+    suspend fun defaultPortionForMeal(mealId: Long): Double =
         intakeRepo?.getMealPortionGrams(mealId) ?: 100.0
 
-    fun defaultPortionForIntake(intake: Intake): Double = when {
+    suspend fun defaultPortionForIntake(intake: Intake): Double = when {
         intake.source_food_id != null -> {
             val food = intakeRepo?.getFoodById(intake.source_food_id)
             defaultPortion(food?.serving_size)

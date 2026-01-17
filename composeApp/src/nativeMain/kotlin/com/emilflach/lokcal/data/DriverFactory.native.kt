@@ -1,11 +1,13 @@
 package com.emilflach.lokcal.data
 
+import app.cash.sqldelight.async.coroutines.synchronous
+import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
+import app.cash.sqldelight.db.SqlSchema
 import app.cash.sqldelight.driver.native.NativeSqliteDriver
-import com.emilflach.lokcal.Database
 
 actual class SqlDriverFactory {
-    actual fun createDriver(): SqlDriver {
-        return NativeSqliteDriver(Database.Schema, "lokcal.db")
+    actual suspend fun createDriver(schema: SqlSchema<QueryResult.AsyncValue<Unit>>): SqlDriver {
+        return NativeSqliteDriver(schema.synchronous(), "lokcal.db")
     }
 }

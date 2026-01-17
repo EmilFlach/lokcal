@@ -1,10 +1,12 @@
 package com.emilflach.lokcal.data
 
+import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
+import app.cash.sqldelight.db.SqlSchema
 import com.emilflach.lokcal.Database
 
 expect class SqlDriverFactory {
-    fun createDriver(): SqlDriver
+    suspend fun createDriver(schema: SqlSchema<QueryResult.AsyncValue<Unit>>): SqlDriver
 
 }
 
@@ -165,8 +167,8 @@ private fun ensureIntakeSchemaUpgrades(driver: SqlDriver) {
     tryExec(driver, "ALTER TABLE Intake ADD COLUMN leftover INTEGER NOT NULL DEFAULT 0")
 }
 
-fun createDatabase(sqlDriverFactory: SqlDriverFactory): Database {
-    val driver = sqlDriverFactory.createDriver()
+suspend fun createDatabase(sqlDriverFactory: SqlDriverFactory): Database {
+    val driver = sqlDriverFactory.createDriver(schema = Database.Schema)
 
     // Ensure Meta table exists for older databases without migrations
     ensureMetaTable(driver)

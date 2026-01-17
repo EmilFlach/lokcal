@@ -1,13 +1,15 @@
 package com.emilflach.lokcal.data
 
+import app.cash.sqldelight.async.coroutines.synchronous
+import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
+import app.cash.sqldelight.db.SqlSchema
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
-import java.util.Properties
-import com.emilflach.lokcal.Database
+import java.util.*
 
 actual class SqlDriverFactory {
-    actual fun createDriver(): SqlDriver {
-        val driver: SqlDriver = JdbcSqliteDriver("jdbc:sqlite:lokcal.db", Properties(), Database.Schema)
+    actual suspend fun createDriver(schema: SqlSchema<QueryResult.AsyncValue<Unit>>): SqlDriver {
+        val driver: SqlDriver = JdbcSqliteDriver("jdbc:sqlite:lokcal.db", Properties(), schema.synchronous())
         return driver
     }
 }
