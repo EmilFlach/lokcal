@@ -6,6 +6,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import lokcal.composeapp.generated.resources.Res
+import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 /**
  * Seeds the Food table from bundled ingredients.json on first app launch.
@@ -17,14 +19,27 @@ object IngredientSeeder {
     // Optional platform override to supply JSON text (e.g., Android assets)
     var provideJsonText: (() -> String?)? = null
 
-    suspend fun seedIfNeeded(database: Database) {
+    @OptIn(ExperimentalResourceApi::class)
+    suspend fun seedIfNeeded(database: Database, onProgress: ((Float) -> Unit)? = null) {
         val metaQ = database.metaQueries
         val already = metaQ.getMeta(META_KEY).awaitAsOneOrNull()
         if (already != null) return
 
-        val jsonText = provideJsonText?.invoke() ?: loadIngredientsJsonText() ?: return
+        var jsonText = provideJsonText?.invoke()
+
+        if (jsonText == null) {
+            try {
+                onProgress?.invoke(0.1f)
+                jsonText = Res.readBytes("files/ingredients.json").decodeToString()
+            } catch (_: Exception) {
+                // Fallback or log
+            }
+        }
+
+        if (jsonText == null) return
 
         val json = try {
+            onProgress?.invoke(0.2f)
             Json.parseToJsonElement(jsonText)
         } catch (_: Throwable) {
             return
@@ -32,8 +47,12 @@ object IngredientSeeder {
         val arr = (json as? JsonArray) ?: return
 
         val foodQ = database.foodQueries
+        val total = arr.size
         foodQ.transaction {
-            for (el in arr) {
+            for ((index, el) in arr.withIndex()) {
+                if (index % 50 == 0) {
+                    onProgress?.invoke(0.2f + (index.toFloat() / total) * 0.8f)
+                }
                 val o = (el as? JsonObject) ?: continue
                 val name = o["name"]?.jsonPrimitive?.content?.trim()?.takeIf { it.isNotEmpty() } ?: continue
                 val desc = o["description"]?.jsonPrimitive?.content?.trim()?.takeIf { it.isNotEmpty() }
@@ -83,7 +102,7 @@ object IngredientSeeder {
                 )
 
                 // Insert aliases
-                val foodId = externalId?.let { eid -> foodQ.selectIdByExternalId(eid).executeAsOneOrNull() }
+                val foodId = externalId?.let { eid -> foodQ.selectIdByExternalId(eid).awaitAsOneOrNull() }
                 if (foodId != null) {
                     val aliases = (o["aliases"] as? JsonArray)
                     if (aliases != null) {
@@ -100,9 +119,3 @@ object IngredientSeeder {
         metaQ.setMeta(META_KEY, "1")
     }
 }
-
-/**
- * Platform-specific loader for ingredients.json. Should return the JSON text when available,
- * or null if not found on the current platform/build.
- */
-expect fun loadIngredientsJsonText(): String?

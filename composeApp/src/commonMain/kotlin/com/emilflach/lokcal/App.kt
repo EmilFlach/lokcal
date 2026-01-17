@@ -2,9 +2,12 @@ package com.emilflach.lokcal
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.data.*
 import com.emilflach.lokcal.theme.AppTheme
 import com.emilflach.lokcal.theme.LocalRecipesColors
@@ -40,10 +43,49 @@ private sealed class Screen {
 internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
     // Database and repositories
 
+    var seedingProgress by remember { mutableStateOf<Float?>(null) }
     val database by produceState<Database?>(null) {
-        value = createDatabase(sqlDriverFactory)
+        value = createDatabase(sqlDriverFactory, onProgress = { seedingProgress = it })
     }
-    if (database == null) return@AppTheme
+
+    val colors = LocalRecipesColors.current
+
+    if (database == null) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = colors.backgroundPage
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                val progress = seedingProgress
+                if (progress != null) {
+                    CircularProgressIndicator(
+                        progress = { progress },
+                        color = colors.backgroundBrand,
+                        trackColor = colors.backgroundBrand.copy(alpha = 0.2f)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Seeding data... ${(progress * 100).toInt()}%",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.foregroundDefault
+                    )
+                } else {
+                    CircularProgressIndicator(color = colors.backgroundBrand)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Initializing...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.foregroundDefault
+                    )
+                }
+            }
+        }
+        return@AppTheme
+    }
 
     val foodRepo = remember(database) { FoodRepository(database!!) }
     val intakeRepo = remember(database) { IntakeRepository(database!!) }
@@ -54,7 +96,6 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
 
     var screen by remember { mutableStateOf<Screen>(Screen.Main(currentDateIso())) }
     var refreshToggle by remember { mutableStateOf(false) }
-    val colors = LocalRecipesColors.current
 
     Surface(
         color = colors.backgroundPage,

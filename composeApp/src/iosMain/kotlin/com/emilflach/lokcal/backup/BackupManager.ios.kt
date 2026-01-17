@@ -23,7 +23,7 @@ actual suspend fun exportDatabaseToBackupDirectory(): Boolean {
 }
 
 actual fun allowNightlyBackup(): Boolean {
-    TODO("Not yet implemented")
+    return false
 }
 
 actual fun enableNightlyBackup(value: Boolean): Boolean {

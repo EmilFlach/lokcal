@@ -9,14 +9,6 @@ import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 
 actual class SqlDriverFactory(private val context: Context) {
     actual suspend fun createDriver(schema: SqlSchema<QueryResult.AsyncValue<Unit>>): SqlDriver {
-        // Provide Android asset-based JSON loader for initial seeding
-        IngredientSeeder.provideJsonText = {
-            try {
-                context.assets.open("ingredients.json").bufferedReader().use { it.readText() }
-            } catch (_: Throwable) {
-                null
-            }
-        }
         return AndroidSqliteDriver(schema.synchronous(), context, "lokcal.db")
     }
 }
