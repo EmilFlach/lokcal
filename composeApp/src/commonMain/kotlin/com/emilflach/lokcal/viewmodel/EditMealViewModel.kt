@@ -46,17 +46,19 @@ class EditMealViewModel(
     }
 
     fun reload() {
-        val meal = repo.getMealById(mealId)
-        val items = repo.getMealItemsWithFood(mealId).map {
-            ItemUi(it.mealItemId, it.food, it.quantityG)
+        scope.launch {
+            val meal = repo.getMealById(mealId)
+            val items = repo.getMealItemsWithFood(mealId).map {
+                ItemUi(it.mealItemId, it.food, it.quantityG)
+            }
+            _state.value = UiState(
+                meal = meal,
+                name = meal?.name ?: "",
+                imageUrl = meal?.image_url ?: "",
+                totalPortions = NumberUtils.formatPortions(meal?.total_portions ?: 1.0),
+                items = items,
+            )
         }
-        _state.value = UiState(
-            meal = meal,
-            name = meal?.name ?: "",
-            imageUrl = meal?.image_url ?: "",
-            totalPortions = NumberUtils.formatPortions(meal?.total_portions ?: 1.0),
-            items = items,
-        )
     }
 
     fun setName(value: String) {
@@ -79,26 +81,37 @@ class EditMealViewModel(
     }
 
     private fun persistMeta() {
-        val st = _state.value
-        val portions = NumberUtils.parseDecimal(st.totalPortions, min = 0.0).takeIf { it > 0.0 } ?: 1.0
-        val name = st.name.ifBlank { st.meal?.name ?: "Meal" }
-        val imageUrl = st.imageUrl.ifBlank { null }
+        scope.launch {
+            val st = _state.value
+            val portions = NumberUtils.parseDecimal(st.totalPortions, min = 0.0).takeIf { it > 0.0 } ?: 1.0
+            val name = st.name.ifBlank { st.meal?.name ?: "Meal" }
+            val imageUrl = st.imageUrl.ifBlank { null }
 
-        repo.updateMealMeta(mealId, name, imageUrl, portions)
-        reload()
+            repo.updateMealMeta(mealId, name, imageUrl, portions)
+            reload()
+        }
     }
 
     fun updateItemQuantity(itemId: Long, grams: Double) {
-        repo.updateMealItemQuantity(itemId, grams.coerceAtLeast(0.0))
-        reload()
+        scope.launch {
+            repo.updateMealItemQuantity(itemId, grams.coerceAtLeast(0.0))
+            reload()
+        }
     }
 
     fun deleteItem(itemId: Long) {
-        repo.deleteMealItem(itemId)
-        reload()
+        scope.launch {
+            repo.deleteMealItem(itemId)
+            reload()
+        }
     }
 
-    fun deleteMeal() = repo.deleteMeal(mealId)
+    fun deleteMeal(onDeleted: () -> Unit) {
+        scope.launch {
+            repo.deleteMeal(mealId)
+            onDeleted()
+        }
+    }
     fun defaultPortionGrams(food: Food) = portionService.defaultPortionForFood(food)
 
     fun subtitleForFood(food: Food, initialGrams: Double): String {

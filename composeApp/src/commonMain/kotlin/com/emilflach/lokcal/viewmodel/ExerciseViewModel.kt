@@ -1,11 +1,17 @@
 package com.emilflach.lokcal.viewmodel
 
 import com.emilflach.lokcal.data.ExerciseRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class ExerciseViewModel(private val repo: ExerciseRepository, private val dateIso: String) {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
     data class UiState(
         val type: ExerciseRepository.Type = ExerciseRepository.Type.WALKING,
         val minutesText: String = "30",
@@ -35,6 +41,8 @@ class ExerciseViewModel(private val repo: ExerciseRepository, private val dateIs
 
     fun save() {
         val minutes = parseMinutes(_state.value.minutesText)
-        repo.logExercise(_state.value.type, minutes, timestamp = timestampForDate(), notes = null)
+        scope.launch {
+            repo.logExercise(_state.value.type, minutes, timestamp = timestampForDate(), notes = null)
+        }
     }
 }

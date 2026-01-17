@@ -2,14 +2,20 @@ package com.emilflach.lokcal.viewmodel
 
 import com.emilflach.lokcal.WeightLog
 import com.emilflach.lokcal.data.WeightRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 /**
  * Platform-agnostic lightweight ViewModel managing Weight list and add/delete logic.
  */
 class WeightListViewModel(private val repo: WeightRepository) {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
     data class ChartState(
         val sorted: List<WeightLog> = emptyList(),
         val startIndex: Int = 0,
@@ -84,21 +90,27 @@ class WeightListViewModel(private val repo: WeightRepository) {
             _error.value = "Enter a valid weight in kg"
             return
         }
-        repo.setForToday(v)
-        _showAddDialog.value = false
-        _input.value = ""
-        _error.value = null
-        refresh(resetChartRange = true)
+        scope.launch {
+            repo.setForToday(v)
+            _showAddDialog.value = false
+            _input.value = ""
+            _error.value = null
+            refresh(resetChartRange = true)
+        }
     }
 
     fun deleteById(id: Long) {
-        repo.deleteById(id)
-        refresh()
+        scope.launch {
+            repo.deleteById(id)
+            refresh()
+        }
     }
 
     fun refresh(resetChartRange: Boolean = false) {
-        val list = repo.getAll()
-        _items.value = list
-        updateChartFor(list, resetRange = resetChartRange)
+        scope.launch {
+            val list = repo.getAll()
+            _items.value = list
+            updateChartFor(list, resetRange = resetChartRange)
+        }
     }
 }

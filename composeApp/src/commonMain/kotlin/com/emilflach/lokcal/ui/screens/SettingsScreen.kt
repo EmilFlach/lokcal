@@ -69,9 +69,12 @@ fun SettingsScreen(
             )
 
             // Starting kcal setting
-            var currentKcal by remember { mutableStateOf(settingsRepo.getStartingKcal()) }
+            var currentKcal by remember { mutableStateOf(0.0) }
+            LaunchedEffect(Unit) {
+                currentKcal = settingsRepo.getStartingKcal()
+            }
             var showKcalDialog by remember { mutableStateOf(false) }
-            var kcalInput by remember { mutableStateOf(currentKcal.toInt().toString()) }
+            var kcalInput by remember(currentKcal) { mutableStateOf(currentKcal.toInt().toString()) }
             ListItem(
                 headlineContent = { Text("Starting kcal") },
                 supportingContent = { Text("${currentKcal.toInt()} kcal") },
@@ -88,9 +91,11 @@ fun SettingsScreen(
                         TextButton(onClick = {
                             val v = kcalInput.trim().toDoubleOrNull()
                             if (v != null && v > 0) {
-                                settingsRepo.setStartingKcal(v)
-                                currentKcal = settingsRepo.getStartingKcal()
-                                showKcalDialog = false
+                                scope.launch {
+                                    settingsRepo.setStartingKcal(v)
+                                    currentKcal = settingsRepo.getStartingKcal()
+                                    showKcalDialog = false
+                                }
                             }
                         }) { Text("Save") }
                     },

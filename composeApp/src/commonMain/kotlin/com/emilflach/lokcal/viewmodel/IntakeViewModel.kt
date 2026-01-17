@@ -97,7 +97,7 @@ class IntakeViewModel(
         }
     }
 
-    private fun getDefaultFoods(mealType: String): Pair<List<Meal>, List<Food>> {
+    private suspend fun getDefaultFoods(mealType: String): Pair<List<Meal>, List<Food>> {
         val frequent = intakeRepo.getFrequentFoods(mealType, 20)
         val foods = if (frequent.size < 20) {
             val recentIds = frequent.map { it.id }.toSet()
@@ -112,10 +112,10 @@ class IntakeViewModel(
     }
 
     fun defaultPortionGrams(food: Food) = portionService.defaultPortionForFood(food)
-    fun defaultPortionGrams(meal: Meal) = portionService.defaultPortionForMeal(meal.id)
+    suspend fun defaultPortionGrams(meal: Meal) = portionService.defaultPortionForMeal(meal.id)
     fun parseGrams(text: String) = NumberUtils.parseDecimal(text)
 
-    fun subtitleForMeal(meal: Meal, initialPortions: String): String {
+    suspend fun subtitleForMeal(meal: Meal, initialPortions: String): String {
         val portionG = defaultPortionGrams(meal)
         val portions = parseGrams(initialPortions)
         val grams = (portionG * portions).coerceAtLeast(0.0)
@@ -128,20 +128,28 @@ class IntakeViewModel(
     }
 
     fun logPortion(foodId: Long, portionG: Double) {
-        intakeRepo.logOrUpdateFoodIntake(foodId, portionG, mealType(), dateIso, refreshId = true)
+        scope.launch {
+            intakeRepo.logOrUpdateFoodIntake(foodId, portionG, mealType(), dateIso, refreshId = true)
+        }
     }
 
     fun logMealPortion(mealId: Long, portionG: Double) {
-        intakeRepo.logOrUpdateMealIntake(mealId, portionG, mealType(), dateIso, refreshId = true)
+        scope.launch {
+            intakeRepo.logOrUpdateMealIntake(mealId, portionG, mealType(), dateIso, refreshId = true)
+        }
     }
 
     fun addMealByPortions(mealId: Long, portionsText: String, onSuccess: () -> Unit) {
-        val portionG = portionService.defaultPortionForMeal(mealId)
-        val portions = NumberUtils.parseDecimal(portionsText, min = 0.0)
-        val grams = (portionG * portions).coerceAtLeast(0.0)
-        if (grams > 0.0) {
-            logMealPortion(mealId, grams)
-            onSuccess()
+        scope.launch {
+            val portionG = portionService.defaultPortionForMeal(mealId)
+            val portions = NumberUtils.parseDecimal(portionsText, min = 0.0)
+            val grams = (portionG * portions).coerceAtLeast(0.0)
+            if (grams > 0.0) {
+                logMealPortion(mealId, grams)
+                withContext(Dispatchers.Main) {
+                    onSuccess()
+                }
+            }
         }
     }
 
@@ -150,28 +158,34 @@ class IntakeViewModel(
         if (grams <= 0.0) return
 
         val sourceItem = openFoodFactsResults[foodId] ?: albertHeijnResults[foodId]
-        if (foodId < 0 && sourceItem != null) {
-            try {
-                val newId = foodRepo.insertManual(
-                    name = sourceItem.name,
-                    brandName = null,
-                    energyKcalPer100g = sourceItem.energyKcalPer100g ?: 0.0,
-                    productUrl = sourceItem.productUrl,
-                    imageUrl = sourceItem.imageUrl,
-                    gtin13 = sourceItem.gtin13,
-                    servingSize = sourceItem.servingSize?.toString() ?: "100",
-                    englishName = null,
-                    dutchName = sourceItem.dutchName,
-                    source = if (albertHeijnResults.containsKey(foodId)) "ah" else "manual",
-                )
-                logPortion(newId, grams)
-                onSuccess()
-            } catch (e: Exception) {
-                e.printStackTrace()
+        scope.launch {
+            if (foodId < 0 && sourceItem != null) {
+                try {
+                    val newId = foodRepo.insertManual(
+                        name = sourceItem.name,
+                        brandName = null,
+                        energyKcalPer100g = sourceItem.energyKcalPer100g ?: 0.0,
+                        productUrl = sourceItem.productUrl,
+                        imageUrl = sourceItem.imageUrl,
+                        gtin13 = sourceItem.gtin13,
+                        servingSize = sourceItem.servingSize?.toString() ?: "100",
+                        englishName = null,
+                        dutchName = sourceItem.dutchName,
+                        source = if (albertHeijnResults.containsKey(foodId)) "ah" else "manual",
+                    )
+                    intakeRepo.logOrUpdateFoodIntake(newId, grams, mealType(), dateIso, refreshId = true)
+                    withContext(Dispatchers.Main) {
+                        onSuccess()
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            } else {
+                intakeRepo.logOrUpdateFoodIntake(foodId, grams, mealType(), dateIso, refreshId = true)
+                withContext(Dispatchers.Main) {
+                    onSuccess()
+                }
             }
-        } else {
-            logPortion(foodId, grams)
-            onSuccess()
         }
     }
 

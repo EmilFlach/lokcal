@@ -39,13 +39,18 @@ private sealed class Screen {
 @Composable
 internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
     // Database and repositories
-    val database = remember(sqlDriverFactory) { createDatabase(sqlDriverFactory) }
-    val foodRepo = remember(database) { FoodRepository(database) }
-    val intakeRepo = remember(database) { IntakeRepository(database) }
-    val mealRepo = remember(database) { MealRepository(database) }
-    val exerciseRepo = remember(database) { ExerciseRepository(database) }
-    val weightRepo = remember(database) { WeightRepository(database) }
-    val settingsRepo = remember(database) { SettingsRepository(database) }
+
+    val database by produceState<Database?>(null) {
+        value = createDatabase(sqlDriverFactory)
+    }
+    if (database == null) return@AppTheme
+
+    val foodRepo = remember(database) { FoodRepository(database!!) }
+    val intakeRepo = remember(database) { IntakeRepository(database!!) }
+    val mealRepo = remember(database) { MealRepository(database!!) }
+    val exerciseRepo = remember(database) { ExerciseRepository(database!!) }
+    val weightRepo = remember(database) { WeightRepository(database!!) }
+    val settingsRepo = remember(database) { SettingsRepository(database!!) }
 
     var screen by remember { mutableStateOf<Screen>(Screen.Main(currentDateIso())) }
     var refreshToggle by remember { mutableStateOf(false) }

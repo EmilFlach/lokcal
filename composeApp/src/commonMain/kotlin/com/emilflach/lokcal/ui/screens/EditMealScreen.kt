@@ -51,8 +51,7 @@ fun EditMealScreen(
                 },
                 actions = {
                     IconButton(onClick = {
-                        viewModel.deleteMeal()
-                        onDeleted()
+                        viewModel.deleteMeal(onDeleted)
                     }) {
                         Icon(Icons.Outlined.Delete, contentDescription = "Delete meal")
                     }

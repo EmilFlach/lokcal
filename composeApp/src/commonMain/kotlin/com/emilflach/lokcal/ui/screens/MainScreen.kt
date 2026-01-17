@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.ui.components.GradientBackground
 import com.emilflach.lokcal.ui.components.main.MainMealList
 import com.emilflach.lokcal.ui.components.main.MainSummary
+import com.emilflach.lokcal.viewmodel.DayState
 import com.emilflach.lokcal.viewmodel.MainViewModel
 
 @Composable
@@ -72,10 +73,14 @@ fun MainScreen(
                 modifier = Modifier.weight(1f)
             ) { page ->
                 val date = remember(page) { viewModel.getDateForPage(page) }
-                val dayState = if (date == uiState.selectedDate) {
-                    uiState.dayState
-                } else {
-                    remember(date) { viewModel.getDayStateFor(date) }
+                var dayState by remember(date) { mutableStateOf(DayState()) }
+                
+                LaunchedEffect(date, uiState.selectedDate, uiState.dayState) {
+                    dayState = if (date == uiState.selectedDate) {
+                        uiState.dayState
+                    } else {
+                        viewModel.getDayStateFor(date)
+                    }
                 }
 
                 MainMealList(

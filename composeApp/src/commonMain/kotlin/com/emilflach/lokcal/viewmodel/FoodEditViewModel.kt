@@ -121,7 +121,9 @@ class FoodEditViewModel(
     }
 
     fun loadMissingImages() {
-        _missingImages.value = intakeRepo.getItemsMissingImage().filter { it.source_type == "FOOD" }
+        scope.launch {
+            _missingImages.value = intakeRepo.getItemsMissingImage().filter { it.source_type == "FOOD" }
+        }
     }
 
     fun reloadFoods() {
@@ -138,27 +140,29 @@ class FoodEditViewModel(
     }
 
     fun startEditing(foodId: Long?) {
-        if (foodId == null) {
-            _edit.value = EditState(id = null, isEdit = false, energyText = "0", source = "manual")
-        } else {
-            val f = repo.getById(foodId)
-            if (f != null) {
-                _edit.value = EditState(
-                    id = f.id,
-                    isEdit = true,
-                    name = f.name,
-                    energyText = (f.energy_kcal_per_100g).roundToInt().toString(),
-                    servingSize = f.serving_size ?: "",
-                    brandName = f.brand_name ?: "",
-                    englishName = f.english_name ?: "",
-                    dutchName = f.dutch_name ?: "",
-                    productUrl = f.product_url ?: "",
-                    imageUrl = f.image_url ?: "",
-                    gtin13 = f.gtin13 ?: "",
-                    source = f.source ?: ""
-                )
+        scope.launch {
+            if (foodId == null) {
+                _edit.value = EditState(id = null, isEdit = false, energyText = "0", source = "manual")
             } else {
-                _edit.value = EditState()
+                val f = repo.getById(foodId)
+                if (f != null) {
+                    _edit.value = EditState(
+                        id = f.id,
+                        isEdit = true,
+                        name = f.name,
+                        energyText = (f.energy_kcal_per_100g).roundToInt().toString(),
+                        servingSize = f.serving_size ?: "",
+                        brandName = f.brand_name ?: "",
+                        englishName = f.english_name ?: "",
+                        dutchName = f.dutch_name ?: "",
+                        productUrl = f.product_url ?: "",
+                        imageUrl = f.image_url ?: "",
+                        gtin13 = f.gtin13 ?: "",
+                        source = f.source ?: ""
+                    )
+                } else {
+                    _edit.value = EditState()
+                }
             }
         }
     }
@@ -236,48 +240,52 @@ class FoodEditViewModel(
         _edit.value = _edit.value.copy(imageUrl = item.imageUrl ?: "", showStealDialog = false)
     }
 
-    fun save(): Long? {
+    fun save(onSaved: () -> Unit) {
         val s = _edit.value
         val name = s.name.trim()
-        if (name.isBlank()) return null
+        if (name.isBlank()) return
         val energy = s.energyText.trim().replace(',', '.').toDoubleOrNull() ?: 0.0
-        val resultId: Long = if (s.isEdit && s.id != null) {
-            repo.updateDetails(
-                id = s.id,
-                name = name,
-                brandName = s.brandName.trim().ifBlank { null },
-                energyKcalPer100g = energy,
-                productUrl = s.productUrl.trim().ifBlank { null },
-                imageUrl = s.imageUrl.trim().ifBlank { null },
-                gtin13 = s.gtin13.trim().ifBlank { null },
-                servingSize = s.servingSize.trim().ifBlank { null },
-                englishName = s.englishName.trim().ifBlank { null },
-                dutchName = s.dutchName.trim().ifBlank { null },
-                source = s.source.trim().ifBlank { null },
-            )
-            s.id
-        } else {
-            repo.insertManual(
-                name = name,
-                brandName = s.brandName.trim().ifBlank { null },
-                energyKcalPer100g = energy,
-                productUrl = s.productUrl.trim().ifBlank { null },
-                imageUrl = s.imageUrl.trim().ifBlank { null },
-                gtin13 = s.gtin13.trim().ifBlank { null },
-                servingSize = s.servingSize.trim().ifBlank { null },
-                englishName = s.englishName.trim().ifBlank { null },
-                dutchName = s.dutchName.trim().ifBlank { null },
-                source = s.source.trim().ifBlank { "manual" }
-            )
+        scope.launch {
+            if (s.isEdit && s.id != null) {
+                repo.updateDetails(
+                    id = s.id,
+                    name = name,
+                    brandName = s.brandName.trim().ifBlank { null },
+                    energyKcalPer100g = energy,
+                    productUrl = s.productUrl.trim().ifBlank { null },
+                    imageUrl = s.imageUrl.trim().ifBlank { null },
+                    gtin13 = s.gtin13.trim().ifBlank { null },
+                    servingSize = s.servingSize.trim().ifBlank { null },
+                    englishName = s.englishName.trim().ifBlank { null },
+                    dutchName = s.dutchName.trim().ifBlank { null },
+                    source = s.source.trim().ifBlank { null },
+                )
+            } else {
+                repo.insertManual(
+                    name = name,
+                    brandName = s.brandName.trim().ifBlank { null },
+                    energyKcalPer100g = energy,
+                    productUrl = s.productUrl.trim().ifBlank { null },
+                    imageUrl = s.imageUrl.trim().ifBlank { null },
+                    gtin13 = s.gtin13.trim().ifBlank { null },
+                    servingSize = s.servingSize.trim().ifBlank { null },
+                    englishName = s.englishName.trim().ifBlank { null },
+                    dutchName = s.dutchName.trim().ifBlank { null },
+                    source = s.source.trim().ifBlank { "manual" }
+                )
+            }
+            // refresh list after save
+            reloadFoods()
+            onSaved()
         }
-        // refresh list after save
-        reloadFoods()
-        return resultId
     }
 
-    fun delete() {
+    fun delete(onDeleted: () -> Unit) {
         val id = _edit.value.id ?: return
-        repo.delete(id)
-        reloadFoods()
+        scope.launch {
+            repo.delete(id)
+            reloadFoods()
+            onDeleted()
+        }
     }
 }

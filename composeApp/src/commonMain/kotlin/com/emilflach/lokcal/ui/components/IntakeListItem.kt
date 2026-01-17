@@ -84,9 +84,14 @@ fun MealIntakeListItem(
     val initialPortions = state.gramsById[keyId] ?: "1"
     val haptic = LocalHapticFeedback.current
 
+    var subtitle by remember(meal.id, initialPortions) { mutableStateOf("") }
+    LaunchedEffect(meal.id, initialPortions) {
+        subtitle = viewModel.subtitleForMeal(meal, initialPortions)
+    }
+
     IntakeListItem(
         name = meal.name,
-        subtitle = viewModel.subtitleForMeal(meal, initialPortions),
+        subtitle = subtitle,
         imageUrl = meal.image_url,
         keyId = keyId,
         initialValue = initialPortions,
