@@ -8,15 +8,18 @@ import org.w3c.dom.Worker
 
 @OptIn(ExperimentalWasmJsInterop::class)
 fun initializeWorker(): String = js(""" "./sqljs.worker.js" """)
+
+object WorkerInstance {
+    var worker: Worker? = null
+}
+
 actual class SqlDriverFactory {
     actual suspend fun createDriver(
         schema: SqlSchema<QueryResult.AsyncValue<Unit>>
     ): SqlDriver {
-        return WebWorkerDriver(
-            Worker(
-                initializeWorker()
-            )
-        ).also { schema.create(it).await() }
+        val worker = Worker(initializeWorker())
+        WorkerInstance.worker = worker
+        return WebWorkerDriver(worker).also { schema.create(it).await() }
     }
 }
 
