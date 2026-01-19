@@ -167,7 +167,7 @@ private fun ensureIntakeSchemaUpgrades(driver: SqlDriver) {
     tryExec(driver, "ALTER TABLE Intake ADD COLUMN leftover INTEGER NOT NULL DEFAULT 0")
 }
 
-suspend fun createDatabase(sqlDriverFactory: SqlDriverFactory): Database {
+suspend fun createDatabase(sqlDriverFactory: SqlDriverFactory, onProgress: ((Float) -> Unit)? = null): Database {
     val driver = sqlDriverFactory.createDriver(schema = Database.Schema)
 
     // Ensure Meta table exists for older databases without migrations
@@ -185,7 +185,7 @@ suspend fun createDatabase(sqlDriverFactory: SqlDriverFactory): Database {
 
     val database = Database(driver)
     // Seed initial data on first launch
-    IngredientSeeder.seedIfNeeded(database)
+    IngredientSeeder.seedIfNeeded(database, onProgress)
     return database
 }
 

@@ -4,8 +4,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.DownloadDone
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
@@ -121,13 +124,30 @@ fun SettingsScreen(
             LaunchedEffect(exportResult) {
                 exportText = when (exportResult) {
                     null -> "Export database"
-                    true -> "✅ Database export successful"
-                    false -> "❌ Database export failed"
+                    true -> "Database export successful"
+                    false -> "Database export failed"
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
             ListItem(
-                headlineContent = { Text(exportText) },
+                headlineContent = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        when (exportResult) {
+                            true -> {
+                                Icon(Icons.Default.DownloadDone, tint = colors.foregroundSuccess, contentDescription = "Export successful")
+                                Spacer(modifier = Modifier.width(8.dp))
+                            }
+
+                            false -> {
+                                Icon(Icons.Default.Error, tint = colors.foregroundDanger, contentDescription = "Export failed")
+                                Spacer(modifier = Modifier.width(8.dp))
+                            }
+
+                            else -> {}
+                        }
+                        Text(exportText)
+                    }
+                },
                 modifier = Modifier.clickable {
                     scope.launch {
                         exportResult = null
@@ -141,12 +161,27 @@ fun SettingsScreen(
             LaunchedEffect(importResult) {
                 importText = when (importResult) {
                     null -> "Import database"
-                    true -> "✅ Database import successful"
-                    false -> "❌ Database import failed"
+                    true -> "Database import successful"
+                    false -> "Database import failed"
                 }
             }
             ListItem(
-                headlineContent = { Text(importText) },
+                headlineContent = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        when (importResult) {
+                            true -> {
+                                Icon(Icons.Default.DownloadDone, tint = colors.foregroundSuccess, contentDescription = "Import successful")
+                                Spacer(modifier = Modifier.width(8.dp))
+                            }
+                            false -> {
+                                Icon(Icons.Default.Error, tint = colors.foregroundDanger, contentDescription = "Import failed")
+                                Spacer(modifier = Modifier.width(8.dp))
+                            }
+                            else -> {}
+                        }
+                        Text(importText)
+                    }
+                },
                 modifier = Modifier.clickable {
                     scope.launch {
                         importResult = null
