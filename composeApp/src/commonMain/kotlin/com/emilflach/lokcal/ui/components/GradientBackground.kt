@@ -20,7 +20,7 @@ fun GradientBackground(percentageLeft: Float) {
     val colors = LocalRecipesColors.current
     val isDarkTheme = isSystemInDarkTheme()
 
-    val targetMiddleColor = if (percentageLeft > 0)
+    val targetMiddleColor = if (percentageLeft >= 0)
         colors.backgroundSurface2
     else
         if (isDarkTheme) colors.backgroundDangerSubtle else colors.backgroundDanger.copy(alpha = 0.3f)

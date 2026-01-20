@@ -43,6 +43,10 @@ fun MainSummaryKcal(
         targetValue = state.startingKcal.toFloat(),
         animationSpec = tween(durationMillis = 180)
     )
+    val animatedLeft by animateFloatAsState(
+        targetValue = state.leftKcal.toFloat(),
+        animationSpec = tween(durationMillis = 180)
+    )
 
     Row(modifier = modifier.height(IntrinsicSize.Min)) {
         Surface(
@@ -62,7 +66,7 @@ fun MainSummaryKcal(
                     modifier = Modifier.fillMaxWidth()
                 )
                 Text(
-                    text = if (state.leftKcal > 0) "${state.leftKcal.roundToInt()}" else "${state.leftKcal.roundToInt() * -1}",
+                    text = if (animatedLeft > 0) "${animatedLeft.roundToInt()}" else "${animatedLeft.roundToInt() * -1}",
                     style = MaterialTheme.typography.displayLarge,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Left,
@@ -145,7 +149,7 @@ fun MainSummaryKcal(
                     )
                     Spacer(Modifier.weight(1f))
                     Text(
-                        text = state.burnedKcal.roundToInt().toString(),
+                        text = animatedBurned.roundToInt().toString(),
                         style = MaterialTheme.typography.titleLarge,
                         color = colors.foregroundSupport
                     )
@@ -176,7 +180,7 @@ fun MainSummaryKcal(
                     )
                     Spacer(Modifier.weight(1f))
                     Text(
-                        text = state.eatenKcal.roundToInt().toString(),
+                        text = animatedEaten.roundToInt().toString(),
                         style = MaterialTheme.typography.titleLarge,
                         color = colors.foregroundSupport
                     )

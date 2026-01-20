@@ -134,7 +134,7 @@ class MainViewModel(
         val burned = exercises.sumOf { it.energy_kcal_total }
         val totalBudget = start + burned
         val left = totalBudget - eaten
-        val percentageLeft = if (start > 0) (left / start).coerceIn(0.0, 1.0) else 0.0
+        val percentageLeft = if (start > 0) (left / start) else if (left < 0) -1.0 else 0.0
 
         // Update Thursday weight prompt visibility
         val isThursday = date.dayOfWeek.name == "THURSDAY"

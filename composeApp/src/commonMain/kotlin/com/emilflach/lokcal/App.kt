@@ -97,6 +97,10 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
     var screen by remember { mutableStateOf<Screen>(Screen.Main(currentDateIso())) }
     var refreshToggle by remember { mutableStateOf(false) }
 
+    val mainViewModel = remember(intakeRepo, exerciseRepo, weightRepo, settingsRepo) {
+        MainViewModel(intakeRepo, exerciseRepo, weightRepo, settingsRepo, currentDateIso())
+    }
+
     Surface(
         color = colors.backgroundPage,
         contentColor = colors.foregroundDefault
@@ -138,10 +142,12 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
         ) { s ->
             when (s) {
                 is Screen.Main -> {
-                    // Recreate VM when refreshToggle changes
-                    val vm = remember(intakeRepo, exerciseRepo, weightRepo, settingsRepo, s.dateIso, refreshToggle) { MainViewModel(intakeRepo, exerciseRepo, weightRepo, settingsRepo, s.dateIso) }
+                    // Update VM date when entering Main screen
+                    LaunchedEffect(s.dateIso, refreshToggle) {
+                        mainViewModel.loadFor(kotlinx.datetime.LocalDate.parse(s.dateIso))
+                    }
                     MainScreen(
-                        viewModel = vm,
+                        viewModel = mainViewModel,
                         onOpenMeal = { meal, dateIso -> screen = Screen.MealTime(meal, dateIso) },
                         onOpenExercise = { dateIso -> screen = Screen.ExerciseList(dateIso) },
                         onOpenSettings = { screen = Screen.Settings },
