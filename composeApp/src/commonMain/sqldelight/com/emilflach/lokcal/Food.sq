@@ -26,6 +26,8 @@ CREATE TABLE Food (
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE INDEX IF NOT EXISTS food_external_id_idx ON Food(external_id);
+
 CREATE TABLE FoodAlias (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     food_id INTEGER NOT NULL REFERENCES Food(id) ON DELETE CASCADE,
@@ -49,6 +51,9 @@ INSERT INTO Food(
 -- Resolve row id after seed via external id
 selectIdByExternalId:
 SELECT id FROM Food WHERE external_id = ?;
+
+selectAllExternalIds:
+SELECT external_id FROM Food WHERE external_id IS NOT NULL;
 
 -- Aliases
 foodAliasInsert:

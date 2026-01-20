@@ -1,7 +1,10 @@
 package com.emilflach.lokcal.data
 
+import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import com.emilflach.lokcal.Database
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -20,10 +23,10 @@ object IngredientSeeder {
     var provideJsonText: (() -> String?)? = null
 
     @OptIn(ExperimentalResourceApi::class)
-    suspend fun seedIfNeeded(database: Database, onProgress: ((Float) -> Unit)? = null) {
+    suspend fun seedIfNeeded(database: Database, onProgress: ((Float) -> Unit)? = null) = withContext(Dispatchers.Default) {
         val metaQ = database.metaQueries
         val already = metaQ.getMeta(META_KEY).awaitAsOneOrNull()
-        if (already != null) return
+        if (already != null) return@withContext
 
         var jsonText = provideJsonText?.invoke()
 
@@ -36,81 +39,92 @@ object IngredientSeeder {
             }
         }
 
-        if (jsonText == null) return
+        if (jsonText == null) return@withContext
 
         val json = try {
             onProgress?.invoke(0.2f)
             Json.parseToJsonElement(jsonText)
         } catch (_: Throwable) {
-            return
+            return@withContext
         }
-        val arr = (json as? JsonArray) ?: return
+        val arr = (json as? JsonArray) ?: return@withContext
 
         val foodQ = database.foodQueries
+        val existingExternalIds = foodQ.selectAllExternalIds().awaitAsList().toSet()
+
         val total = arr.size
-        foodQ.transaction {
-            for ((index, el) in arr.withIndex()) {
-                if (index % 50 == 0) {
-                    onProgress?.invoke(0.2f + (index.toFloat() / total) * 0.8f)
-                }
-                val o = (el as? JsonObject) ?: continue
-                val name = o["name"]?.jsonPrimitive?.content?.trim()?.takeIf { it.isNotEmpty() } ?: continue
-                val desc = o["description"]?.jsonPrimitive?.content?.trim()?.takeIf { it.isNotEmpty() }
 
-                val extras = o["extras"] as? JsonObject
-                val kcalStr = extras?.get("kcal")?.jsonPrimitive?.content
-                val kcal = kcalStr?.toDoubleOrNull()
+        for ((index, el) in arr.withIndex()) {
+            if (index % 50 == 0) {
+                onProgress?.invoke(0.2f + (index.toFloat() / total) * 0.8f)
+            }
+            val o = (el as? JsonObject) ?: continue
+            val externalId = o["id"]?.jsonPrimitive?.content
+            
+            // Skip if already exists
+            if (externalId != null && existingExternalIds.contains(externalId)) {
+                continue
+            }
 
-                val englishName = extras?.get("englishName")?.jsonPrimitive?.content
-                val dutchName = extras?.get("dutchName")?.jsonPrimitive?.content
-                val brandName = extras?.get("brandName")?.jsonPrimitive?.content
-                val servingSize = extras?.get("servingSize")?.jsonPrimitive?.content
-                val gtin13 = extras?.get("gtin13")?.jsonPrimitive?.content
-                val imageUrl = extras?.get("imageUrl")?.jsonPrimitive?.content
-                val productUrl = extras?.get("productUrl")?.jsonPrimitive?.content
-                val source = extras?.get("source")?.jsonPrimitive?.content
+            val name = o["name"]?.jsonPrimitive?.content?.trim()?.takeIf { it.isNotEmpty() } ?: continue
+            val desc = o["description"]?.jsonPrimitive?.content?.trim()?.takeIf { it.isNotEmpty() }
 
-                val rawJson = o.toString()
-                val externalId = o["id"]?.jsonPrimitive?.content
-                val pluralName = o["pluralName"]?.jsonPrimitive?.content
-                val labelId = o["labelId"]?.jsonPrimitive?.content
-                val createdAtSrc = o["createdAt"]?.jsonPrimitive?.content
-                val updatedAtSrc = o["updatedAt"]?.jsonPrimitive?.content
-                val onHand = o["onHand"]?.jsonPrimitive?.content?.lowercase() == "true"
+            val extras = o["extras"] as? JsonObject
+            val kcalStr = extras?.get("kcal")?.jsonPrimitive?.content
+            val kcal = kcalStr?.toDoubleOrNull()
 
-                // Insert structured fields
-                val energy = kcal ?: 0.0
-                foodQ.insertFromSeed(
-                    name = name,
-                    description = desc,
-                    energy_kcal_per_100g = energy,
-                    raw_json = rawJson,
-                    external_id = externalId,
-                    plural_name = pluralName,
-                    label_id = labelId,
-                    created_at_source = createdAtSrc,
-                    updated_at_source = updatedAtSrc,
-                    on_hand = if (onHand) 1 else 0,
-                    english_name = englishName,
-                    dutch_name = dutchName,
-                    brand_name = brandName,
-                    serving_size = servingSize,
-                    gtin13 = gtin13,
-                    image_url = imageUrl,
-                    product_url = productUrl,
-                    source = source
-                )
+            val englishName = extras?.get("englishName")?.jsonPrimitive?.content
+            val dutchName = extras?.get("dutchName")?.jsonPrimitive?.content
+            val brandName = extras?.get("brandName")?.jsonPrimitive?.content
+            val servingSize = extras?.get("servingSize")?.jsonPrimitive?.content
+            val gtin13 = extras?.get("gtin13")?.jsonPrimitive?.content
+            val imageUrl = extras?.get("imageUrl")?.jsonPrimitive?.content
+            val productUrl = extras?.get("productUrl")?.jsonPrimitive?.content
+            val source = extras?.get("source")?.jsonPrimitive?.content
 
-                // Insert aliases
-                val foodId = externalId?.let { eid -> foodQ.selectIdByExternalId(eid).awaitAsOneOrNull() }
-                if (foodId != null) {
-                    val aliases = (o["aliases"] as? JsonArray)
-                    if (aliases != null) {
-                        for (al in aliases) {
-                            val alias = (al as? kotlinx.serialization.json.JsonPrimitive)?.content?.trim()
-                            if (!alias.isNullOrEmpty()) {
-                                database.foodQueries.foodAliasInsert(food_id = foodId, alias = alias)
-                            }
+            val rawJson = o.toString()
+            val pluralName = o["pluralName"]?.jsonPrimitive?.content
+            val labelId = o["labelId"]?.jsonPrimitive?.content
+            val createdAtSrc = o["createdAt"]?.jsonPrimitive?.content
+            val updatedAtSrc = o["updatedAt"]?.jsonPrimitive?.content
+            val onHand = o["onHand"]?.jsonPrimitive?.content?.lowercase() == "true"
+
+            // Insert structured fields
+            val energy = kcal ?: 0.0
+
+            foodQ.insertFromSeed(
+                name = name,
+                description = desc,
+                energy_kcal_per_100g = energy,
+                raw_json = rawJson,
+                external_id = externalId,
+                plural_name = pluralName,
+                label_id = labelId,
+                created_at_source = createdAtSrc,
+                updated_at_source = updatedAtSrc,
+                on_hand = if (onHand) 1 else 0,
+                english_name = englishName,
+                dutch_name = dutchName,
+                brand_name = brandName,
+                serving_size = servingSize,
+                gtin13 = gtin13,
+                image_url = imageUrl,
+                product_url = productUrl,
+                source = source
+            )
+
+            // Insert aliases
+            val currentFoodId = if (externalId != null) {
+                foodQ.selectIdByExternalId(externalId).awaitAsOneOrNull()
+            } else null
+
+            if (currentFoodId != null) {
+                val aliases = (o["aliases"] as? JsonArray)
+                if (aliases != null) {
+                    for (al in aliases) {
+                        val alias = (al as? kotlinx.serialization.json.JsonPrimitive)?.content?.trim()
+                        if (!alias.isNullOrEmpty()) {
+                            foodQ.foodAliasInsert(food_id = currentFoodId, alias = alias)
                         }
                     }
                 }

@@ -14,13 +14,29 @@ object WorkerInstance {
 }
 
 actual class SqlDriverFactory {
-    actual suspend fun createDriver(
-        schema: SqlSchema<QueryResult.AsyncValue<Unit>>
-    ): SqlDriver {
+    actual suspend fun createDriver(schema: SqlSchema<QueryResult.AsyncValue<Unit>>): SqlDriver {
         val worker = Worker(initializeWorker())
         WorkerInstance.worker = worker
-        return WebWorkerDriver(worker).also { schema.create(it).await() }
+        val driver = WebWorkerDriver(worker)
+        if (!isMetaTablePresent(driver)) {
+            schema.create(driver).await()
+        }
+        return driver
+    }
+
+    private suspend fun isMetaTablePresent(driver: SqlDriver): Boolean {
+        val result = driver.executeQuery(
+            null,
+            "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='Meta'",
+            mapper = { cursor ->
+                val hasNext = cursor.next()
+                QueryResult.AsyncValue {
+                    if (hasNext.await()) cursor.getLong(0) else 0L
+                }
+            },
+            parameters = 0
+        ).await()
+        return result != 0L
     }
 }
-
 
