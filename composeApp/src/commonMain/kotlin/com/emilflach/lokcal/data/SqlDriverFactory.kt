@@ -27,6 +27,14 @@ private fun tryExec(driver: SqlDriver, sql: String) {
 }
 
 private fun ensureFoodSchemaUpgrades(driver: SqlDriver) {
+    // Check if the first new column exists. If it does, we assume all are already added.
+    try {
+        driver.execute(null, "SELECT brand FROM Food LIMIT 0", 0)
+        return // Column exists, skip upgrades
+    } catch (_: Throwable) {
+        // Column doesn't exist, proceed with upgrades
+    }
+
     // Add newly introduced columns to existing Food table (best-effort, safe if already present)
     tryExec(driver, "ALTER TABLE Food ADD COLUMN brand TEXT")
     tryExec(driver, "ALTER TABLE Food ADD COLUMN category TEXT")
@@ -78,9 +86,14 @@ private fun ensureMealSchemaUpgrades(driver: SqlDriver) {
         """.trimIndent()
     )
 
-    // Add the new columns if the table already existed without them
-    tryExec(driver, "ALTER TABLE Meal ADD COLUMN total_portions REAL NOT NULL DEFAULT 1.0")
-    tryExec(driver, "ALTER TABLE Meal ADD COLUMN image_url TEXT")
+    // Check if the new columns exist.
+    try {
+        driver.execute(null, "SELECT total_portions FROM Meal LIMIT 0", 0)
+    } catch (_: Throwable) {
+        // Add the new columns if the table already existed without them
+        tryExec(driver, "ALTER TABLE Meal ADD COLUMN total_portions REAL NOT NULL DEFAULT 1.0")
+        tryExec(driver, "ALTER TABLE Meal ADD COLUMN image_url TEXT")
+    }
 
     // Ensure MealItem table exists
     tryExec(
@@ -112,7 +125,7 @@ private fun ensureExerciseSchemaUpgrades(driver: SqlDriver) {
             "DELETE FROM Exercise WHERE timestamp = '2000-01-01' AND exercise_type = 'AUTOMATIC_STEPS' AND duration_min = 0",
             0
         )
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         // Constraint error or table doesn't exist, need to create or update the table
 
         // Create a new table with the correct constraint
@@ -164,7 +177,11 @@ private fun ensureWeightSchemaUpgrades(driver: SqlDriver) {
 }
 
 private fun ensureIntakeSchemaUpgrades(driver: SqlDriver) {
-    tryExec(driver, "ALTER TABLE Intake ADD COLUMN leftover INTEGER NOT NULL DEFAULT 0")
+    try {
+        driver.execute(null, "SELECT leftover FROM Intake LIMIT 0", 0)
+    } catch (_: Throwable) {
+        tryExec(driver, "ALTER TABLE Intake ADD COLUMN leftover INTEGER NOT NULL DEFAULT 0")
+    }
 }
 
 suspend fun createDatabase(sqlDriverFactory: SqlDriverFactory, onProgress: ((Float) -> Unit)? = null): Database {
