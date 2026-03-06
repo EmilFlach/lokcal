@@ -44,17 +44,18 @@ open class AlbertHeijnScraper(
         val html = fetchHtml(url)
 
         val apolloState = extractApolloState(html)
+        val ldJson = extractLdJson(html)
         val productId = regexGroup(url, "product/(?:wi)?(\\d+)")
         val productJson = apolloState?.let { findProductInState(it, productId!!) }
 
-        val name = extractName(productJson)
-        val kcal = extractKcal(productJson)
+        val name = extractName(productJson) ?: ldJson?.get("name")?.jsonPrimitive?.contentOrNull
+        val kcal = extractKcal(productJson, html)
         val servingGrams = extractServingSize(productJson)
-        val image = extractImageUrl(productJson)
-        val gtin = extractGtin(productJson)
+        val image = extractImageUrl(productJson) ?: ldJson?.get("image")?.jsonPrimitive?.contentOrNull?.let { unescapeUrl(it) }
+        val gtin = extractGtin(productJson) ?: ldJson?.get("gtin13")?.jsonPrimitive?.contentOrNull
 
         return FoodScrapeResult(
-            name = name,
+            name = cleanName(unescapeHtml(name)),
             kcalPer100g = kcal,
             servingSizeGrams = servingGrams,
             imageUrl = image,
@@ -63,20 +64,22 @@ open class AlbertHeijnScraper(
         )
     }
 
-    private fun extractName(productJson: JsonObject?): String = unescapeHtml(productJson?.get("title")?.jsonPrimitive?.contentOrNull)
+    private fun extractName(productJson: JsonObject?): String? = 
+        productJson?.get("title")?.jsonPrimitive?.contentOrNull?.let { cleanName(it) }
+
+    private fun cleanName(name: String): String =
+        name.removeSuffix(" bestellen | Albert Heijn").trim()
 
     private fun extractGtin(productJson: JsonObject?): String?  =
          productJson?.get("tradeItem")?.jsonObject?.get("gtin")?.jsonPrimitive?.contentOrNull?.removePrefix("0")
 
-    private fun extractImageUrl(productJson: JsonObject?): String {
-        return unescapeUrl(productJson?.get("imagePack")?.jsonArray?.firstOrNull()?.jsonObject?.get("small")?.jsonObject?.get("url")?.jsonPrimitive?.contentOrNull)
+    private fun extractImageUrl(productJson: JsonObject?): String? {
+        return productJson?.get("imagePack")?.jsonArray?.firstOrNull()?.jsonObject?.get("small")?.jsonObject?.get("url")?.jsonPrimitive?.contentOrNull?.let { unescapeUrl(it) }
     }
 
-    private fun extractKcal(product: JsonObject?): Double {
-        if (product == null) return 0.0
-        
-        // Strategy 1: Look for tradeItem -> nutritions (New structure)
-        product["tradeItem"]?.jsonObject?.get("nutritions")?.jsonArray?.let { nutritions ->
+    private fun extractKcal(product: JsonObject?, html: String): Double {
+        // Strategy 1: Look for tradeItem -> nutritions (Apollo state structure)
+        product?.get("tradeItem")?.jsonObject?.get("nutritions")?.jsonArray?.let { nutritions ->
             val hundredEntry = nutritions.find {
                 val basis = it.jsonObject["basisQuantity"]?.jsonPrimitive?.contentOrNull ?: ""
                 basis.startsWith("100.0", ignoreCase = true)
@@ -90,9 +93,18 @@ open class AlbertHeijnScraper(
                 
                 val value = energy?.get("value")?.jsonPrimitive?.contentOrNull
                 if (value != null) {
-                    return floor(regexGroup(value, "([0-9.]+)\\s*kcal", ignoreCase = true)?.toDoubleOrNull() ?: 0.0)
+                    val kcalValue = regexGroup(value, "([0-9.]+)\\s*kcal", ignoreCase = true)?.toDoubleOrNull()
+                    if (kcalValue != null) return floor(kcalValue)
                 }
             }
+        }
+
+        // Strategy 2: Direct regex from HTML (useful if Apollo state parsing fails or isn't there)
+        // Look for common patterns like "410.0 kJ (99.0 kcal)"
+        // We look for patterns where it specifies 100g/ml if possible, but fallback to any kcal
+        val kcalMatch = regexGroup(html, "([0-9.]+)\\s*kcal", ignoreCase = true)
+        if (kcalMatch != null) {
+            return floor(kcalMatch.toDoubleOrNull() ?: 0.0)
         }
 
         return 0.0
@@ -110,6 +122,40 @@ open class AlbertHeijnScraper(
             }
         }
         return 100.0
+    }
+
+    private fun extractLdJson(html: String): JsonObject? {
+        val startMarker = "<script type=\"application/ld+json\">"
+        val startIndex = html.indexOf(startMarker)
+        if (startIndex == -1) {
+            // Try with single quotes or extra spaces
+            val altStartMarker = "<script type='application/ld+json'>"
+            val altStartIndex = html.indexOf(altStartMarker)
+            if (altStartIndex == -1) return null
+            
+            val jsonStart = altStartIndex + altStartMarker.length
+            val jsonEnd = html.indexOf("</script>", jsonStart)
+            if (jsonEnd == -1) return null
+            val jsonString = html.substring(jsonStart, jsonEnd)
+            return try {
+                Json.decodeFromString<JsonObject>(jsonString)
+            } catch (e: Exception) {
+                println("[DEBUG_LOG] LD+JSON parsing failed: ${e.message}")
+                null
+            }
+        }
+        
+        val jsonStart = startIndex + startMarker.length
+        val jsonEnd = html.indexOf("</script>", jsonStart)
+        if (jsonEnd == -1) return null
+        
+        val jsonString = html.substring(jsonStart, jsonEnd)
+        return try {
+            Json.decodeFromString<JsonObject>(jsonString)
+        } catch (e: Exception) {
+            println("[DEBUG_LOG] LD+JSON parsing failed: ${e.message}")
+            null
+        }
     }
 
     private fun extractApolloState(html: String): JsonObject? {

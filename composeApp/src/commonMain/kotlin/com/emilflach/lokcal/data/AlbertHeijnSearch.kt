@@ -17,7 +17,7 @@ import kotlinx.serialization.json.Json
  * For each result, we scrape the product page using the existing AlbertHeijnScraper to obtain
  * detailed fields (name, kcal/100g, serving size, image, gtin13).
  */
-class AlbertHeijnSearch(
+open class AlbertHeijnSearch(
     private val scraper: AlbertHeijnScraper = AlbertHeijnScraper(),
     private val client: HttpClient = defaultClient,
 ) {
@@ -38,13 +38,10 @@ class AlbertHeijnSearch(
         }
     }
 
-    suspend fun search(query: String): List<OnlineFoodItem> {
+    open suspend fun search(query: String): List<OnlineFoodItem> {
         if (query.isBlank()) return emptyList()
         val url = "$BASE/zoeken?query=" + query.encodeURLParameter()
-        val html = client.get(url) {
-            accept(ContentType.Text.Html)
-            header(HttpHeaders.Referrer, BASE)
-        }.body<String>()
+        val html = fetchSearchHtml(url)
 
         val links = extractTopProductLinks(html)
         if (links.isEmpty()) return emptyList()
@@ -70,35 +67,36 @@ class AlbertHeijnSearch(
         }
     }
 
+    protected open suspend fun fetchSearchHtml(url: String): String {
+        return client.get(url) {
+            accept(ContentType.Text.Html)
+            header(HttpHeaders.Referrer, BASE)
+        }.body<String>()
+    }
+
     private fun extractTopProductLinks(html: String, max: Int = 5): List<String> {
-        // Limit parsing strictly to the real search results lane to avoid Smart Promotions, etc.
-        // Prefer the first occurrence of data-testhook="search-lane"; fall back to id="search-lane".
-        val searchHookIdx = html.indexOf("data-testhook=\"search-lane\"")
-        val searchIdIdx = html.indexOf("id=\"search-lane\"")
-        val startIdx = listOf(searchHookIdx, searchIdIdx)
-            .filter { it >= 0 }
-            .minOrNull() ?: return emptyList()
-
-        // End right before any non-search recommendation/promotions lanes if present to avoid grabbing unrelated cards
-        val smartPromotionsIdx = html.indexOf("data-testid=\"smart-promotions\"", startIdx)
-        val similarProductsIdx = html.indexOf("data-testid=\"similar-products-recommendations-lane\"", startIdx)
-        val boundaries = listOf(smartPromotionsIdx, similarProductsIdx).filter { it >= 0 }
-        val endIdx = if (boundaries.isEmpty()) html.length else boundaries.minOrNull() ?: html.length
-
-        val scoped = html.substring(startIdx, endIdx)
-
+        // Search results are rendered client-side and embedded in the HTML via JSON
+        // Extract product links using regex across the entire HTML
         val results = mutableListOf<String>()
-        val articleRegex = Regex("<article[^>]*class=\"[^\"]*product-card-portrait_root__[^\"]*\"[\\s\\S]*?</article>", RegexOption.IGNORE_CASE)
-        val hrefRegex = Regex("<a[^>]+href=\"(/producten/product/wi[0-9]+/[^\"]*)\"", RegexOption.IGNORE_CASE)
 
-        for (match in articleRegex.findAll(scoped)) {
-            val block = match.value
-            val href = hrefRegex.find(block)?.groupValues?.getOrNull(1)
-            if (href != null) {
-                results.add(href)
+        // Try a simpler pattern first
+        val pattern = """"webPath":"(/producten/product/wi\d+/[^"]+)""""
+        val webPathRegex = Regex(pattern)
+
+        println("[extractTopProductLinks] HTML length: ${html.length}")
+        println("[extractTopProductLinks] Pattern: $pattern")
+        println("[extractTopProductLinks] Contains test string: ${html.contains(""""webPath":"/producten/product/wi""")}")
+
+        for (match in webPathRegex.findAll(html)) {
+            val path = match.groupValues.getOrNull(1)
+            println("[extractTopProductLinks] Found match: $path")
+            if (path != null && !results.contains(path)) {
+                results.add(path)
                 if (results.size >= max) break
             }
         }
+
+        println("[extractTopProductLinks] Total results: ${results.size}")
         return results
     }
 }
