@@ -41,6 +41,8 @@ class EditMealViewModel(
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state.asStateFlow()
 
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
     init {
         reload()
     }
@@ -119,7 +121,6 @@ class EditMealViewModel(
     }
 
     // Steal image logic
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var stealSearchJob: Job? = null
     fun openStealDialog() {
         updateState { copy(showStealDialog = true, stealSearchQuery = "", stealResults = emptyList()) }
