@@ -1,0 +1,207 @@
+CREATE TABLE Intake (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL,
+    meal_type TEXT NOT NULL CHECK (meal_type IN ('BREAKFAST','LUNCH','DINNER','SNACK')),
+    source_type TEXT NOT NULL CHECK (source_type IN ('FOOD','MEAL')),
+    source_food_id INTEGER REFERENCES Food(id) ON DELETE SET NULL,
+    source_meal_id INTEGER REFERENCES Meal(id) ON DELETE SET NULL,
+    quantity_g REAL NOT NULL CHECK (quantity_g >= 0),
+    -- Snapshot fields to preserve historical values at time of logging
+    item_name TEXT NOT NULL,
+    energy_kcal_total REAL NOT NULL,
+    notes TEXT,
+    leftover INTEGER NOT NULL DEFAULT 0,
+    CHECK (
+        (source_type = 'FOOD' AND source_food_id IS NOT NULL AND source_meal_id IS NULL) OR
+        (source_type = 'MEAL' AND source_meal_id IS NOT NULL AND source_food_id IS NULL)
+    )
+);
+
+logFoodIntake:
+INSERT INTO Intake(timestamp, meal_type, source_type, source_food_id, quantity_g, item_name, energy_kcal_total, notes)
+VALUES (?, ?, 'FOOD', ?, ?, ?, ?, ?);
+
+logMealIntake:
+INSERT INTO Intake(timestamp, meal_type, source_type, source_meal_id, quantity_g, item_name, energy_kcal_total, notes)
+VALUES (?, ?, 'MEAL', ?, ?, ?, ?, ?);
+
+selectIntakeByMealAndDateRange:
+SELECT * FROM Intake WHERE meal_type = ? AND timestamp BETWEEN ? AND ? ORDER BY id DESC;
+
+deleteIntakeById:
+DELETE FROM Intake WHERE id = ?;
+
+updateIntakeQuantity:
+UPDATE Intake
+SET energy_kcal_total = CASE
+    WHEN quantity_g > 0 THEN energy_kcal_total * (? / quantity_g)
+    WHEN source_type = 'FOOD' AND source_food_id IS NOT NULL THEN (
+        SELECT energy_kcal_per_100g FROM Food WHERE id = source_food_id
+    ) * (? / 100.0)
+    ELSE energy_kcal_total
+END,
+    quantity_g = ?
+WHERE id = ?;
+
+updateIntakeQuantityAndId:
+UPDATE Intake
+SET energy_kcal_total = CASE
+    WHEN quantity_g > 0 THEN energy_kcal_total * (? / quantity_g)
+    WHEN source_type = 'FOOD' AND source_food_id IS NOT NULL THEN (
+        SELECT energy_kcal_per_100g FROM Food WHERE id = source_food_id
+    ) * (? / 100.0)
+    ELSE energy_kcal_total
+END,
+    quantity_g = ?,
+    id = (SELECT MAX(id) + 1 FROM Intake)
+WHERE id = ?;
+
+-- Direct setter for cases where repository recomputes kcal/qty (e.g., MEAL when previous qty was 0)
+updateIntakeQuantityDirect:
+UPDATE Intake SET energy_kcal_total = ?, quantity_g = ? WHERE id = ?;
+
+updateIntakeQuantityAndIdDirect:
+UPDATE Intake SET energy_kcal_total = ?, quantity_g = ?, id = (SELECT MAX(id) + 1 FROM Intake) WHERE id = ?;
+
+-- Helper to fetch one intake row
+selectIntakeById:
+SELECT * FROM Intake WHERE id = ?;
+
+-- Most frequently selected foods (by count of intakes), returns Food rows
+frequentFoods:
+SELECT f.* FROM Food f
+JOIN (
+  SELECT source_food_id AS food_id, COUNT(*) AS frequency
+  FROM Intake
+  WHERE source_type = 'FOOD' AND source_food_id IS NOT NULL
+  AND meal_type = ?
+  GROUP BY source_food_id
+) r ON r.food_id = f.id
+ORDER BY r.frequency DESC
+LIMIT ?;
+
+-- Update leftover flag for a specific intake row
+updateLeftoverById:
+UPDATE Intake SET leftover = ? WHERE id = ?;
+
+-- Select all leftover intakes
+selectAllLeftovers:
+SELECT * FROM Intake WHERE leftover = 1 ORDER BY timestamp DESC;
+
+selectLatestIntakeId:
+SELECT id FROM Intake ORDER BY id DESC LIMIT 1;
+
+-- Stats: Most eaten foods by weight in a date range (including foods from meals)
+statsMostEatenByWeight:
+SELECT
+    food_id,
+    item_name,
+    SUM(quantity_g) AS total_quantity_g,
+    COUNT(*) AS intake_count
+FROM (
+    -- Direct food intakes
+    SELECT
+        source_food_id AS food_id,
+        item_name,
+        quantity_g
+    FROM Intake
+    WHERE source_type = 'FOOD' AND timestamp BETWEEN ? AND ?
+
+    UNION ALL
+
+    -- Food items from meal intakes
+    SELECT
+        mi.food_id,
+        f.name AS item_name,
+        (mi.quantity_g * (i.quantity_g / (SELECT COALESCE(SUM(quantity_g), 1.0) FROM MealItem WHERE meal_id = i.source_meal_id))) AS quantity_g
+    FROM Intake i
+    JOIN MealItem mi ON i.source_meal_id = mi.meal_id
+    JOIN Food f ON f.id = mi.food_id
+    WHERE i.source_type = 'MEAL' AND i.timestamp BETWEEN ? AND ?
+)
+GROUP BY food_id, item_name
+ORDER BY total_quantity_g DESC;
+
+-- Stats: Daily kcal intake in a date range
+statsDailyKcal:
+SELECT
+    SUBSTR(timestamp, 1, 10) AS day,
+    SUM(energy_kcal_total) AS total_kcal
+FROM Intake
+WHERE timestamp BETWEEN ? AND ?
+GROUP BY day
+ORDER BY day ASC;
+
+countDaysWithInformation:
+SELECT COUNT(DISTINCT day)
+FROM (
+    SELECT SUBSTR(timestamp, 1, 10) AS day FROM Intake
+    UNION
+    SELECT SUBSTR(timestamp, 1, 10) AS day FROM Exercise
+);
+
+getDaysWithInformation:
+SELECT DISTINCT day
+FROM (
+    SELECT SUBSTR(timestamp, 1, 10) AS day FROM Intake
+    UNION
+    SELECT SUBSTR(timestamp, 1, 10) AS day FROM Exercise
+)
+ORDER BY day ASC;
+
+getTotalKcalEaten:
+SELECT SUM(energy_kcal_total)
+FROM Intake
+WHERE timestamp BETWEEN ? AND ?;
+
+getTotalWeightEatenG:
+SELECT SUM(quantity_g)
+FROM Intake
+WHERE timestamp BETWEEN ? AND ?;
+
+getCountTrackedIntakes:
+SELECT COUNT(*)
+FROM Intake
+WHERE timestamp BETWEEN ? AND ?;
+
+allItemFrequencies:
+SELECT
+    i.source_type,
+    i.source_food_id,
+    i.source_meal_id,
+    COUNT(*) AS frequency
+FROM Intake i
+LEFT JOIN Food f ON i.source_food_id = f.id
+LEFT JOIN Meal m ON i.source_meal_id = m.id
+WHERE (i.source_type = 'FOOD' AND f.id IS NOT NULL)
+   OR (i.source_type = 'MEAL' AND m.id IS NOT NULL)
+GROUP BY i.source_type, i.source_food_id, i.source_meal_id;
+
+itemsMissingImage:
+SELECT
+    source_type,
+    source_food_id,
+    source_meal_id,
+    item_name,
+    MAX(image_url) AS image_url,
+    COUNT(*) AS frequency
+FROM (
+    SELECT
+        i.source_type,
+        i.source_food_id,
+        i.source_meal_id,
+        i.item_name,
+        CASE
+            WHEN i.source_type = 'FOOD' THEN f.image_url
+            WHEN i.source_type = 'MEAL' THEN m.image_url
+        END AS image_url
+    FROM Intake i
+    LEFT JOIN Food f ON i.source_food_id = f.id
+    LEFT JOIN Meal m ON i.source_meal_id = m.id
+    WHERE (i.source_type = 'FOOD' AND f.id IS NOT NULL)
+       OR (i.source_type = 'MEAL' AND m.id IS NOT NULL)
+)
+WHERE (image_url IS NULL OR image_url = '')
+GROUP BY source_type, source_food_id, source_meal_id, item_name
+ORDER BY frequency DESC;
+

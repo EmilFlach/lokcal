@@ -1,8 +1,8 @@
 import SwiftUI
-import ComposeApp
+import Shared
 
 @main
-struct ComposeApp: App {
+struct LokcalApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView().ignoresSafeArea(.all)

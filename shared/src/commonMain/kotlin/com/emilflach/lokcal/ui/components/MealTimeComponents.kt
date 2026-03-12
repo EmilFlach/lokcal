@@ -1,0 +1,318 @@
+package com.emilflach.lokcal.ui.components
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.BookmarkRemove
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.outlined.BookmarkAdd
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.util.NumberUtils
+import com.emilflach.lokcal.util.NumberUtils.sanitizeDecimalInput
+import com.emilflach.lokcal.viewmodel.MealTimeViewModel
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SaveMealAction(viewModel: MealTimeViewModel) {
+    val color = LocalRecipesColors.current
+    val haptic = LocalHapticFeedback.current
+    var showAlert by remember { mutableStateOf(false) }
+    var name by remember { mutableStateOf("") }
+    var portions by remember { mutableStateOf("1") }
+
+    IconButton(onClick = { showAlert = true }) {
+        Icon(imageVector = Icons.Filled.Save, contentDescription = "Save as meal")
+    }
+
+    if (showAlert) {
+        AlertDialog(
+            containerColor = color.backgroundSurface1,
+            onDismissRequest = { showAlert = false },
+            title = { Text("Save as meal") },
+            text = {
+                Column {
+                    Text(text = "Name")
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        singleLine = true,
+                    )
+                    Spacer(Modifier.height(32.dp))
+                    Text(text = "Total portions")
+                    OutlinedTextField(
+                        value = portions,
+                        onValueChange = { portions = sanitizeDecimalInput(it) },
+                        singleLine = true,
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.saveAsMealFromInputs(name, portions)
+                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                    showAlert = false
+                }) { Text("Save") }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showAlert = false
+                    haptic.performHapticFeedback(HapticFeedbackType.Reject)
+                }) { Text("Cancel") }
+            }
+        )
+    }
+}
+
+@Composable
+fun MealTimeTopBarTrailingActions(
+    viewModel: MealTimeViewModel,
+    state: MealTimeViewModel.UiState,
+) {
+    val haptic = LocalHapticFeedback.current
+    val isLeftover = state.isMarkedLeftover
+
+    IconToggleButton(checked = isLeftover, onCheckedChange = {
+        viewModel.toggleLeftovers()
+        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+    }) {
+        Icon(
+            imageVector = if (isLeftover) Icons.Filled.BookmarkRemove else Icons.Outlined.BookmarkAdd,
+            contentDescription = "Toggle leftovers"
+        )
+    }
+    SaveMealAction(viewModel)
+}
+
+@Composable
+fun MealTimeFab(onAdd: () -> Unit) {
+    val color = LocalRecipesColors.current
+    FloatingActionButton(
+        onClick = onAdd,
+        containerColor = color.backgroundBrand,
+        contentColor = color.onBackgroundBrand
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(imageVector = Icons.Filled.Add, contentDescription = "Add portion")
+        }
+    }
+}
+
+@Composable
+fun MealTimeTotalKcal(value: Int) {
+    val color = LocalRecipesColors.current
+    Column {
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text = "$value kcal",
+            style = MaterialTheme.typography.headlineLarge,
+            fontSize = 60.sp,
+            textAlign = TextAlign.Center,
+            color = color.foregroundDefault,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(Modifier.height(32.dp))
+    }
+}
+
+fun LazyListScope.mealTimeItemsList(
+    items: List<MealTimeViewModel.IntakeUiState>,
+    viewModel: MealTimeViewModel
+) {
+    items(items, key = { it.intake.id }) { ui ->
+        val entry = ui.intake
+        val isMeal = entry.source_meal_id != null
+        val haptic = LocalHapticFeedback.current
+        val uriHandler = LocalUriHandler.current
+        val state by viewModel.state.collectAsState()
+
+        MealTimeItem(
+            title = entry.item_name,
+            subtitle = ui.subtitle,
+            index = items.indexOf(ui),
+            size = items.size,
+            isMeal = isMeal,
+            imageUrl = ui.imageUrl,
+            highlight = state.highlightedIntakeId == entry.id,
+            onHighlighted = { viewModel.clearHighlight() },
+            onLongPress = {
+                if (isMeal) {
+                    entry.source_meal_id.let { viewModel.copyMealItemsIntoMealTime(it) }
+                } else {
+                    ui.productUrl?.let { url ->
+                        uriHandler.openUri(uri = url)
+                    }
+                }
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            },
+            quantityControls = { requester ->
+                if (isMeal) {
+                    PortionQuantityControls(
+                        requester = requester,
+                        stateKey = entry.id,
+                        initialGrams = entry.quantity_g,
+                        portionGrams = ui.portionGrams,
+                        onCommitPortions = { portions ->
+                            viewModel.updateQuantityByPortions(entry.id, portions)
+                        },
+                        onDelete = { viewModel.deleteItem(entry.id) }
+                    )
+                } else {
+                    GramQuantityControls(
+                        requester = requester,
+                        stateKey = entry.id,
+                        initialGrams = entry.quantity_g,
+                        portionGrams = ui.portionGrams,
+                        onCommitGrams = { g ->
+                            viewModel.updateQuantity(entry.id, g)
+                        },
+                        onDelete = { viewModel.deleteItem(entry.id) }
+                    )
+                }
+            }
+        )
+        Spacer(Modifier.height(2.dp))
+    }
+}
+
+fun LazyListScope.mealTimeSuggestionsSection(
+    title: String,
+    items: List<MealTimeViewModel.SuggestionUiState>,
+    viewModel: MealTimeViewModel,
+    requesters: FocusRequesters,
+    isLeftoverSection: Boolean = false,
+    keyPrefix: Long = 0,
+) {
+    if (items.isEmpty()) return
+
+    item {
+        Spacer(Modifier.height(32.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = LocalRecipesColors.current.foregroundDefault
+        )
+        Spacer(Modifier.height(8.dp))
+    }
+
+    itemsIndexed(items = items) { index, ui ->
+        val intake = ui.intake
+        val haptic = LocalHapticFeedback.current
+        val uriHandler = LocalUriHandler.current
+        val state by viewModel.state.collectAsState()
+
+        if (intake.source_meal_id != null) {
+            val mealId = intake.source_meal_id
+            val keyId = -mealId - keyPrefix
+            val portionG = ui.portionGrams
+            val portions = if (portionG > 0.0) intake.quantity_g / portionG else 0.0
+            
+            val initialPortions = state.suggestionInputs[keyId] ?: NumberUtils.formatPortions(portions)
+            val portionsText = state.suggestionInputs[keyId] ?: initialPortions
+            val portionsVal = NumberUtils.parseDecimal(portionsText)
+            val liveGrams = (portionsVal * portionG).coerceAtLeast(0.0)
+            
+            var subtitle by remember(mealId, liveGrams) { mutableStateOf("") }
+            LaunchedEffect(mealId, liveGrams) {
+                subtitle = viewModel.subtitleForMealSuggestion(mealId, liveGrams)
+            }
+
+            IntakeListItem(
+                name = intake.item_name,
+                subtitle = subtitle,
+                keyId = keyId,
+                imageUrl = ui.imageUrl,
+                initialValue = initialPortions,
+                isMeal = true,
+                addButtonDescription = "Add",
+                index = index,
+                size = items.size,
+                requesters = requesters,
+                onValueChange = { viewModel.updateSuggestionInput(keyId, it) },
+                onAddClick = {
+                    val text = state.suggestionInputs[keyId] ?: initialPortions
+                    viewModel.addSuggestion(intake, text, isLeftoverSection)
+                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                },
+                onAddByKeyboard = {
+                    val text = state.suggestionInputs[keyId] ?: initialPortions
+                    viewModel.addSuggestion(intake, text, isLeftoverSection)
+                },
+                inputField = { tf, requester, onValueChange, onDone ->
+                    PortionsTextField(tf, requester, onValueChange, onDone)
+                }
+            )
+        } else if (intake.source_food_id != null) {
+            val foodId = intake.source_food_id
+            val keyId = foodId + keyPrefix
+            val initialGrams = state.suggestionInputs[keyId] ?: intake.quantity_g.toInt().toString()
+            val gramsText = state.suggestionInputs[keyId] ?: initialGrams
+            val gramsVal = NumberUtils.parseDecimal(gramsText)
+            
+            var subtitle by remember(foodId, gramsVal) { mutableStateOf("") }
+            LaunchedEffect(foodId, gramsVal) {
+                subtitle = viewModel.subtitleForFoodSuggestion(foodId, gramsVal)
+            }
+
+            IntakeListItem(
+                name = intake.item_name,
+                subtitle = subtitle,
+                keyId = keyId,
+                imageUrl = ui.imageUrl,
+                initialValue = initialGrams,
+                addButtonDescription = "Add",
+                index = index,
+                size = items.size,
+                requesters = requesters,
+                onValueChange = { viewModel.updateSuggestionInput(keyId, it) },
+                onAddClick = {
+                    val text = state.suggestionInputs[keyId] ?: initialGrams
+                    viewModel.addSuggestion(intake, text, isLeftoverSection)
+                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                },
+                onAddByKeyboard = {
+                    val text = state.suggestionInputs[keyId] ?: initialGrams
+                    viewModel.addSuggestion(intake, text, isLeftoverSection)
+                },
+                onLongPress = {
+                    ui.productUrl?.let { url ->
+                        uriHandler.openUri(url)
+                    }
+                },
+                inputField = { tf, requester, onValueChange, onDone ->
+                    GramTextField(tf, requester, onValueChange, onDone)
+                }
+            )
+        }
+    }
+}

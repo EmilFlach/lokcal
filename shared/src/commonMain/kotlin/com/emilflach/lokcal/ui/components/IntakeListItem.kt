@@ -1,0 +1,273 @@
+package com.emilflach.lokcal.ui.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
+import com.emilflach.lokcal.Food
+import com.emilflach.lokcal.Meal
+import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.util.rememberKtorImageLoader
+import com.emilflach.lokcal.viewmodel.IntakeViewModel
+
+@Composable
+fun FoodIntakeListItem(
+    food: Food,
+    viewModel: IntakeViewModel,
+    index: Int,
+    size: Int,
+    requesters: FocusRequesters,
+    onDone: (itemAdded: Boolean) -> Unit
+) {
+    val state by viewModel.state.collectAsState()
+    val initialGrams = state.gramsById[food.id] ?: viewModel.defaultPortionGrams(food).toInt().toString()
+    val haptic = LocalHapticFeedback.current
+    val uriHandler = LocalUriHandler.current
+
+    IntakeListItem(
+        name = food.name,
+        subtitle = viewModel.subtitleForFood(food, initialGrams),
+        keyId = food.id,
+        imageUrl = food.image_url,
+        initialValue = initialGrams,
+        index = index,
+        size = size,
+        requesters = requesters,
+        onValueChange = { viewModel.setGrams(food.id, it) },
+        onAddClick = {
+            viewModel.addFoodByGrams(food.id, initialGrams) { onDone(true) }
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+        },
+        onAddByKeyboard = {
+            viewModel.addFoodByGrams(food.id, initialGrams) { onDone(true) }
+        },
+        onLongPress = {
+            food.product_url?.let { uriHandler.openUri(it) }
+        },
+        inputField = { tf, requester, onValueChange, onDone ->
+            GramTextField(tf, requester, onValueChange, onDone)
+        }
+    )
+}
+
+@Composable
+fun MealIntakeListItem(
+    meal: Meal,
+    viewModel: IntakeViewModel,
+    index: Int,
+    size: Int,
+    requesters: FocusRequesters,
+    onDone: (itemAdded: Boolean) -> Unit
+) {
+    val keyId = -meal.id
+    val state by viewModel.state.collectAsState()
+    val initialPortions = state.gramsById[keyId] ?: "1"
+    val haptic = LocalHapticFeedback.current
+
+    var subtitle by remember(meal.id, initialPortions) { mutableStateOf("") }
+    LaunchedEffect(meal.id, initialPortions) {
+        subtitle = viewModel.subtitleForMeal(meal, initialPortions)
+    }
+
+    IntakeListItem(
+        name = meal.name,
+        subtitle = subtitle,
+        imageUrl = meal.image_url,
+        keyId = keyId,
+        initialValue = initialPortions,
+        isMeal = true,
+        index = index,
+        size = size,
+        requesters = requesters,
+        onValueChange = { viewModel.setGrams(keyId, it) },
+        onAddClick = {
+            viewModel.addMealByPortions(meal.id, initialPortions) { onDone(true) }
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+        },
+        onAddByKeyboard = {
+            viewModel.addMealByPortions(meal.id, initialPortions) { onDone(true) }
+        },
+        inputField = { tf, requester, onValueChange, onDone ->
+            PortionsTextField(tf, requester, onValueChange, onDone)
+        }
+    )
+}
+
+@Composable
+fun IntakeListItem(
+    name: String,
+    subtitle: String,
+    imageUrl: String? = null,
+    keyId: Long,
+    initialValue: String,
+    isMeal: Boolean = false,
+    addButtonDescription: String = "Add",
+    index: Int,
+    size: Int,
+    requesters: FocusRequesters,
+    onValueChange: (String) -> Unit,
+    onAddClick: () -> Unit,
+    onAddByKeyboard: () -> Unit,
+    onLongPress: (() -> Unit)? = null,
+    inputField: @Composable (
+        tf: TextFieldValue,
+        requester: FocusRequester,
+        onValueChange: (TextFieldValue, String) -> Unit,
+        onDone: () -> Unit
+    ) -> Unit
+) {
+    val keyboard = LocalSoftwareKeyboardController.current
+    val colors = LocalRecipesColors.current
+    val imageLoader = rememberKtorImageLoader()
+
+    var tf by remember(keyId) {
+        mutableStateOf(TextFieldValue(text = initialValue))
+    }
+    
+    LaunchedEffect(initialValue) {
+        if (tf.text != initialValue) {
+            tf = tf.copy(text = initialValue)
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp)
+            .clip(getRoundedCornerShape(index, size))
+            .background(colors.backgroundSurface1)
+            .combinedClickable(
+                onClick = {
+                    requesters.request(keyId)
+                    keyboard?.show()
+                },
+                onLongClick = onLongPress
+            )
+            .padding(vertical = 16.dp, horizontal = 16.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            if (!imageUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = null,
+                    imageLoader = imageLoader,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .padding(end = 4.dp)
+                        .height(40.dp)
+                        .width(35.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .background(colors.backgroundSurface2)
+                )
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = colors.foregroundDefault
+                )
+                Row {
+                    if(isMeal) {
+                        Text(
+                            text = "Meal",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.foregroundBrand
+                        )
+                        Text(
+                            text = " • ",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.foregroundSupport
+                        )
+                    }
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.foregroundSupport
+                    )
+                }
+
+                Spacer(Modifier.height(4.dp))
+            }
+
+            inputField(
+                tf,
+                requesters[keyId],
+                { newTf, value ->
+                    tf = newTf
+                    onValueChange(value)
+                },
+                onAddByKeyboard
+            )
+
+            FilledIconButton(
+                modifier = Modifier.size(50.dp),
+                onClick = onAddClick
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = addButtonDescription
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun getRoundedCornerShape(index: Int, size: Int): Shape { 
+    return when (index) {
+        0 if size == 1 -> RoundedCornerShape(16.dp)
+        0 -> RoundedCornerShape(
+            topStart = 16.dp,
+            topEnd = 16.dp,
+            bottomStart = 4.dp,
+            bottomEnd = 4.dp
+        )
+        size - 1 -> RoundedCornerShape(
+            bottomStart = 16.dp,
+            bottomEnd = 16.dp,
+            topStart = 4.dp,
+            topEnd = 4.dp
+        )
+        else -> RoundedCornerShape(4.dp)
+    }
+}

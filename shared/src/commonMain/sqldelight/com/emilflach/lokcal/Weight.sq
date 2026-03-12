@@ -1,0 +1,18 @@
+CREATE TABLE WeightLog (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT NOT NULL UNIQUE,
+    weight_kg REAL NOT NULL CHECK (weight_kg > 0)
+);
+
+insertOrReplace:
+INSERT OR REPLACE INTO WeightLog(date, weight_kg)
+VALUES (?, ?);
+
+selectAllDesc:
+SELECT * FROM WeightLog ORDER BY date DESC;
+
+deleteById:
+DELETE FROM WeightLog WHERE id = ?;
+
+selectByDate:
+SELECT * FROM WeightLog WHERE date = ?;

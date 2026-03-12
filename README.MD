@@ -10,26 +10,26 @@ To run the application on android device/emulator:
  - open project in Android Studio and run imported android run configuration  
 
 To build the application bundle:  
- - run `./gradlew :composeApp:assembleDebug`  
- - find `.apk` file in `composeApp/build/outputs/apk/debug/composeApp-debug.apk`  
+ - run `./gradlew :androidApp:assembleDebug`  
+ - find `.apk` file in `androidApp/build/outputs/apk/debug/androidApp-debug.apk`  
 
-Run android UI tests on the connected device: `./gradlew :composeApp:connectedDebugAndroidTest`
+Run android UI tests on the connected device: `./gradlew :androidApp:connectedDebugAndroidTest`
 
 ### Desktop
-Run the desktop application: `./gradlew :composeApp:run`  
-Run the desktop **hot reload** application: `./gradlew :composeApp:hotRunJvm`  
-Run desktop UI tests: `./gradlew :composeApp:jvmTest`  
+Run the desktop application: `./gradlew :shared:run`  
+Run the desktop **hot reload** application: `./gradlew :shared:hotRunJvm`  
+Run desktop UI tests: `./gradlew :shared:jvmTest`  
 
 ### iOS
 To run the application on iPhone device/simulator:  
- - Open `iosApp/iosApp.xcproject` in Xcode and run standard configuration  
+ - Open `iosApp/iosApp.xcodeproj` in Xcode and run standard configuration  
  - Or use [Kotlin Multiplatform Mobile plugin](https://plugins.jetbrains.com/plugin/14936-kotlin-multiplatform-mobile) for Android Studio  
 
-Run iOS simulator UI tests: `./gradlew :composeApp:iosSimulatorArm64Test`  
+Run iOS simulator UI tests: `./gradlew :shared:iosSimulatorArm64Test`  
 
 ### Wasm Browser (Alpha)
-Run the browser application: `./gradlew :composeApp:wasmJsBrowserDevelopmentRun --continue`  
-Run browser UI tests: `./gradlew :composeApp:wasmJsBrowserTest`  
+Run the browser application: `./gradlew :shared:wasmJsBrowserDevelopmentRun --continue`  
+Run browser UI tests: `./gradlew :shared:wasmJsBrowserTest`  
 
 
 ## Lokcal Calorie Tracker — Product Requirements
@@ -152,15 +152,15 @@ Out of Scope (v1)
 
 Developer Notes
 - Build and run:
-  - Desktop (JVM): ./gradlew :composeApp:run
-  - Android: ./gradlew :composeApp:installDebug (then launch) or use Android Studio
-  - Wasm/JS: ./gradlew :composeApp:wasmJsBrowserDevelopmentRun
+  - Desktop (JVM): ./gradlew :shared:run
+  - Android: ./gradlew :androidApp:installDebug (then launch) or use Android Studio
+  - Wasm/JS: ./gradlew :shared:wasmJsBrowserDevelopmentRun
   - iOS: open iosApp/iosApp.xcodeproj in Xcode and run a scheme
 - Persistence:
-  - See SQLDelight schema under composeApp/src/commonMain/sqldelight/…
-  - Seed data lives at composeApp/src/commonMain/kotlin/com/emilflach/lokcal/data/ingredients.json
+  - See SQLDelight schema under shared/src/commonMain/sqldelight/…
+  - Seed data lives at shared/src/commonMain/kotlin/com/emilflach/lokcal/data/ingredients.json
 - Testing:
-  - JVM tests: ./gradlew :composeApp:jvmTest
-  - iOS simulator tests: ./gradlew :composeApp:iosSimulatorArm64Test
-  - Browser tests: ./gradlew :composeApp:wasmJsBrowserTest
+  - JVM tests: ./gradlew :shared:jvmTest
+  - iOS simulator tests: ./gradlew :shared:iosSimulatorArm64Test
+  - Browser tests: ./gradlew :shared:wasmJsBrowserTest
 
