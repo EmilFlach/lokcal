@@ -1,7 +1,7 @@
 package com.emilflach.lokcal.data
 
 import kotlinx.coroutines.test.runTest
-import lokcal.composeapp.generated.resources.Res
+import lokcal.shared.generated.resources.Res
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.test.Test
 import kotlin.test.assertEquals
