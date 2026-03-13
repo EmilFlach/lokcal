@@ -1,6 +1,5 @@
 package com.emilflach.lokcal
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
@@ -29,6 +28,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.NavDisplay
+import androidx.savedstate.serialization.SavedStateConfiguration
 import com.emilflach.lokcal.data.ExerciseRepository
 import com.emilflach.lokcal.data.FoodRepository
 import com.emilflach.lokcal.data.IntakeRepository
@@ -60,28 +64,66 @@ import com.emilflach.lokcal.viewmodel.MealTimeViewModel
 import com.emilflach.lokcal.viewmodel.MealsListViewModel
 import com.emilflach.lokcal.viewmodel.StatisticsViewModel
 import com.emilflach.lokcal.viewmodel.WeightListViewModel
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
 
-private sealed class Screen {
-    data class Main(val dateIso: String) : Screen()
-    data class MealTime(val mealType: String, val dateIso: String, val highlightLatest: Boolean = false) : Screen()
-    data class Intake(val mealType: String, val dateIso: String) : Screen()
-    data class EditMeal(val mealId: Long, val returnMealType: String, val dateIso: String) : Screen()
+@Serializable
+private sealed interface Screen : NavKey {
+    @Serializable
+    data class Main(val dateIso: String) : Screen
+    @Serializable
+    data class MealTime(val mealType: String, val dateIso: String, val highlightLatest: Boolean = false) : Screen
+    @Serializable
+    data class Intake(val mealType: String, val dateIso: String) : Screen
+    @Serializable
+    data class EditMeal(val mealId: Long, val returnMealType: String, val dateIso: String) : Screen
     // Settings flow
-    data object Settings : Screen()
-    data class MealsList(val viewModel: MealsListViewModel) : Screen()
-    data class FoodManage(val viewModel: FoodEditViewModel) : Screen()
-    data class FoodEdit(val foodId: Long?, val viewModel: FoodEditViewModel) : Screen()
-    data class EditMealFromList(val mealId: Long, val viewModel: MealsListViewModel) : Screen()
+    @Serializable
+    data object Settings : Screen
+    @Serializable
+    data class MealsList(val dateIso: String) : Screen
+    @Serializable
+    data class FoodManage(val dateIso: String) : Screen
+    @Serializable
+    data class FoodEdit(val foodId: Long?, val dateIso: String) : Screen
+    @Serializable
+    data class EditMealFromList(val mealId: Long, val dateIso: String) : Screen
     // Exercise flow
-    data class ExerciseList(val dateIso: String) : Screen()
+    @Serializable
+    data class ExerciseList(val dateIso: String) : Screen
     // Weight flow
-    sealed class ReturnTo {
-        data object Settings : ReturnTo()
-        data class Main(val dateIso: String) : ReturnTo()
+    @Serializable
+    sealed interface ReturnTo {
+        @Serializable
+        data object Settings : ReturnTo
+        @Serializable
+        data class Main(val dateIso: String) : ReturnTo
     }
-    data class WeightList(val openAdd: Boolean = false, val returnTo: ReturnTo) : Screen()
+    @Serializable
+    data class WeightList(val openAdd: Boolean = false, val returnTo: ReturnTo) : Screen
     // Stats flow
-    data object Statistics : Screen()
+    @Serializable
+    data object Statistics : Screen
+}
+
+private val navigationConfig = SavedStateConfiguration {
+    serializersModule = SerializersModule {
+        polymorphic(NavKey::class) {
+            subclass(Screen.Main::class, Screen.Main.serializer())
+            subclass(Screen.MealTime::class, Screen.MealTime.serializer())
+            subclass(Screen.Intake::class, Screen.Intake.serializer())
+            subclass(Screen.EditMeal::class, Screen.EditMeal.serializer())
+            subclass(Screen.Settings::class, Screen.Settings.serializer())
+            subclass(Screen.MealsList::class, Screen.MealsList.serializer())
+            subclass(Screen.FoodManage::class, Screen.FoodManage.serializer())
+            subclass(Screen.FoodEdit::class, Screen.FoodEdit.serializer())
+            subclass(Screen.EditMealFromList::class, Screen.EditMealFromList.serializer())
+            subclass(Screen.ExerciseList::class, Screen.ExerciseList.serializer())
+            subclass(Screen.WeightList::class, Screen.WeightList.serializer())
+            subclass(Screen.Statistics::class, Screen.Statistics.serializer())
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -140,140 +182,174 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
     val weightRepo = remember(database) { WeightRepository(database!!) }
     val settingsRepo = remember(database) { SettingsRepository(database!!) }
 
-    var screen by remember { mutableStateOf<Screen>(Screen.Main(currentDateIso())) }
     var refreshToggle by remember { mutableStateOf(false) }
 
     val mainViewModel = remember(intakeRepo, exerciseRepo, weightRepo, settingsRepo) {
         MainViewModel(intakeRepo, exerciseRepo, weightRepo, settingsRepo, currentDateIso())
     }
 
+    val backStack = rememberNavBackStack(navigationConfig, Screen.Main(currentDateIso()))
+
+    // Store ViewModels that need to be preserved across navigation
+    val mealsListViewModel = remember(intakeRepo) { MealsListViewModel(intakeRepo) }
+    val foodEditViewModel = remember(foodRepo, intakeRepo) { FoodEditViewModel(foodRepo, intakeRepo) }
+
     Surface(
         color = colors.backgroundPage,
         contentColor = colors.foregroundDefault
     ) {
 
-        AnimatedContent(
-            targetState = screen,
+        NavDisplay(
+            backStack = backStack,
+            onBack = { backStack.removeLastOrNull() },
+            // Default fade transition for most screens
             transitionSpec = {
-                when {
-                    initialState is Screen.MealTime && targetState is Screen.Intake ||
-                            initialState is Screen.Intake && targetState is Screen.MealTime ->
-                        EnterTransition.None togetherWith ExitTransition.None
-
-                    targetState is Screen.MealTime || targetState is Screen.ExerciseList ->
-                        (scaleIn(
-                            initialScale = 0.8f,
-                            animationSpec = tween(200)
-                        ) + fadeIn(
-                            animationSpec = tween(200)
-                        )).togetherWith(
-                            fadeOut(animationSpec = tween(200))
-                        )
-
-                    initialState is Screen.MealTime && targetState is Screen.Main ||
-                            initialState is Screen.ExerciseList && targetState is Screen.Main ->
-                        fadeIn(animationSpec = tween(200))
-                            .togetherWith(
-                                scaleOut(
-                                    targetScale = 0.8f,
-                                    animationSpec = tween(200)
-                                ) + fadeOut(animationSpec = tween(200))
-                            )
-
-                    else ->
-                        fadeIn(animationSpec = tween(200))
-                            .togetherWith(fadeOut(animationSpec = tween(200)))
-                }
-            }
-        ) { s ->
-            when (s) {
-                is Screen.Main -> {
+                fadeIn(animationSpec = tween(200)) togetherWith fadeOut(animationSpec = tween(200))
+            },
+            popTransitionSpec = {
+                fadeIn(animationSpec = tween(200)) togetherWith fadeOut(animationSpec = tween(200))
+            },
+            entryProvider = entryProvider {
+                entry<Screen.Main> { s ->
                     // Update VM date when entering Main screen
                     LaunchedEffect(s.dateIso, refreshToggle) {
                         mainViewModel.loadFor(kotlinx.datetime.LocalDate.parse(s.dateIso))
                     }
                     MainScreen(
                         viewModel = mainViewModel,
-                        onOpenMeal = { meal, dateIso -> screen = Screen.MealTime(meal, dateIso) },
-                        onOpenExercise = { dateIso -> screen = Screen.ExerciseList(dateIso) },
-                        onOpenSettings = { screen = Screen.Settings },
-                        onOpenWeightToday = { screen = Screen.WeightList(openAdd = true, returnTo = Screen.ReturnTo.Main(s.dateIso)) },
-                        onOpenWeightList = { screen = Screen.WeightList(openAdd = false, returnTo = Screen.ReturnTo.Main(s.dateIso)) },
-                        onOpenStatistics = { screen = Screen.Statistics }
+                        onOpenMeal = { meal, dateIso -> backStack.add(Screen.MealTime(meal, dateIso)) },
+                        onOpenExercise = { dateIso -> backStack.add(Screen.ExerciseList(dateIso)) },
+                        onOpenSettings = { backStack.add(Screen.Settings) },
+                        onOpenWeightToday = { backStack.add(Screen.WeightList(openAdd = true, returnTo = Screen.ReturnTo.Main(s.dateIso))) },
+                        onOpenWeightList = { backStack.add(Screen.WeightList(openAdd = false, returnTo = Screen.ReturnTo.Main(s.dateIso))) },
+                        onOpenStatistics = { backStack.add(Screen.Statistics) }
                     )
                 }
-                is Screen.MealTime -> {
+                entry<Screen.MealTime>(
+                    metadata = NavDisplay.transitionSpec {
+                        // Scale + fade in when opening
+                        (scaleIn(
+                            initialScale = 0.8f,
+                            animationSpec = tween(200)
+                        ) + fadeIn(
+                            animationSpec = tween(200)
+                        )) togetherWith fadeOut(animationSpec = tween(200))
+                    } + NavDisplay.popTransitionSpec {
+                        // Scale + fade out when going back
+                        fadeIn(animationSpec = tween(200)) togetherWith
+                            (scaleOut(
+                                targetScale = 0.8f,
+                                animationSpec = tween(200)
+                            ) + fadeOut(animationSpec = tween(200)))
+                    }
+                ) { s ->
                     val vm = remember(intakeRepo, s.mealType, s.dateIso, refreshToggle) { MealTimeViewModel(intakeRepo, s.mealType, s.dateIso) }
                     MealTimeScreen(
                         viewModel = vm,
-                        onBack = { screen = Screen.Main(s.dateIso); refreshToggle = !refreshToggle },
+                        onBack = { backStack.removeLastOrNull(); refreshToggle = !refreshToggle },
                         onAdd = { meal ->
-                            screen = Screen.Intake(meal, s.dateIso)
+                            backStack.add(Screen.Intake(meal, s.dateIso))
                         },
                         shouldHighlightLatest = s.highlightLatest
                     )
                 }
-                is Screen.Intake -> {
+                entry<Screen.Intake>(
+                    metadata = NavDisplay.transitionSpec {
+                        // No transition - keep old screen visible
+                        EnterTransition.None togetherWith ExitTransition.KeepUntilTransitionsFinished
+                    } + NavDisplay.popTransitionSpec {
+                        // No transition when going back
+                        EnterTransition.None togetherWith ExitTransition.None
+                    }
+                ) { s ->
                     val intakeVm = remember(foodRepo, intakeRepo, s.mealType, s.dateIso) { IntakeViewModel(foodRepo, intakeRepo, s.mealType, s.dateIso) }
                     IntakeScreen(
                         viewModel = intakeVm,
                         onDone = { itemAdded ->
                             // Navigate back to meal time and refresh
-                            screen = Screen.MealTime(s.mealType, s.dateIso, highlightLatest = itemAdded)
+                            backStack.apply {
+                                removeLastOrNull()
+                                removeLastOrNull()
+                                add(Screen.MealTime(s.mealType, s.dateIso, highlightLatest = itemAdded))
+                            }
                             refreshToggle = !refreshToggle
                         },
                         autoFocusSearch = true
                     )
                 }
-                is Screen.EditMeal -> {
+                entry<Screen.EditMeal> { s ->
                     val editVm = remember(intakeRepo, s.mealId) { EditMealViewModel(mealRepo, foodRepo, intakeRepo, s.mealId) }
                     EditMealScreen(
                         viewModel = editVm,
-                        onBack = { screen = Screen.MealTime(s.returnMealType, s.dateIso); refreshToggle = !refreshToggle },
-                        onDeleted = { screen = Screen.MealTime(s.returnMealType, s.dateIso); refreshToggle = !refreshToggle }
+                        onBack = { backStack.removeLastOrNull(); refreshToggle = !refreshToggle },
+                        onDeleted = {
+                            backStack.apply {
+                                removeLastOrNull()
+                                removeLastOrNull()
+                                add(Screen.MealTime(s.returnMealType, s.dateIso))
+                            }
+                            refreshToggle = !refreshToggle
+                        }
                     )
                 }
-                is Screen.FoodManage -> {
+                entry<Screen.FoodManage> { s ->
                     FoodManageScreen(
-                        viewModel = s.viewModel,
-                        onBack = { screen = Screen.Settings },
-                        onOpenEdit = { id -> screen = Screen.FoodEdit(id, s.viewModel) }
+                        viewModel = foodEditViewModel,
+                        onBack = { backStack.removeLastOrNull() },
+                        onOpenEdit = { id -> backStack.add(Screen.FoodEdit(id, s.dateIso)) }
                     )
                 }
-                is Screen.FoodEdit -> {
+                entry<Screen.FoodEdit> { s ->
                     FoodEditScreen(
-                        viewModel = s.viewModel,
+                        viewModel = foodEditViewModel,
                         foodId = s.foodId,
-                        onBack = { screen = Screen.FoodManage(s.viewModel) },
-                        onSaved = { s.viewModel.refresh(); screen = Screen.FoodManage(s.viewModel); refreshToggle = !refreshToggle },
-                        onDeleted = { s.viewModel.refresh(); screen = Screen.FoodManage(s.viewModel); refreshToggle = !refreshToggle }
+                        onBack = { backStack.removeLastOrNull() },
+                        onSaved = { foodEditViewModel.refresh(); backStack.removeLastOrNull(); refreshToggle = !refreshToggle },
+                        onDeleted = { foodEditViewModel.refresh(); backStack.removeLastOrNull(); refreshToggle = !refreshToggle }
                     )
                 }
-                Screen.Settings -> {
+                entry<Screen.Settings> {
                     SettingsScreen(
-                        onBack = { screen = Screen.Main(currentDateIso()) },
-                        onOpenMealsList = { screen = Screen.MealsList(MealsListViewModel(intakeRepo)) },
-                        onOpenWeightList = { screen = Screen.WeightList(returnTo = Screen.ReturnTo.Settings) },
-                        onOpenFoodManage = { screen = Screen.FoodManage(FoodEditViewModel(foodRepo, intakeRepo)) },
+                        onBack = { backStack.removeLastOrNull() },
+                        onOpenMealsList = { backStack.add(Screen.MealsList(currentDateIso())) },
+                        onOpenWeightList = { backStack.add(Screen.WeightList(returnTo = Screen.ReturnTo.Settings)) },
+                        onOpenFoodManage = { backStack.add(Screen.FoodManage(currentDateIso())) },
                         settingsRepo = settingsRepo
                     )
                 }
-                is Screen.MealsList -> {
+                entry<Screen.MealsList> { s ->
                     MealsListScreen(
-                        viewModel = s.viewModel,
-                        onBack = { screen = Screen.Settings },
-                        onOpenMeal = { id -> screen = Screen.EditMealFromList(id, s.viewModel) }
+                        viewModel = mealsListViewModel,
+                        onBack = { backStack.removeLastOrNull() },
+                        onOpenMeal = { id -> backStack.add(Screen.EditMealFromList(id, s.dateIso)) }
                     )
                 }
-                is Screen.EditMealFromList -> {
+                entry<Screen.EditMealFromList> { s ->
                     val editVm = remember(intakeRepo, s.mealId) { EditMealViewModel(mealRepo, foodRepo, intakeRepo, s.mealId) }
                     EditMealScreen(
                         viewModel = editVm,
-                        onBack = { s.viewModel.refresh(); screen = Screen.MealsList(s.viewModel); refreshToggle = !refreshToggle },
-                        onDeleted = { s.viewModel.refresh(); screen = Screen.MealsList(s.viewModel); refreshToggle = !refreshToggle }
+                        onBack = { mealsListViewModel.refresh(); backStack.removeLastOrNull(); refreshToggle = !refreshToggle },
+                        onDeleted = { mealsListViewModel.refresh(); backStack.removeLastOrNull(); refreshToggle = !refreshToggle }
                     )
                 }
-                is Screen.ExerciseList -> {
+                entry<Screen.ExerciseList>(
+                    metadata = NavDisplay.transitionSpec {
+                        // Scale + fade in when opening
+                        (scaleIn(
+                            initialScale = 0.8f,
+                            animationSpec = tween(200)
+                        ) + fadeIn(
+                            animationSpec = tween(200)
+                        )) togetherWith fadeOut(animationSpec = tween(200))
+                    } + NavDisplay.popTransitionSpec {
+                        // Scale + fade out when going back
+                        fadeIn(animationSpec = tween(200)) togetherWith
+                            (scaleOut(
+                                targetScale = 0.8f,
+                                animationSpec = tween(200)
+                            ) + fadeOut(animationSpec = tween(200)))
+                    }
+                ) { s ->
                     val vm = remember(exerciseRepo, s.dateIso, refreshToggle) {
                         ExerciseListViewModel(
                             exerciseRepo,
@@ -282,21 +358,21 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                     }
                     ExerciseListScreen(
                         viewModel = vm,
-                        onBack = { screen = Screen.Main(s.dateIso) }
+                        onBack = { backStack.removeLastOrNull() }
                     )
                 }
-                is Screen.WeightList -> {
+                entry<Screen.WeightList> { s ->
                     val vm = remember(weightRepo, s.openAdd, refreshToggle) {
                         WeightListViewModel(
                             weightRepo
                         )
                     }
-                    val onBackAction: () -> Unit = when (val r = s.returnTo) {
+                    val onBackAction: () -> Unit = when (s.returnTo) {
                         is Screen.ReturnTo.Settings -> {
-                            { screen = Screen.Settings }
+                            { backStack.removeLastOrNull() }
                         }
                         is Screen.ReturnTo.Main -> {
-                            { screen = Screen.Main(r.dateIso); refreshToggle = !refreshToggle }
+                            { backStack.removeLastOrNull(); refreshToggle = !refreshToggle }
                         }
                     }
                     WeightListScreen(
@@ -305,14 +381,14 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
                         openAdd = s.openAdd
                     )
                 }
-                Screen.Statistics -> {
+                entry<Screen.Statistics> {
                     val vm = remember(intakeRepo, exerciseRepo, settingsRepo) { StatisticsViewModel(intakeRepo, exerciseRepo, settingsRepo) }
                     StatisticsScreen(
                         viewModel = vm,
-                        onBack = { screen = Screen.Main(currentDateIso()) }
+                        onBack = { backStack.removeLastOrNull() }
                     )
                 }
             }
-        }
+        )
     }
 }

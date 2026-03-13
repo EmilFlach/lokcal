@@ -1,26 +1,27 @@
 [versions]
 
-composeCharts = "0.2.0"
+composeCharts = "0.2.5"
 connectClient = "1.2.0-alpha02"
-kotlin = "2.2.21"
-compose = "1.9.3"
-agp = "9.0.0"
-androidx-activityCompose = "1.11.0"
-androidx-uiTest = "1.9.4"
-hotReload = "1.1.0-alpha01"
+kotlin = "2.3.10"
+compose = "1.10.2"
+agp = "9.0.1"
+androidx-activityCompose = "1.13.0"
+androidx-uiTest = "1.10.5"
+hotReload = "1.1.0-beta01"
 kotlinx-coroutines = "1.10.2"
 kscan = "0.4.0"
-ktor = "3.3.2"
-androidx-navigation = "2.9.1"
-kotlinx-serialization = "1.9.0"
-coil = "3.3.0"
+ktor = "3.4.1"
+androidx-navigation = "1.0.0-alpha06"
+compose-multiplatform-navigation3-browser = "0.3.1"
+kotlinx-serialization = "1.10.0"
+coil = "3.4.0"
 kotlinx-datetime = "0.7.1"
 sqlDelight = "2.2.1"
 slf4j = "2.0.17"
-filekit = "0.12.0"
+filekit = "0.13.0"
 documentfile = "1.1.0"
-uiBackhandler = "1.9.3"
-workRuntimeKtx = "2.11.0"
+uiBackhandler = "1.10.2"
+workRuntimeKtx = "2.11.1"
 
 [libraries]
 
@@ -41,7 +42,8 @@ ktor-serialization-json = { module = "io.ktor:ktor-serialization-kotlinx-json", 
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
-androidx-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "androidx-navigation" }
+androidx-navigation-compose = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "androidx-navigation" }
+navigation3-browser = { module = "com.github.terrakok:navigation3-browser", version.ref = "compose-multiplatform-navigation3-browser" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 coil = { module = "io.coil-kt.coil3:coil-compose-core", version.ref = "coil" }
 coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
