@@ -112,9 +112,9 @@ class IntakeRepository(database: Database) {
             val totalKcal = (kcalPer100g * newQuantityG) / 100.0
             
             if (refreshId) {
-                intakeQ.updateIntakeQuantityAndId(newQuantityG, totalKcal, newQuantityG, id)
+                intakeQ.updateIntakeQuantityAndIdDirect(totalKcal, newQuantityG, id)
             } else {
-                intakeQ.updateIntakeQuantity(newQuantityG, totalKcal, newQuantityG, id)
+                intakeQ.updateIntakeQuantityDirect(totalKcal, newQuantityG, id)
             }
         }
     }
