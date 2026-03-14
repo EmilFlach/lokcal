@@ -125,7 +125,7 @@ class IntakeRepository(database: Database) {
         var mealId = 0L
         mealQ.transaction {
             mealQ.mealInsertWithPortions(name, null, totalPortions)
-            mealId = mealQ.lastInsertId().executeAsOne()
+            mealId = mealQ.lastInsertId().awaitAsOne()
             items.forEach { (foodId, grams) ->
                 require(grams >= 0.0) { "Item grams must be >= 0" }
                 mealQ.mealItemInsert(meal_id = mealId, food_id = foodId, quantity_g = grams)
@@ -275,8 +275,6 @@ class IntakeRepository(database: Database) {
         deleteIntakeById(intake.id)
     }
 
-    // Utilities
-    private fun <T> tryExecute(block: () -> T): T? = try { block() } catch (_: Exception) { null }
     private fun nowIso(dateIso: String? = null) = (dateIso ?: currentDateIso()) + "T12:00:00"
     private fun todayRange(dateIso: String? = null): Pair<String, String> {
         val date = dateIso ?: currentDateIso()
