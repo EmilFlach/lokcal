@@ -11,6 +11,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,14 +65,21 @@ internal fun AppNavigation(
     val colors = LocalRecipesColors.current
     var refreshToggle by remember { mutableStateOf(false) }
     val backStack = rememberNavBackStack(navigationConfig, Screen.Main(currentDateIso()))
+    val mainUiStateHolder = mainViewModel.uiState.collectAsState()
+    val effectiveCurrentDestination = remember {
+        derivedStateOf {
+            val dest = backStack.lastOrNull()
+            if (dest is Screen.Main) Screen.Main(mainUiStateHolder.value.selectedDate.toString())
+            else dest
+        }
+    }
 
     Surface(
         color = colors.backgroundPage,
         contentColor = colors.foregroundDefault
     ) {
-        val currentDestination = remember { derivedStateOf { backStack.lastOrNull() } }
         BrowserNavigationEffect(
-            currentDestination = currentDestination,
+            currentDestination = effectiveCurrentDestination,
             nameResolver = { key -> (key as? Screen)?.browserInfo() },
         )
 
@@ -86,8 +94,11 @@ internal fun AppNavigation(
             },
             entryProvider = entryProvider {
                 entry<Screen.Main> { s ->
-                    LaunchedEffect(s.dateIso, refreshToggle) {
+                    LaunchedEffect(s.dateIso) {
                         mainViewModel.loadFor(LocalDate.parse(s.dateIso))
+                    }
+                    LaunchedEffect(refreshToggle) {
+                        mainViewModel.refresh()
                     }
                     MainScreen(
                         viewModel = mainViewModel,

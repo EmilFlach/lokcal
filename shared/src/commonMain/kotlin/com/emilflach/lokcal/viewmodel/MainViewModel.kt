@@ -189,6 +189,10 @@ class MainViewModel(
         }.reversed()
     }
 
+    fun refresh() {
+        loadFor(_uiState.value.selectedDate)
+    }
+
     fun formattedDate(): String {
         val selectedDate = _uiState.value.selectedDate
         val isToday = selectedDate.toString() == currentDateIso()
