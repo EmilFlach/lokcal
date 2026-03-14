@@ -20,6 +20,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -198,6 +199,28 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
         color = colors.backgroundPage,
         contentColor = colors.foregroundDefault
     ) {
+
+        val currentDestination = remember { derivedStateOf { backStack.lastOrNull() } }
+        BrowserNavigationEffect(
+            currentDestination = currentDestination,
+            nameResolver = { key ->
+                when (key) {
+                    is Screen.Main -> "main" to mapOf("date" to key.dateIso)
+                    is Screen.MealTime -> "meal_time" to mapOf("type" to key.mealType, "date" to key.dateIso)
+                    is Screen.Intake -> "intake" to mapOf("type" to key.mealType, "date" to key.dateIso)
+                    is Screen.EditMeal -> "edit_meal" to mapOf("id" to key.mealId.toString(), "date" to key.dateIso)
+                    is Screen.Settings -> "settings" to emptyMap()
+                    is Screen.MealsList -> "meals_list" to mapOf("date" to key.dateIso)
+                    is Screen.FoodManage -> "food_manage" to mapOf("date" to key.dateIso)
+                    is Screen.FoodEdit -> "food_edit" to mapOf("id" to (key.foodId?.toString() ?: ""), "date" to key.dateIso)
+                    is Screen.EditMealFromList -> "edit_meal_from_list" to mapOf("id" to key.mealId.toString(), "date" to key.dateIso)
+                    is Screen.ExerciseList -> "exercise_list" to mapOf("date" to key.dateIso)
+                    is Screen.WeightList -> "weight_list" to emptyMap()
+                    is Screen.Statistics -> "statistics" to emptyMap()
+                    else -> null
+                }
+            },
+        )
 
         NavDisplay(
             backStack = backStack,
