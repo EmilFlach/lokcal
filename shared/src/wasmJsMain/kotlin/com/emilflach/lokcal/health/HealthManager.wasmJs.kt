@@ -1,7 +1,7 @@
 package com.emilflach.lokcal.health
 
 actual fun allowAutomaticExerciseLogging(): Boolean {
-    return true
+    return false
 }
 
 internal actual suspend fun getStepsData(

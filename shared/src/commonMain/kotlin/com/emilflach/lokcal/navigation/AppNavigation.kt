@@ -26,6 +26,7 @@ import com.emilflach.lokcal.data.IntakeRepository
 import com.emilflach.lokcal.data.MealRepository
 import com.emilflach.lokcal.data.SettingsRepository
 import com.emilflach.lokcal.data.WeightRepository
+import com.emilflach.lokcal.health.HealthManager
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.screens.EditMealScreen
 import com.emilflach.lokcal.ui.screens.ExerciseListScreen
@@ -192,6 +193,7 @@ internal fun AppNavigation(
                         onOpenMealsList = { backStack.add(Screen.MealsManage(currentDateIso())) },
                         onOpenWeightList = { backStack.add(Screen.WeightList(returnTo = Screen.ReturnTo.Settings)) },
                         onOpenFoodManage = { backStack.add(Screen.FoodManage(currentDateIso())) },
+                        onRequestHealthPermissions = { HealthManager.requestPermissions() },
                         settingsRepo = settingsRepo
                     )
                 }
@@ -231,7 +233,8 @@ internal fun AppNavigation(
                     }
                     ExerciseListScreen(
                         viewModel = vm,
-                        onBack = { backStack.removeLastOrNull() }
+                        onBack = { backStack.removeLastOrNull() },
+                        onEnableHealth = { HealthManager.requestPermissions() }
                     )
                 }
                 entry<Screen.WeightList> { s ->

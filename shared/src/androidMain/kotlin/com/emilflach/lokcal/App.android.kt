@@ -42,20 +42,21 @@ class AppActivity : ComponentActivity() {
         healthConnectClient = getHealthClientOrNull()
         healthConnectClient?.let { client ->
             HealthManager.setHealthProvider(client)
+            HealthManager.setRequestPermissionsCallback {
+                healthPermissions.launch(permissions)
+            }
         }
     }
 
     override fun onResume() {
         super.onResume()
 
-        // Health permissions
+        // Sync permission state without auto-requesting
         healthConnectClient?.let { client ->
             activityScope.launch {
                 val granted = client.permissionController.getGrantedPermissions()
                 if (granted.containsAll(permissions)) {
                     HealthManager.setPermissionsGranted(true)
-                } else {
-                    healthPermissions.launch(permissions)
                 }
             }
         }

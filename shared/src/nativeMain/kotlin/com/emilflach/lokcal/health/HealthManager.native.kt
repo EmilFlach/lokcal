@@ -1,7 +1,8 @@
 package com.emilflach.lokcal.health
 
 actual fun allowAutomaticExerciseLogging(): Boolean {
-    return true
+    // TODO: Implement HealthKit integration for iOS
+    return false
 }
 
 internal actual suspend fun getStepsData(

@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -26,6 +27,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +40,7 @@ import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.backup.BackupManager
 import com.emilflach.lokcal.data.SettingsRepository
+import com.emilflach.lokcal.health.HealthManager
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import kotlinx.coroutines.launch
 
@@ -48,6 +51,7 @@ fun SettingsScreen(
     onOpenMealsList: () -> Unit,
     onOpenWeightList: () -> Unit,
     onOpenFoodManage: () -> Unit,
+    onRequestHealthPermissions: () -> Unit,
     settingsRepo: SettingsRepository,
 ) {
     val colors = LocalRecipesColors.current
@@ -212,6 +216,24 @@ fun SettingsScreen(
                     }
                 }
             )
+
+            if (HealthManager.showAutomaticExerciseLogging()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                val healthGranted by HealthManager.permissionsGranted.collectAsState()
+                ListItem(
+                    headlineContent = { Text("Step tracking") },
+                    supportingContent = {
+                        Text(if (healthGranted) "Connected via Health Connect" else "Not connected")
+                    },
+                    trailingContent = {
+                        if (!healthGranted) {
+                            Button(onClick = onRequestHealthPermissions) {
+                                Text("Enable")
+                            }
+                        }
+                    }
+                )
+            }
 
             if(BackupManager.showNightlyBackupSettings()) {
                 Spacer(modifier = Modifier.height(16.dp))
