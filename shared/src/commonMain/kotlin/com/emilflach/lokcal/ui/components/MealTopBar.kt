@@ -147,7 +147,7 @@ fun MealTopBar(
                     onClick = { onSearchOnline() },
                     color = color.backgroundSurface2,
                     modifier = Modifier
-                        .padding(end = 8.dp)
+                        .padding(end = if (onScanBarcode != null) 8.dp else 16.dp)
                         .clip(MaterialTheme.shapes.small)
                         .height(57.dp)
                         .width(57.dp)
