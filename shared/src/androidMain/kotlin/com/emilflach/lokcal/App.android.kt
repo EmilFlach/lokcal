@@ -1,18 +1,13 @@
 package com.emilflach.lokcal
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.StepsRecord
-import com.emilflach.lokcal.camera.CameraManager
 import com.emilflach.lokcal.data.SqlDriverFactory
 import com.emilflach.lokcal.health.HealthManager
 import io.github.vinceglb.filekit.FileKit
@@ -33,13 +28,6 @@ class AppActivity : ComponentActivity() {
         if (granted.containsAll(permissions)) {
             HealthManager.setPermissionsGranted(true)
         }
-    }
-
-    // Camera permission launcher
-    private val cameraPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        CameraManager.setPermissionsGranted(granted)
     }
 
     private var healthConnectClient: HealthConnectClient? = null
@@ -72,16 +60,6 @@ class AppActivity : ComponentActivity() {
             }
         }
 
-        // Camera permission
-        val cameraGranted = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.CAMERA
-        ) == PackageManager.PERMISSION_GRANTED
-        if (cameraGranted) {
-            CameraManager.setPermissionsGranted(true)
-        } else {
-            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-        }
     }
 
     override fun onDestroy() {

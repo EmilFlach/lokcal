@@ -4,5 +4,7 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+    <key>NSCameraUsageDescription</key>
+    <string>Camera access is required for barcode scanning</string>
 </dict>
 </plist>

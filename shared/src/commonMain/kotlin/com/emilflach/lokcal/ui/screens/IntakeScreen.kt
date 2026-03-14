@@ -33,6 +33,7 @@ import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.camera.CameraManager
+import com.emilflach.lokcal.camera.RequestCameraPermission
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.FocusRequesters
 import com.emilflach.lokcal.ui.components.FoodIntakeListItem
@@ -61,6 +62,7 @@ fun IntakeScreen(
         onDone(false)
     }
 
+    var waitingForCameraPermission by remember { mutableStateOf(false) }
     var showItems by remember { mutableStateOf(false) }
     LaunchedEffect(state.meals, state.foods) {
         if ((state.meals.isNotEmpty() || state.foods.isNotEmpty()) && !showItems) {
@@ -85,7 +87,11 @@ fun IntakeScreen(
                 autoFocusSearch = autoFocusSearch,
                 onScanBarcode = {
                     keyboard?.hide()
-                    viewModel.setShowScanner(true)
+                    if (CameraManager.arePermissionsGranted()) {
+                        viewModel.setShowScanner(true)
+                    } else {
+                        waitingForCameraPermission = true
+                    }
                 },
                 onSearchOnline = viewModel::searchOnline,
                 isSearchingOnline = state.isSearchingOnline,
@@ -167,16 +173,20 @@ fun IntakeScreen(
         }
     }
 
-    if (state.showScanner) {
-        if (CameraManager.arePermissionsGranted()) {
-            BackHandler { viewModel.setShowScanner(false) }
-            ScannerViewContainer(
-                onScan = viewModel::setQuery,
-                onClose = { viewModel.setShowScanner(false) }
-            )
-        } else {
-            viewModel.setShowScanner(false)
+    if (waitingForCameraPermission) {
+        RequestCameraPermission { granted ->
+            CameraManager.setPermissionsGranted(granted)
+            waitingForCameraPermission = false
+            if (granted) viewModel.setShowScanner(true)
         }
+    }
+
+    if (state.showScanner) {
+        BackHandler { viewModel.setShowScanner(false) }
+        ScannerViewContainer(
+            onScan = viewModel::setQuery,
+            onClose = { viewModel.setShowScanner(false) }
+        )
     }
 }
 
