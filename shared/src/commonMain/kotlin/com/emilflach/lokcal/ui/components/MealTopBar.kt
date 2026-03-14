@@ -56,7 +56,7 @@ fun MealTopBar(
     onClearQuery: () -> Unit = {},
     autoFocusSearch: Boolean = false,
     onSearchOnline: () -> Unit = {},
-    onScanBarcode: () -> Unit = {},
+    onScanBarcode: (() -> Unit)? = null,
     isSearchingOnline: Boolean = false,
     trailingActions: (@Composable () -> Unit)? = null,
     colors: TopAppBarColors = run {
@@ -169,23 +169,25 @@ fun MealTopBar(
                         }
                     }
                 }
-                Surface(
-                    onClick = { onScanBarcode() },
-                    color = color.backgroundSurface2,
-                    modifier = Modifier
-                        .padding(end = 16.dp)
-                        .clip(MaterialTheme.shapes.small)
-                        .height(57.dp)
-                        .width(47.dp)
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
+                if (onScanBarcode != null) {
+                    Surface(
+                        onClick = { onScanBarcode() },
+                        color = color.backgroundSurface2,
+                        modifier = Modifier
+                            .padding(end = 16.dp)
+                            .clip(MaterialTheme.shapes.small)
+                            .height(57.dp)
+                            .width(47.dp)
                     ) {
-                        Icon(
-                            Icons.Default.DocumentScanner,
-                            contentDescription = "Scan a barcode",
-                        )
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                Icons.Default.DocumentScanner,
+                                contentDescription = "Scan a barcode",
+                            )
+                        }
                     }
                 }
             }

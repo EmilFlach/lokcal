@@ -41,6 +41,7 @@ import com.emilflach.lokcal.ui.components.MealIntakeListItem
 import com.emilflach.lokcal.ui.components.MealTopBar
 import com.emilflach.lokcal.ui.components.ScannerViewContainer
 import com.emilflach.lokcal.ui.components.searchSection
+import com.emilflach.lokcal.util.showBarcodeScanner
 import com.emilflach.lokcal.viewmodel.IntakeViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -85,14 +86,16 @@ fun IntakeScreen(
                     }
                 },
                 autoFocusSearch = autoFocusSearch,
-                onScanBarcode = {
-                    keyboard?.hide()
-                    if (CameraManager.arePermissionsGranted()) {
-                        viewModel.setShowScanner(true)
-                    } else {
-                        waitingForCameraPermission = true
+                onScanBarcode = if (showBarcodeScanner) {
+                    {
+                        keyboard?.hide()
+                        if (CameraManager.arePermissionsGranted()) {
+                            viewModel.setShowScanner(true)
+                        } else {
+                            waitingForCameraPermission = true
+                        }
                     }
-                },
+                } else null,
                 onSearchOnline = viewModel::searchOnline,
                 isSearchingOnline = state.isSearchingOnline,
             )
