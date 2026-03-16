@@ -21,6 +21,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -28,6 +31,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.RecipesColors
 import com.emilflach.lokcal.viewmodel.DayState
@@ -39,7 +43,8 @@ fun MainSummaryKcal(
     colors: RecipesColors,
     fadeAlpha: Float,
     onOpenExercise: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isCompact: Boolean = false,
 ) {
     val animatedEaten by animateFloatAsState(
         targetValue = state.eatenKcal.toFloat(),
@@ -65,22 +70,33 @@ fun MainSummaryKcal(
                 .weight(4f)
                 .fillMaxHeight()
                 .background(colors.backgroundSurface2, MaterialTheme.shapes.medium)
-                .padding(16.dp)
+                .padding(if (isCompact) 12.dp else 16.dp)
                 .alpha(fadeAlpha)
         ) {
             Column {
                 Text(
                     text = if (state.leftKcal > 0) "Remaining" else "Above goal",
-                    style = MaterialTheme.typography.titleSmall,
+                    style = if (isCompact) MaterialTheme.typography.labelMedium else MaterialTheme.typography.titleSmall,
                     textAlign = TextAlign.Left,
                     modifier = Modifier.fillMaxWidth()
                 )
+                val textStyle = if (isCompact) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.displayLarge
+                var multiplier by remember(animatedLeft, isCompact) { mutableStateOf(1f) }
+
                 Text(
                     text = if (animatedLeft > 0) "${animatedLeft.roundToInt()}" else "${animatedLeft.roundToInt() * -1}",
-                    style = MaterialTheme.typography.displayLarge,
+                    style = textStyle.copy(fontSize = textStyle.fontSize * multiplier),
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Left,
+                    maxLines = 1,
+                    overflow = TextOverflow.Visible,
+                    softWrap = false,
                     color = colors.foregroundDefault,
+                    onTextLayout = {
+                        if (it.hasVisualOverflow) {
+                            multiplier *= 0.9f
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(4.dp))
@@ -145,7 +161,7 @@ fun MainSummaryKcal(
                     )
                     .background(colors.backgroundSurface1)
                     .clickable { onOpenExercise() }
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = if (isCompact) 12.dp else 16.dp)
                     .alpha(fadeAlpha)
             ) {
                 Row(
@@ -154,13 +170,13 @@ fun MainSummaryKcal(
                 ) {
                     Text(
                         text = "Burned",
-                        style = MaterialTheme.typography.titleSmall,
+                        style = if (isCompact) MaterialTheme.typography.labelMedium else MaterialTheme.typography.titleSmall,
                         color = colors.foregroundSupport,
                     )
                     Spacer(Modifier.weight(1f))
                     Text(
                         text = animatedBurned.roundToInt().toString(),
-                        style = MaterialTheme.typography.titleLarge,
+                        style = if (isCompact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
                         color = colors.foregroundSupport
                     )
                 }
@@ -177,7 +193,7 @@ fun MainSummaryKcal(
                         )
                     )
                     .background(colors.backgroundSurface1)
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = if (isCompact) 12.dp else 16.dp)
                     .alpha(fadeAlpha)
             ) {
                 Row(
@@ -185,13 +201,13 @@ fun MainSummaryKcal(
                 ) {
                     Text(
                         text = "Eaten",
-                        style = MaterialTheme.typography.titleSmall,
+                        style = if (isCompact) MaterialTheme.typography.labelMedium else MaterialTheme.typography.titleSmall,
                         color = colors.foregroundSupport
                     )
                     Spacer(Modifier.weight(1f))
                     Text(
                         text = animatedEaten.roundToInt().toString(),
-                        style = MaterialTheme.typography.titleLarge,
+                        style = if (isCompact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
                         color = colors.foregroundSupport
                     )
                 }

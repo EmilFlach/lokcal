@@ -1,6 +1,7 @@
 package com.emilflach.lokcal.ui.screens
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -52,38 +53,44 @@ fun MainScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        GradientBackground(uiState.dayState.percentageLeft.toFloat())
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.safeDrawing)
-        ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val isCompact = maxHeight < 700.dp
+            val hideGraphs = maxHeight < 800.dp
+            
+            GradientBackground(uiState.dayState.percentageLeft.toFloat())
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
+            ) {
 
-            MainSummary(
-                state = uiState.dayState,
-                formattedDate = viewModel.formattedDate(),
-                onDateClick = { viewModel.setToCurrentDate() },
-                selectedDate = uiState.selectedDate,
-                last7 = uiState.last7Deltas,
-                animationTrigger = animationTrigger,
-                onOpenExercise = onOpenExercise,
-                onOpenWeightToday = onOpenWeightToday,
-                onOpenWeightList = onOpenWeightList,
-                onOpenStatistics = onOpenStatistics,
-                onOpenSettings = onOpenSettings
-            )
+                MainSummary(
+                    state = uiState.dayState,
+                    formattedDate = viewModel.formattedDate(),
+                    onDateClick = { viewModel.setToCurrentDate() },
+                    selectedDate = uiState.selectedDate,
+                    last7 = uiState.last7Deltas,
+                    animationTrigger = animationTrigger,
+                    onOpenExercise = onOpenExercise,
+                    onOpenWeightToday = onOpenWeightToday,
+                    onOpenWeightList = onOpenWeightList,
+                    onOpenStatistics = onOpenStatistics,
+                    onOpenSettings = onOpenSettings,
+                    isCompact = isCompact,
+                    hideGraphs = hideGraphs
+                )
 
-            HorizontalPager(
-                state = pagerState,
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                pageSpacing = 16.dp,
-                flingBehavior = PagerDefaults.flingBehavior(
+                HorizontalPager(
                     state = pagerState,
-                    pagerSnapDistance = PagerSnapDistance.atMost(1)
-                ),
-                beyondViewportPageCount = 1,
-                modifier = Modifier.weight(1f)
-            ) { page ->
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    pageSpacing = 16.dp,
+                    flingBehavior = PagerDefaults.flingBehavior(
+                        state = pagerState,
+                        pagerSnapDistance = PagerSnapDistance.atMost(1)
+                    ),
+                    beyondViewportPageCount = 1,
+                    modifier = Modifier.weight(1f)
+                ) { page ->
                 val date = remember(page) { viewModel.getDateForPage(page) }
                 var dayState by remember(date) { mutableStateOf(DayState()) }
                 
@@ -98,10 +105,12 @@ fun MainScreen(
                 MainMealList(
                     state = dayState,
                     selectedDate = date,
-                    onOpenMeal = onOpenMeal
+                    onOpenMeal = onOpenMeal,
+                    isCompact = isCompact
                 )
             }
         }
     }
+}
 }
 
