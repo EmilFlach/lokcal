@@ -88,7 +88,7 @@ class FoodRepository(database: Database) {
      * - Fuzzy fallback (Levenshtein over all rows) is only used when LIKE finds nothing AND query length >= 4.
      *   This guard avoids the previous issue where very short queries could show almost everything.
      */
-    suspend fun search(query: String): List<Food> {
+    suspend fun search(query: String, trackingCounts: Map<Long, Long> = emptyMap()): List<Food> {
         val q = query.trim()
         if (q.isEmpty()) return emptyList()
         val qLower = q.lowercase()
@@ -115,6 +115,7 @@ class FoodRepository(database: Database) {
         fun exactMatch(f: Food): Boolean = SearchUtils.exactMatch(fields(f), q)
         fun prefixMatch(f: Food): Boolean = SearchUtils.prefixMatch(fields(f), q)
         fun containsPos(f: Food): Int = SearchUtils.containsPos(fields(f), qLower)
+        fun trackingCount(f: Food): Long = trackingCounts[f.id] ?: 0L
         fun levScore(f: Food): Int {
             var best = Int.MAX_VALUE
             for (s in fields(f)) {
@@ -136,9 +137,11 @@ class FoodRepository(database: Database) {
             }
             if (filtered.isNotEmpty()) {
                 return filtered.sortedWith(
-                    compareBy<Food> { if (exactMatch(it)) 0 else 1 }
+                    compareByDescending<Food> { trackingCount(it) > 0 }
+                        .thenBy { if (exactMatch(it)) 0 else 1 }
                         .thenBy { if (prefixMatch(it)) 0 else 1 }
                         .thenBy { tokensPosSum(it) }
+                        .thenByDescending { trackingCount(it) }
                         .thenBy { levScore(it) }
                         .thenBy { sourcePriority(it.source) }
                         .thenBy { it.name.lowercase() }
@@ -154,9 +157,11 @@ class FoodRepository(database: Database) {
         // If LIKE found candidates, use the existing relevance ordering
         if (candidatesLike.isNotEmpty()) {
             return candidatesLike.sortedWith(
-                compareBy<Food> { if (exactMatch(it)) 0 else 1 }
+                compareByDescending<Food> { trackingCount(it) > 0 }
+                    .thenBy { if (exactMatch(it)) 0 else 1 }
                     .thenBy { if (prefixMatch(it)) 0 else 1 }
                     .thenBy { containsPos(it) }
+                    .thenByDescending { trackingCount(it) }
                     .thenBy { levScore(it) }
                     .thenBy { sourcePriority(it.source) }
                     .thenBy { it.name.lowercase() }
@@ -167,7 +172,9 @@ class FoodRepository(database: Database) {
         val all = getAll()
         if (all.isEmpty()) return emptyList()
         return all.sortedWith(
-            compareBy<Food> { levScore(it) }
+            compareByDescending<Food> { trackingCount(it) > 0 }
+                .thenBy { levScore(it) }
+                .thenByDescending { trackingCount(it) }
                 .thenBy { sourcePriority(it.source) }
                 .thenBy { it.name.lowercase() }
         ).take(100)

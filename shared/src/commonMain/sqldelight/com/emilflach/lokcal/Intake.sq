@@ -80,6 +80,29 @@ JOIN (
 ORDER BY r.frequency DESC
 LIMIT ?;
 
+-- Most frequently selected meals (by count of intakes), returns Meal rows
+frequentMeals:
+SELECT m.* FROM Meal m
+JOIN (
+  SELECT source_meal_id AS meal_id, COUNT(*) AS frequency
+  FROM Intake
+  WHERE source_type = 'MEAL' AND source_meal_id IS NOT NULL
+  AND meal_type = ?
+  GROUP BY source_meal_id
+) r ON r.meal_id = m.id
+ORDER BY r.frequency DESC
+LIMIT ?;
+
+-- All items (food and meal) with their tracking counts
+itemTrackingCounts:
+SELECT
+    source_type,
+    source_food_id,
+    source_meal_id,
+    COUNT(*) AS frequency
+FROM Intake
+GROUP BY source_type, source_food_id, source_meal_id;
+
 -- Update leftover flag for a specific intake row
 updateLeftoverById:
 UPDATE Intake SET leftover = ? WHERE id = ?;

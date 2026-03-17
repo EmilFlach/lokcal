@@ -100,10 +100,13 @@ class IntakeViewModel(
     private fun performSearch(mealType: String) {
         searchJob?.cancel()
         searchJob = scope.launch {
+            val trackingCounts = intakeRepo.getTrackingCounts()
             val (meals, foods) = if (_state.value.query.isBlank()) {
                 getDefaultFoods(mealType)
             } else {
-                intakeRepo.searchMeals(_state.value.query) to foodRepo.search(_state.value.query)
+                val foodTracking = trackingCounts.filterKeys { it.first == "FOOD" }.mapKeys { it.key.second }
+                val mealTracking = trackingCounts.filterKeys { it.first == "MEAL" }.mapKeys { it.key.second }
+                intakeRepo.searchMeals(_state.value.query, mealTracking) to foodRepo.search(_state.value.query, foodTracking)
             }
             _state.value = _state.value.copy(meals = meals, foods = foods)
         }

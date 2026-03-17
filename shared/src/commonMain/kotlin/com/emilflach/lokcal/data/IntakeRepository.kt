@@ -190,7 +190,7 @@ class IntakeRepository(database: Database) {
      *   exact/prefix results to avoid noisy matches; otherwise rank by exact, prefix, containsPos, name.
      * - No fuzzy (Levenshtein) fallback for meals to prevent broad/irrelevant results.
      */
-    suspend fun searchMeals(query: String): List<Meal> {
+    suspend fun searchMeals(query: String, trackingCounts: Map<Long, Long> = emptyMap()): List<Meal> {
         val q = query.trim()
         if (q.isEmpty()) return emptyList()
         val qLower = q.lowercase()
@@ -199,6 +199,7 @@ class IntakeRepository(database: Database) {
         fun exactMatch(m: Meal): Boolean = SearchUtils.exactMatch(fields(m), q)
         fun prefixMatch(m: Meal): Boolean = SearchUtils.prefixMatch(fields(m), q)
         fun containsPos(m: Meal): Int = SearchUtils.containsPos(fields(m), qLower)
+        fun trackingCount(m: Meal): Long = trackingCounts[m.id] ?: 0L
 
         // Order-agnostic multi-word search: ensure all tokens present across names
         val tokens = SearchUtils.tokenize(qLower)
@@ -211,9 +212,11 @@ class IntakeRepository(database: Database) {
             }
             if (filtered.isNotEmpty()) {
                 return filtered.sortedWith(
-                    compareBy<Meal> { if (exactMatch(it)) 0 else 1 }
+                    compareByDescending<Meal> { trackingCount(it) > 0 }
+                        .thenBy { if (exactMatch(it)) 0 else 1 }
                         .thenBy { if (prefixMatch(it)) 0 else 1 }
                         .thenBy { SearchUtils.tokensPosSum(fields(it), tokens) }
+                        .thenByDescending { trackingCount(it) }
                         .thenBy { it.name.lowercase() }
                 )
             }
@@ -228,8 +231,10 @@ class IntakeRepository(database: Database) {
         if (qLower.length <= 3) {
             val strict = candidates.filter { exactMatch(it) || prefixMatch(it) }
             if (strict.isNotEmpty()) return strict.sortedWith(
-                compareBy<Meal> { if (exactMatch(it)) 0 else 1 }
+                compareByDescending<Meal> { trackingCount(it) > 0 }
+                    .thenBy { if (exactMatch(it)) 0 else 1 }
                     .thenBy { if (prefixMatch(it)) 0 else 1 }
+                    .thenByDescending { trackingCount(it) }
                     .thenBy { it.name.lowercase() }
             )
             // If no strict matches, return empty to avoid noise
@@ -237,9 +242,11 @@ class IntakeRepository(database: Database) {
         }
 
         return candidates.sortedWith(
-            compareBy<Meal> { if (exactMatch(it)) 0 else 1 }
+            compareByDescending<Meal> { trackingCount(it) > 0 }
+                .thenBy { if (exactMatch(it)) 0 else 1 }
                 .thenBy { if (prefixMatch(it)) 0 else 1 }
                 .thenBy { containsPos(it) }
+                .thenByDescending { trackingCount(it) }
                 .thenBy { it.name.lowercase() }
         )
     }
@@ -308,6 +315,15 @@ class IntakeRepository(database: Database) {
         intakeQ.getCountTrackedIntakes(startIso, endIso).awaitAsOne()
 
     suspend fun getAllItemFrequencies() = intakeQ.allItemFrequencies().awaitAsList()
+
+    suspend fun getTrackingCounts(): Map<Pair<String, Long>, Long> {
+        val rows = intakeQ.itemTrackingCounts().awaitAsList()
+        return rows.associate { row ->
+            val type = row.source_type
+            val id = if (type == "FOOD") row.source_food_id!! else row.source_meal_id!!
+            (type to id) to row.frequency
+        }
+    }
 
     suspend fun getItemsMissingImage() = intakeQ.itemsMissingImage().awaitAsList()
 }
