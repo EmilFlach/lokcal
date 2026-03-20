@@ -178,16 +178,19 @@ class IntakeViewModel(
                 try {
                     val newId = foodRepo.insertManual(
                         name = sourceItem.name,
-                        brandName = null,
                         energyKcalPer100g = sourceItem.energyKcalPer100g ?: 0.0,
-                        productUrl = sourceItem.productUrl,
-                        imageUrl = sourceItem.imageUrl,
-                        gtin13 = sourceItem.gtin13,
                         servingSize = sourceItem.servingSize?.toString() ?: "100",
-                        englishName = null,
-                        dutchName = sourceItem.dutchName,
+                        gtin13 = sourceItem.gtin13,
+                        imageUrl = sourceItem.imageUrl,
+                        productUrl = sourceItem.productUrl,
                         source = if (albertHeijnResults.containsKey(foodId)) "ah" else "manual",
                     )
+                    // Add Dutch name as alias if available
+                    sourceItem.dutchName?.let { dutchName ->
+                        if (dutchName.isNotBlank() && dutchName.lowercase() != sourceItem.name.lowercase()) {
+                            foodRepo.addAlias(newId, dutchName, "locale:nl")
+                        }
+                    }
                     intakeRepo.logOrUpdateFoodIntake(newId, grams, mealType(), dateIso, refreshId = true)
                     withContext(Dispatchers.Main) {
                         onSuccess()
@@ -319,26 +322,13 @@ class IntakeViewModel(
     private fun OnlineFoodItem.toFood(tempId: Long, source: String) = Food(
         id = tempId,
         name = name,
-        description = null,
-        brand = null,
-        category = null,
         energy_kcal_per_100g = energyKcalPer100g ?: 0.0,
         unit = "g",
-        external_id = null,
-        plural_name = null,
-        english_name = null,
-        dutch_name = dutchName,
-        brand_name = null,
         serving_size = servingSize?.toString(),
         gtin13 = gtin13,
         image_url = imageUrl,
         product_url = productUrl,
         source = source,
-        label_id = null,
-        created_at_source = null,
-        updated_at_source = null,
-        on_hand = 0L,
-        raw_json = null,
         created_at = ""
     )
 

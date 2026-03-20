@@ -5,6 +5,7 @@ import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import com.emilflach.lokcal.Database
 import com.emilflach.lokcal.Food
+import com.emilflach.lokcal.FoodAlias
 import com.emilflach.lokcal.util.SearchUtils
 import com.emilflach.lokcal.util.levenshtein
 
@@ -18,26 +19,20 @@ class FoodRepository(database: Database) {
     suspend fun updateDetails(
         id: Long,
         name: String,
-        brandName: String?,
         energyKcalPer100g: Double,
         productUrl: String?,
         imageUrl: String?,
         gtin13: String?,
         servingSize: String?,
-        englishName: String?,
-        dutchName: String?,
         source: String?,
     ) {
         queries.updateDetails(
             name = name,
-            brand_name = brandName,
             energy_kcal_per_100g = energyKcalPer100g,
-            product_url = productUrl,
-            image_url = imageUrl,
-            gtin13 = gtin13,
             serving_size = servingSize,
-            english_name = englishName,
-            dutch_name = dutchName,
+            gtin13 = gtin13,
+            image_url = imageUrl,
+            product_url = productUrl,
             source = source,
             id = id
         )
@@ -45,27 +40,21 @@ class FoodRepository(database: Database) {
 
     suspend fun insertManual(
         name: String,
-        brandName: String?,
         energyKcalPer100g: Double,
-        productUrl: String?,
-        imageUrl: String?,
-        gtin13: String?,
         servingSize: String?,
-        englishName: String?,
-        dutchName: String?,
+        gtin13: String?,
+        imageUrl: String?,
+        productUrl: String?,
         source: String?,
     ): Long {
         return queries.transactionWithResult {
             queries.insertManual(
                 name = name,
-                brand_name = brandName,
                 energy_kcal_per_100g = energyKcalPer100g,
-                product_url = productUrl,
-                image_url = imageUrl,
-                gtin13 = gtin13,
                 serving_size = servingSize,
-                english_name = englishName,
-                dutch_name = dutchName,
+                gtin13 = gtin13,
+                image_url = imageUrl,
+                product_url = productUrl,
                 source = source
             )
             queries.selectLastInsertRowId().awaitAsOne()
@@ -76,17 +65,31 @@ class FoodRepository(database: Database) {
         queries.deleteById(id)
     }
 
+    // Alias management methods
+    suspend fun addAlias(foodId: Long, alias: String, type: String) {
+        queries.insertAlias(foodId, alias, type)
+    }
+
+    suspend fun getAliases(foodId: Long): List<FoodAlias> {
+        return queries.selectAliasesByFoodId(foodId).awaitAsList()
+    }
+
+    suspend fun getAliasesByType(foodId: Long, type: String): List<FoodAlias> {
+        return queries.selectAliasesByType(foodId, type).awaitAsList()
+    }
+
+    suspend fun deleteAlias(aliasId: Long) {
+        queries.deleteAlias(aliasId)
+    }
+
+    suspend fun updateAlias(aliasId: Long, alias: String, type: String) {
+        queries.updateAlias(alias, type, aliasId)
+    }
+
     /**
      * Search foods with order-agnostic, multi-field logic.
-     * Steps and rationale:
-     * - Trim and lowercase the query; if empty -> empty list (avoid noisy defaults in search mode).
-     * - Multi-word: use the longest token for an initial LIKE to get a focused candidate set, then
-     *   require that all tokens are present across any of the fields (name/english/dutch/brand),
-     *   regardless of order. Rank by exact match, prefix match, token positions, Levenshtein, source, name.
-     * - Single-word: fetch LIKE candidates across fields; if any, rank by exact, prefix, containsPos,
-     *   Levenshtein distance, source priority, and name.
-     * - Fuzzy fallback (Levenshtein over all rows) is only used when LIKE finds nothing AND query length >= 4.
-     *   This guard avoids the previous issue where very short queries could show almost everything.
+     * Now searches across food names and aliases stored in FoodAlias table.
+     * The SQL query with LEFT JOIN handles the alias matching, so we just use the name field for sorting.
      */
     suspend fun search(query: String, trackingCounts: Map<Long, Long> = emptyMap()): List<Food> {
         val q = query.trim()
@@ -108,10 +111,7 @@ class FoodRepository(database: Database) {
             else -> 4
         }
 
-        fun fields(f: Food): List<String> = listOfNotNull(
-            f.name, f.english_name, f.dutch_name, f.brand_name
-        )
-
+        fun fields(f: Food): List<String> = listOf(f.name)
         fun exactMatch(f: Food): Boolean = SearchUtils.exactMatch(fields(f), q)
         fun prefixMatch(f: Food): Boolean = SearchUtils.prefixMatch(fields(f), q)
         fun containsPos(f: Food): Int = SearchUtils.containsPos(fields(f), qLower)
@@ -125,12 +125,12 @@ class FoodRepository(database: Database) {
             return best
         }
 
-        // Multi-word, order-agnostic search: ensure all tokens are present in any order across fields
+        // Multi-word, order-agnostic search
         val tokens = SearchUtils.tokenize(qLower)
         if (tokens.size >= 2) {
             val primary = SearchUtils.longestToken(tokens) ?: tokens.first()
             val likePrimary = "%$primary%"
-            val initial = queries.searchByAny(likePrimary, likePrimary, likePrimary, likePrimary).awaitAsList()
+            val initial = queries.searchByAny(likePrimary, likePrimary, q).awaitAsList()
             fun tokensPosSum(f: Food): Int = SearchUtils.tokensPosSum(fields(f), tokens)
             val filtered = initial.filter { f ->
                 SearchUtils.tokensPresent(fields(f), tokens)
@@ -147,14 +147,11 @@ class FoodRepository(database: Database) {
                         .thenBy { it.name.lowercase() }
                 )
             }
-            // If nothing matched all tokens, continue with normal flow and fuzzy fallback below
         }
 
         val like = "%$qLower%"
-        // Fetch candidates across multiple fields (case-insensitive)
-        val candidatesLike = queries.searchByAny(like, like, like, like).awaitAsList()
+        val candidatesLike = queries.searchByAny(like, like, q).awaitAsList()
 
-        // If LIKE found candidates, use the existing relevance ordering
         if (candidatesLike.isNotEmpty()) {
             return candidatesLike.sortedWith(
                 compareByDescending<Food> { trackingCount(it) > 0 }
@@ -168,7 +165,7 @@ class FoodRepository(database: Database) {
             )
         }
 
-        // Fuzzy fallback: when LIKE returns nothing (e.g., misspellings)
+        // Fuzzy fallback
         val all = getAll()
         if (all.isEmpty()) return emptyList()
         return all.sortedWith(
@@ -178,9 +175,5 @@ class FoodRepository(database: Database) {
                 .thenBy { sourcePriority(it.source) }
                 .thenBy { it.name.lowercase() }
         ).take(100)
-    }
-
-    suspend fun insert(name: String, description: String?) {
-        queries.insert(name = name, description = description)
     }
 }

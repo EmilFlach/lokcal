@@ -184,21 +184,179 @@ private fun ensureIntakeSchemaUpgrades(driver: SqlDriver) {
     }
 }
 
+private fun getSchemaVersion(driver: SqlDriver): Int {
+    return try {
+        var version = 0
+        driver.executeQuery(
+            identifier = null,
+            sql = "SELECT value FROM Meta WHERE key = 'schema_version'",
+            mapper = { cursor ->
+                if (cursor.next().value) {
+                    version = cursor.getString(0)?.toIntOrNull() ?: 0
+                }
+                QueryResult.Value(Unit)
+            },
+            parameters = 0,
+            binders = null
+        )
+        version
+    } catch (_: Throwable) {
+        0
+    }
+}
+
+private fun setSchemaVersion(driver: SqlDriver, version: Int) {
+    tryExec(driver, "INSERT OR REPLACE INTO Meta(key, value) VALUES ('schema_version', '$version')")
+}
+
+private fun migrateToV5(driver: SqlDriver) {
+    println("[Migration] Starting V5 migration: Simplify Food table, enhance FoodAlias, remove enum constraints")
+
+    // Step 1: Create new FoodAlias table with alias_type
+    tryExec(driver, """
+        CREATE TABLE IF NOT EXISTS FoodAlias_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            food_id INTEGER NOT NULL REFERENCES Food(id) ON DELETE CASCADE,
+            alias TEXT NOT NULL,
+            alias_type TEXT NOT NULL,
+            UNIQUE(food_id, alias, alias_type)
+        )
+    """)
+
+    // Step 2: Migrate existing aliases (if any)
+    tryExec(driver, """
+        INSERT OR IGNORE INTO FoodAlias_new (food_id, alias, alias_type)
+        SELECT food_id, alias, 'name' FROM FoodAlias
+    """)
+
+    // Step 3: Migrate brand_name, english_name, dutch_name to aliases
+    tryExec(driver, """
+        INSERT OR IGNORE INTO FoodAlias_new (food_id, alias, alias_type)
+        SELECT id, brand_name, 'brand'
+        FROM Food
+        WHERE brand_name IS NOT NULL AND brand_name != ''
+    """)
+
+    tryExec(driver, """
+        INSERT OR IGNORE INTO FoodAlias_new (food_id, alias, alias_type)
+        SELECT id, english_name, 'locale:en'
+        FROM Food
+        WHERE english_name IS NOT NULL AND english_name != ''
+    """)
+
+    tryExec(driver, """
+        INSERT OR IGNORE INTO FoodAlias_new (food_id, alias, alias_type)
+        SELECT id, dutch_name, 'locale:nl'
+        FROM Food
+        WHERE dutch_name IS NOT NULL AND dutch_name != ''
+    """)
+
+    // Step 4: Create new simplified Food table
+    tryExec(driver, """
+        CREATE TABLE Food_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            energy_kcal_per_100g REAL NOT NULL DEFAULT 0,
+            unit TEXT NOT NULL DEFAULT 'g',
+            serving_size TEXT,
+            gtin13 TEXT,
+            image_url TEXT,
+            product_url TEXT,
+            source TEXT,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    // Step 5: Copy data (only 10 fields)
+    tryExec(driver, """
+        INSERT INTO Food_new (id, name, energy_kcal_per_100g, unit, serving_size,
+                              gtin13, image_url, product_url, source, created_at)
+        SELECT id, name, energy_kcal_per_100g, unit, serving_size,
+               gtin13, image_url, product_url, source, created_at
+        FROM Food
+    """)
+
+    // Step 6: Replace tables
+    tryExec(driver, "DROP TABLE IF EXISTS Food")
+    tryExec(driver, "ALTER TABLE Food_new RENAME TO Food")
+
+    tryExec(driver, "DROP TABLE IF EXISTS FoodAlias")
+    tryExec(driver, "ALTER TABLE FoodAlias_new RENAME TO FoodAlias")
+
+    // Step 7: Create indexes
+    tryExec(driver, "CREATE INDEX IF NOT EXISTS food_gtin13_idx ON Food(gtin13)")
+    tryExec(driver, "CREATE INDEX IF NOT EXISTS food_source_idx ON Food(source)")
+    tryExec(driver, "CREATE INDEX IF NOT EXISTS food_alias_text_idx ON FoodAlias(LOWER(alias))")
+    tryExec(driver, "CREATE INDEX IF NOT EXISTS food_alias_type_idx ON FoodAlias(alias_type)")
+    tryExec(driver, "CREATE INDEX IF NOT EXISTS food_alias_food_id_idx ON FoodAlias(food_id)")
+
+    // Step 8: Recreate Intake table without meal_type CHECK constraint
+    tryExec(driver, """
+        CREATE TABLE Intake_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT NOT NULL,
+            meal_type TEXT NOT NULL,
+            source_type TEXT NOT NULL CHECK (source_type IN ('FOOD','MEAL')),
+            source_food_id INTEGER REFERENCES Food(id) ON DELETE SET NULL,
+            source_meal_id INTEGER REFERENCES Meal(id) ON DELETE SET NULL,
+            quantity_g REAL NOT NULL CHECK (quantity_g >= 0),
+            item_name TEXT NOT NULL,
+            energy_kcal_total REAL NOT NULL,
+            notes TEXT,
+            leftover INTEGER NOT NULL DEFAULT 0,
+            CHECK (
+                (source_type = 'FOOD' AND source_food_id IS NOT NULL AND source_meal_id IS NULL) OR
+                (source_type = 'MEAL' AND source_meal_id IS NOT NULL AND source_food_id IS NULL)
+            )
+        )
+    """)
+
+    tryExec(driver, "INSERT INTO Intake_new SELECT * FROM Intake")
+    tryExec(driver, "DROP TABLE IF EXISTS Intake")
+    tryExec(driver, "ALTER TABLE Intake_new RENAME TO Intake")
+
+    // Step 9: Recreate Exercise table without exercise_type CHECK constraint
+    tryExec(driver, """
+        CREATE TABLE Exercise_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT NOT NULL,
+            exercise_type TEXT NOT NULL,
+            duration_min REAL NOT NULL CHECK (duration_min >= 0),
+            energy_kcal_total REAL NOT NULL,
+            notes TEXT
+        )
+    """)
+
+    tryExec(driver, "INSERT INTO Exercise_new SELECT * FROM Exercise")
+    tryExec(driver, "DROP TABLE IF EXISTS Exercise")
+    tryExec(driver, "ALTER TABLE Exercise_new RENAME TO Exercise")
+
+    println("[Migration] V5 migration completed successfully")
+}
+
 suspend fun createDatabase(sqlDriverFactory: SqlDriverFactory, onProgress: ((Float) -> Unit)? = null): Database {
     val driver = sqlDriverFactory.createDriver(schema = Database.Schema)
 
     // Ensure Meta table exists for older databases without migrations
     ensureMetaTable(driver)
 
-    // Best-effort runtime schema upgrades for existing installs without SQLDelight migrations
-    ensureFoodSchemaUpgrades(driver)
-    ensureMealSchemaUpgrades(driver)
-    ensureExerciseSchemaUpgrades(driver)
-    ensureWeightSchemaUpgrades(driver)
-    ensureIntakeSchemaUpgrades(driver)
+    // Check schema version and run migration if needed
+    val currentVersion = getSchemaVersion(driver)
+    if (currentVersion < 5) {
+        // Run old migrations first if database exists
+        if (currentVersion == 0) {
+            // Best-effort runtime schema upgrades for existing installs without SQLDelight migrations
+            ensureFoodSchemaUpgrades(driver)
+            ensureMealSchemaUpgrades(driver)
+            ensureExerciseSchemaUpgrades(driver)
+            ensureWeightSchemaUpgrades(driver)
+            ensureIntakeSchemaUpgrades(driver)
+        }
 
-    // Ensure Intake leftover column exists for older databases (best-effort)
-
+        // Run V5 migration
+        migrateToV5(driver)
+        setSchemaVersion(driver, 5)
+    }
 
     val database = Database(driver)
     // Seed initial data on first launch

@@ -9,22 +9,27 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddLink
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ImageSearch
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -35,7 +40,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
@@ -156,27 +164,6 @@ fun FoodEditScreen(
             Spacer(Modifier.height(16.dp))
             Text("Optional fields")
             OutlinedTextField(
-                value = state.brandName,
-                onValueChange = { viewModel.updateBrandName(it) },
-                label = { Text("Brand name") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = state.englishName,
-                onValueChange = { viewModel.updateEnglishName(it) },
-                label = { Text("English name") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = state.dutchName,
-                onValueChange = { viewModel.updateDutchName(it) },
-                label = { Text("Dutch name") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
                 value = state.productUrl,
                 onValueChange = { viewModel.updateProductUrl(it) },
                 label = { Text("Product URL") },
@@ -217,6 +204,21 @@ fun FoodEditScreen(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
+
+            // Alias management section (only show when editing existing food)
+            if (isEdit && state.id != null) {
+                Spacer(Modifier.height(16.dp))
+                AliasManagementSection(
+                    aliases = state.aliases,
+                    onAddAlias = { alias, type ->
+                        viewModel.addAlias(alias, type)
+                    },
+                    onDeleteAlias = { aliasId ->
+                        viewModel.deleteAlias(aliasId)
+                    }
+                )
+            }
+
             Spacer(Modifier.height(64.dp))
         }
 
@@ -266,4 +268,111 @@ fun FoodEditScreen(
             )
         }
     }
+}
+
+@Composable
+private fun AliasManagementSection(
+    aliases: List<com.emilflach.lokcal.FoodAlias>,
+    onAddAlias: (String, String) -> Unit,
+    onDeleteAlias: (Long) -> Unit
+) {
+    val colors = LocalRecipesColors.current
+    var showAddDialog by remember { mutableStateOf(false) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+        ) {
+            Text("Aliases", style = MaterialTheme.typography.titleMedium)
+            FilledTonalButton(onClick = { showAddDialog = true }) {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.padding(end = 4.dp))
+                Text("Add Alias")
+            }
+        }
+
+        if (aliases.isEmpty()) {
+            Text(
+                "No aliases yet. Add brand names, translations, or alternative names.",
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.foregroundSupport
+            )
+        } else {
+            aliases.forEach { alias ->
+                AliasCard(
+                    alias = alias,
+                    onDelete = { onDeleteAlias(alias.id) }
+                )
+            }
+        }
+    }
+
+    if (showAddDialog) {
+        AddAliasDialog(
+            onDismiss = { showAddDialog = false },
+            onAdd = { aliasText ->
+                onAddAlias(aliasText, "name")
+                showAddDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+private fun AliasCard(
+    alias: com.emilflach.lokcal.FoodAlias,
+    onDelete: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+        ) {
+            Text(alias.alias, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, contentDescription = "Delete alias")
+            }
+        }
+    }
+}
+
+@Composable
+private fun AddAliasDialog(
+    onDismiss: () -> Unit,
+    onAdd: (String) -> Unit
+) {
+    var aliasText by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = { if (aliasText.isNotBlank()) onAdd(aliasText.trim()) },
+                enabled = aliasText.isNotBlank()
+            ) {
+                Text("Add")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        title = { Text("Add Alias") },
+        text = {
+            OutlinedTextField(
+                value = aliasText,
+                onValueChange = { aliasText = it },
+                label = { Text("Alias (brand name, translation, etc.)") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    )
 }

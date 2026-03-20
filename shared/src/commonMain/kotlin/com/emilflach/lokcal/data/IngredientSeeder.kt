@@ -15,6 +15,7 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 /**
  * Seeds the Food table from bundled ingredients.json on first app launch.
  * Uses Meta table key "ingredients_seeded" to prevent reseeding.
+ * Updated to use new schema with FoodAlias table.
  */
 object IngredientSeeder {
     private const val META_KEY = "ingredients_seeded"
@@ -50,7 +51,10 @@ object IngredientSeeder {
         val arr = (json as? JsonArray) ?: return@withContext
 
         val foodQ = database.foodQueries
-        val existingExternalIds = foodQ.selectAllExternalIds().awaitAsList().toSet()
+        val foodRepository = FoodRepository(database)
+
+        // Check for duplicates by name (since external_id is no longer tracked)
+        val existingNames = foodRepository.getAll().map { it.name.lowercase() }.toSet()
 
         val total = arr.size
 
@@ -59,19 +63,17 @@ object IngredientSeeder {
                 onProgress?.invoke(0.2f + (index.toFloat() / total) * 0.8f)
             }
             val o = (el as? JsonObject) ?: continue
-            val externalId = o["id"]?.jsonPrimitive?.content
-            
-            // Skip if already exists
-            if (externalId != null && existingExternalIds.contains(externalId)) {
+
+            val name = o["name"]?.jsonPrimitive?.content?.trim()?.takeIf { it.isNotEmpty() } ?: continue
+
+            // Skip if already exists (by name)
+            if (existingNames.contains(name.lowercase())) {
                 continue
             }
 
-            val name = o["name"]?.jsonPrimitive?.content?.trim()?.takeIf { it.isNotEmpty() } ?: continue
-            val desc = o["description"]?.jsonPrimitive?.content?.trim()?.takeIf { it.isNotEmpty() }
-
             val extras = o["extras"] as? JsonObject
             val kcalStr = extras?.get("kcal")?.jsonPrimitive?.content
-            val kcal = kcalStr?.toDoubleOrNull()
+            val kcal = kcalStr?.toDoubleOrNull() ?: 0.0
 
             val englishName = extras?.get("englishName")?.jsonPrimitive?.content
             val dutchName = extras?.get("dutchName")?.jsonPrimitive?.content
@@ -82,54 +84,46 @@ object IngredientSeeder {
             val productUrl = extras?.get("productUrl")?.jsonPrimitive?.content
             val source = extras?.get("source")?.jsonPrimitive?.content
 
-            val rawJson = o.toString()
-            val pluralName = o["pluralName"]?.jsonPrimitive?.content
-            val labelId = o["labelId"]?.jsonPrimitive?.content
-            val createdAtSrc = o["createdAt"]?.jsonPrimitive?.content
-            val updatedAtSrc = o["updatedAt"]?.jsonPrimitive?.content
-            val onHand = o["onHand"]?.jsonPrimitive?.content?.lowercase() == "true"
-
-            // Insert structured fields
-            val energy = kcal ?: 0.0
-
-            foodQ.insertFromSeed(
+            // Insert food with simplified schema
+            val foodId = foodRepository.insertManual(
                 name = name,
-                description = desc,
-                energy_kcal_per_100g = energy,
-                raw_json = rawJson,
-                external_id = externalId,
-                plural_name = pluralName,
-                label_id = labelId,
-                created_at_source = createdAtSrc,
-                updated_at_source = updatedAtSrc,
-                on_hand = if (onHand) 1 else 0,
-                english_name = englishName,
-                dutch_name = dutchName,
-                brand_name = brandName,
-                serving_size = servingSize,
+                energyKcalPer100g = kcal,
+                servingSize = servingSize,
                 gtin13 = gtin13,
-                image_url = imageUrl,
-                product_url = productUrl,
-                source = source
+                imageUrl = imageUrl,
+                productUrl = productUrl,
+                source = source ?: "seed"
             )
 
-            // Insert aliases
-            val currentFoodId = if (externalId != null) {
-                foodQ.selectIdByExternalId(externalId).awaitAsOneOrNull()
-            } else null
+            // Create aliases for locale-specific names and brands
+            englishName?.let {
+                if (it.isNotBlank() && it.lowercase() != name.lowercase()) {
+                    foodRepository.addAlias(foodId, it, "locale:en")
+                }
+            }
+            dutchName?.let {
+                if (it.isNotBlank() && it.lowercase() != name.lowercase()) {
+                    foodRepository.addAlias(foodId, it, "locale:nl")
+                }
+            }
+            brandName?.let {
+                if (it.isNotBlank()) {
+                    foodRepository.addAlias(foodId, it, "brand")
+                }
+            }
 
-            if (currentFoodId != null) {
-                val aliases = (o["aliases"] as? JsonArray)
-                if (aliases != null) {
-                    for (al in aliases) {
-                        val alias = (al as? kotlinx.serialization.json.JsonPrimitive)?.content?.trim()
-                        if (!alias.isNullOrEmpty()) {
-                            foodQ.foodAliasInsert(food_id = currentFoodId, alias = alias)
-                        }
+            // Insert any additional aliases from the JSON
+            val aliases = (o["aliases"] as? JsonArray)
+            if (aliases != null) {
+                for (al in aliases) {
+                    val alias = (al as? kotlinx.serialization.json.JsonPrimitive)?.content?.trim()
+                    if (!alias.isNullOrEmpty() && alias.lowercase() != name.lowercase()) {
+                        foodRepository.addAlias(foodId, alias, "name")
                     }
                 }
             }
         }
         metaQ.setMeta(META_KEY, "1")
+        onProgress?.invoke(1.0f)
     }
 }

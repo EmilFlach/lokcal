@@ -1,7 +1,7 @@
 CREATE TABLE Intake (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     timestamp TEXT NOT NULL,
-    meal_type TEXT NOT NULL CHECK (meal_type IN ('BREAKFAST','LUNCH','DINNER','SNACK')),
+    meal_type TEXT NOT NULL,
     source_type TEXT NOT NULL CHECK (source_type IN ('FOOD','MEAL')),
     source_food_id INTEGER REFERENCES Food(id) ON DELETE SET NULL,
     source_meal_id INTEGER REFERENCES Meal(id) ON DELETE SET NULL,

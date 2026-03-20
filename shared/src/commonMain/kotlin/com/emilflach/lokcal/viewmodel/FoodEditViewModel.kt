@@ -2,6 +2,7 @@ package com.emilflach.lokcal.viewmodel
 
 import com.emilflach.lokcal.AllItemFrequencies
 import com.emilflach.lokcal.Food
+import com.emilflach.lokcal.FoodAlias
 import com.emilflach.lokcal.ItemsMissingImage
 import com.emilflach.lokcal.data.AlbertHeijnScraper
 import com.emilflach.lokcal.data.FoodRepository
@@ -48,13 +49,11 @@ class FoodEditViewModel(
         val name: String = "",
         val energyText: String = "0",
         val servingSize: String = "",
-        val brandName: String = "",
-        val englishName: String = "",
-        val dutchName: String = "",
         val productUrl: String = "",
         val imageUrl: String = "",
         val gtin13: String = "",
         val source: String = "manual",
+        val aliases: List<FoodAlias> = emptyList(),
         // Import dialog state
         val showUrlDialog: Boolean = false,
         val urlInput: String = "",
@@ -150,19 +149,18 @@ class FoodEditViewModel(
             } else {
                 val f = repo.getById(foodId)
                 if (f != null) {
+                    val aliases = repo.getAliases(f.id)
                     _edit.value = EditState(
                         id = f.id,
                         isEdit = true,
                         name = f.name,
                         energyText = (f.energy_kcal_per_100g).roundToInt().toString(),
                         servingSize = f.serving_size ?: "",
-                        brandName = f.brand_name ?: "",
-                        englishName = f.english_name ?: "",
-                        dutchName = f.dutch_name ?: "",
                         productUrl = f.product_url ?: "",
                         imageUrl = f.image_url ?: "",
                         gtin13 = f.gtin13 ?: "",
-                        source = f.source ?: ""
+                        source = f.source ?: "",
+                        aliases = aliases
                     )
                 } else {
                     _edit.value = EditState()
@@ -194,7 +192,6 @@ class FoodEditViewModel(
                 productUrl = url,
                 imageUrl = r.imageUrl ?: current.imageUrl,
                 gtin13 = r.gtin13 ?: current.gtin13,
-                brandName = r.name.toString().ifBlank { current.name },
                 source = "ah",
                 showUrlDialog = false,
                 isImporting = false,
@@ -208,13 +205,40 @@ class FoodEditViewModel(
     fun updateName(v: String) { _edit.value = _edit.value.copy(name = v) }
     fun updateEnergyText(v: String) { _edit.value = _edit.value.copy(energyText = v.filter { it.isDigit() || it == '.' || it == ',' }) }
     fun updateServingSize(v: String) { _edit.value = _edit.value.copy(servingSize = v) }
-    fun updateBrandName(v: String) { _edit.value = _edit.value.copy(brandName = v) }
-    fun updateEnglishName(v: String) { _edit.value = _edit.value.copy(englishName = v) }
-    fun updateDutchName(v: String) { _edit.value = _edit.value.copy(dutchName = v) }
     fun updateProductUrl(v: String) { _edit.value = _edit.value.copy(productUrl = v) }
     fun updateImageUrl(v: String) { _edit.value = _edit.value.copy(imageUrl = v) }
     fun updateGtin13(v: String) { _edit.value = _edit.value.copy(gtin13 = v.filter { it.isDigit() }) }
     fun updateSource(v: String) { _edit.value = _edit.value.copy(source = v) }
+
+    fun addAlias(alias: String, type: String) {
+        val current = _edit.value
+        val foodId = current.id ?: return
+        scope.launch {
+            repo.addAlias(foodId, alias, type)
+            val updated = repo.getAliases(foodId)
+            _edit.value = current.copy(aliases = updated)
+        }
+    }
+
+    fun deleteAlias(aliasId: Long) {
+        val current = _edit.value
+        val foodId = current.id ?: return
+        scope.launch {
+            repo.deleteAlias(aliasId)
+            val updated = repo.getAliases(foodId)
+            _edit.value = current.copy(aliases = updated)
+        }
+    }
+
+    fun updateAlias(aliasId: Long, alias: String, type: String) {
+        val current = _edit.value
+        val foodId = current.id ?: return
+        scope.launch {
+            repo.updateAlias(aliasId, alias, type)
+            val updated = repo.getAliases(foodId)
+            _edit.value = current.copy(aliases = updated)
+        }
+    }
     
     // Steal image logic
     private var stealSearchJob: Job? = null
@@ -254,27 +278,21 @@ class FoodEditViewModel(
                 repo.updateDetails(
                     id = s.id,
                     name = name,
-                    brandName = s.brandName.trim().ifBlank { null },
                     energyKcalPer100g = energy,
                     productUrl = s.productUrl.trim().ifBlank { null },
                     imageUrl = s.imageUrl.trim().ifBlank { null },
                     gtin13 = s.gtin13.trim().ifBlank { null },
                     servingSize = s.servingSize.trim().ifBlank { null },
-                    englishName = s.englishName.trim().ifBlank { null },
-                    dutchName = s.dutchName.trim().ifBlank { null },
                     source = s.source.trim().ifBlank { null },
                 )
             } else {
                 repo.insertManual(
                     name = name,
-                    brandName = s.brandName.trim().ifBlank { null },
                     energyKcalPer100g = energy,
-                    productUrl = s.productUrl.trim().ifBlank { null },
-                    imageUrl = s.imageUrl.trim().ifBlank { null },
-                    gtin13 = s.gtin13.trim().ifBlank { null },
                     servingSize = s.servingSize.trim().ifBlank { null },
-                    englishName = s.englishName.trim().ifBlank { null },
-                    dutchName = s.dutchName.trim().ifBlank { null },
+                    gtin13 = s.gtin13.trim().ifBlank { null },
+                    imageUrl = s.imageUrl.trim().ifBlank { null },
+                    productUrl = s.productUrl.trim().ifBlank { null },
                     source = s.source.trim().ifBlank { "manual" }
                 )
             }
