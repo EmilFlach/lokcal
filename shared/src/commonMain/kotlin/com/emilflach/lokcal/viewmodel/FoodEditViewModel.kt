@@ -193,16 +193,6 @@ class FoodEditViewModel(
             _edit.value = current.copy(aliases = updated)
         }
     }
-
-    fun updateAlias(aliasId: Long, alias: String, type: String) {
-        val current = _edit.value
-        val foodId = current.id ?: return
-        scope.launch {
-            repo.updateAlias(aliasId, alias, type)
-            val updated = repo.getAliases(foodId)
-            _edit.value = current.copy(aliases = updated)
-        }
-    }
     
     // Steal image logic
     private var stealSearchJob: Job? = null

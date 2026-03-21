@@ -12,8 +12,5 @@ setPreference:
 INSERT OR REPLACE INTO source_preference(preference_order, source_id)
 VALUES (?, ?);
 
-deletePreference:
-DELETE FROM source_preference WHERE preference_order = ?;
-
 clearAllPreferences:
 DELETE FROM source_preference;
