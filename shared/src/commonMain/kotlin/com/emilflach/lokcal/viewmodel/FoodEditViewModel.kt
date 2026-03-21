@@ -4,9 +4,11 @@ import com.emilflach.lokcal.AllItemFrequencies
 import com.emilflach.lokcal.Food
 import com.emilflach.lokcal.FoodAlias
 import com.emilflach.lokcal.ItemsMissingImage
-import com.emilflach.lokcal.data.AlbertHeijnScraper
 import com.emilflach.lokcal.data.FoodRepository
 import com.emilflach.lokcal.data.IntakeRepository
+import com.emilflach.lokcal.data.scraper.AlbertHeijnFoodSource
+import com.emilflach.lokcal.data.scraper.OpenFoodFactsFoodSource
+import com.emilflach.lokcal.data.scraper.SourceRegistry
 import com.emilflach.lokcal.ui.dialogs.StealImageItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -85,7 +87,10 @@ class FoodEditViewModel(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var searchJob: Job? = null
 
-    private val scraper by lazy { AlbertHeijnScraper() }
+    private val sourceRegistry = SourceRegistry().apply {
+        register(AlbertHeijnFoodSource())
+        register(OpenFoodFactsFoodSource())
+    }
 
     init {
         // initial load
@@ -166,39 +171,6 @@ class FoodEditViewModel(
                     _edit.value = EditState()
                 }
             }
-        }
-    }
-
-    // Import dialog controls
-    fun openImportDialog() { _edit.value = _edit.value.copy(showUrlDialog = true, importError = null) }
-    fun closeImportDialog() { _edit.value = _edit.value.copy(showUrlDialog = false, isImporting = false, importError = null) }
-    fun setUrlInput(v: String) { _edit.value = _edit.value.copy(urlInput = v) }
-
-    suspend fun importFromUrl(urlRaw: String) {
-        val url = urlRaw.trim()
-        if (url.isEmpty()) {
-            _edit.value = _edit.value.copy(importError = "Please enter a URL")
-            return
-        }
-        _edit.value = _edit.value.copy(isImporting = true, importError = null)
-
-        try {
-            val r = scraper.scrape(url)
-            val current = _edit.value
-            _edit.value = current.copy(
-                name = r.name.toString().ifBlank { current.name },
-                energyText = r.kcalPer100g.toString().ifBlank { current.energyText },
-                servingSize = r.servingSizeGrams.toString().ifBlank { current.servingSize },
-                productUrl = url,
-                imageUrl = r.imageUrl ?: current.imageUrl,
-                gtin13 = r.gtin13 ?: current.gtin13,
-                source = "ah",
-                showUrlDialog = false,
-                isImporting = false,
-                importError = null,
-            )
-        } catch (_: Exception) {
-            _edit.value = _edit.value.copy(isImporting = false, importError = "Failed to import from URL")
         }
     }
 

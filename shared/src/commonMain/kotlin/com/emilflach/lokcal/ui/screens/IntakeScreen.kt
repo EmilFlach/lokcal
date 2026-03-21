@@ -119,23 +119,18 @@ fun IntakeScreen(
                 state = listState
             ) {
                 if (state.showOnlineSearchSections) {
-                    searchSection(
-                        title = "Albert Heijn",
-                        section = state.ahSection,
-                        viewModel = viewModel,
-                        requesters = requesters,
-                        onDone = onDone
-                    )
-
-                    item { Spacer(Modifier.height(16.dp)) }
-
-                    searchSection(
-                        title = "OpenFoodFacts",
-                        section = state.offSection,
-                        viewModel = viewModel,
-                        requesters = requesters,
-                        onDone = onDone
-                    )
+                    state.scraperSections.forEachIndexed { index, section ->
+                        searchSection(
+                            title = section.scraperName,
+                            section = section,
+                            viewModel = viewModel,
+                            requesters = requesters,
+                            onDone = onDone
+                        )
+                        if (index < state.scraperSections.size - 1) {
+                            item { Spacer(Modifier.height(16.dp)) }
+                        }
+                    }
                 } else {
                     val totalSize = state.meals.size + state.foods.size
 

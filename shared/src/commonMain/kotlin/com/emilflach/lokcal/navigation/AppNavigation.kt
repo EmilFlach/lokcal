@@ -37,6 +37,7 @@ import com.emilflach.lokcal.ui.screens.MainScreen
 import com.emilflach.lokcal.ui.screens.MealTimeScreen
 import com.emilflach.lokcal.ui.screens.MealsListScreen
 import com.emilflach.lokcal.ui.screens.SettingsScreen
+import com.emilflach.lokcal.ui.screens.SourcePreferenceScreen
 import com.emilflach.lokcal.ui.screens.StatisticsScreen
 import com.emilflach.lokcal.ui.screens.WeightListScreen
 import com.emilflach.lokcal.util.currentDateIso
@@ -47,6 +48,7 @@ import com.emilflach.lokcal.viewmodel.IntakeViewModel
 import com.emilflach.lokcal.viewmodel.MainViewModel
 import com.emilflach.lokcal.viewmodel.MealTimeViewModel
 import com.emilflach.lokcal.viewmodel.MealsListViewModel
+import com.emilflach.lokcal.viewmodel.SourcePreferenceViewModel
 import com.emilflach.lokcal.viewmodel.StatisticsViewModel
 import com.emilflach.lokcal.viewmodel.WeightListViewModel
 import kotlinx.datetime.LocalDate
@@ -142,7 +144,9 @@ internal fun AppNavigation(
                         EnterTransition.None togetherWith ExitTransition.None
                     }
                 ) { s ->
-                    val intakeVm = remember(foodRepo, intakeRepo, s.mealType, s.dateIso) { IntakeViewModel(foodRepo, intakeRepo, s.mealType, s.dateIso) }
+                    val intakeVm = remember(foodRepo, intakeRepo, settingsRepo, s.mealType, s.dateIso) {
+                        IntakeViewModel(foodRepo, intakeRepo, settingsRepo, s.mealType, s.dateIso)
+                    }
                     IntakeScreen(
                         viewModel = intakeVm,
                         onDone = { itemAdded ->
@@ -193,8 +197,16 @@ internal fun AppNavigation(
                         onOpenMealsList = { backStack.add(Screen.MealsManage(currentDateIso())) },
                         onOpenWeightList = { backStack.add(Screen.WeightList(returnTo = Screen.ReturnTo.Settings)) },
                         onOpenFoodManage = { backStack.add(Screen.FoodManage(currentDateIso())) },
+                        onOpenScraperPreferences = { backStack.add(Screen.ScraperPreference) },
                         onRequestHealthPermissions = { HealthManager.requestPermissions() },
                         settingsRepo = settingsRepo
+                    )
+                }
+                entry<Screen.ScraperPreference> {
+                    val viewModel = remember(settingsRepo) { SourcePreferenceViewModel(settingsRepo) }
+                    SourcePreferenceScreen(
+                        onBack = { backStack.removeLastOrNull() },
+                        viewModel = viewModel
                     )
                 }
                 entry<Screen.MealsManage> { s ->

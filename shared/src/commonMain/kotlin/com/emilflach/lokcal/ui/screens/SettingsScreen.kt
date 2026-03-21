@@ -57,6 +57,7 @@ fun SettingsScreen(
     onOpenMealsList: () -> Unit,
     onOpenWeightList: () -> Unit,
     onOpenFoodManage: () -> Unit,
+    onOpenScraperPreferences: () -> Unit,
     onRequestHealthPermissions: () -> Unit,
     settingsRepo: SettingsRepository,
 ) {
@@ -139,11 +140,22 @@ fun SettingsScreen(
                 },
                 colors = itemColors,
                 modifier = Modifier
-                    .clip(getRoundedCornerShape(0, 1))
+                    .clip(getRoundedCornerShape(0, 2))
                     .clickable {
                         kcalInput = currentKcal.toInt().toString()
                         showKcalDialog = true
                     }
+            )
+            Spacer(Modifier.height(2.dp))
+            ListItem(
+                headlineContent = { Text("Search sources") },
+                supportingContent = {
+                    Text("Configure online food search sources", color = colors.foregroundSupport)
+                },
+                colors = itemColors,
+                modifier = Modifier
+                    .clip(getRoundedCornerShape(1, 2))
+                    .clickable { onOpenScraperPreferences() }
             )
             if (showKcalDialog) {
                 AlertDialog(

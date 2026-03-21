@@ -1,5 +1,6 @@
 package com.emilflach.lokcal.data
 
+import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import com.emilflach.lokcal.Database
 
@@ -8,6 +9,7 @@ import com.emilflach.lokcal.Database
  */
 class SettingsRepository(database: Database) {
     private val meta = database.metaQueries
+    private val sourcePref = database.sourcePreferenceQueries
 
     companion object {
         private const val KEY_STARTING_KCAL = "starting_kcal"
@@ -23,6 +25,51 @@ class SettingsRepository(database: Database) {
         require(value > 0.0) { "Starting kcal must be > 0" }
         try {
             meta.setMeta(KEY_STARTING_KCAL, value.toString())
+        } catch (_: Throwable) {
+            // ignore
+        }
+    }
+
+    // Source preference methods
+    suspend fun getSourcePreferences(): List<String> {
+        return try {
+            val prefs = sourcePref.getPreferences().awaitAsList().map { it.source_id }
+            println("[SettingsRepo] getSourcePreferences: $prefs")
+            prefs
+        } catch (e: Throwable) {
+            println("[SettingsRepo] getSourcePreferences error: ${e.message}")
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
+    suspend fun setSourcePreference(order: Long, sourceId: String) {
+        require(order in 1..2) { "Preference order must be 1 or 2" }
+        try {
+            println("[SettingsRepo] setSourcePreference: order=$order, sourceId=$sourceId")
+            sourcePref.setPreference(order, sourceId)
+            println("[SettingsRepo] setSourcePreference: success")
+        } catch (e: Throwable) {
+            println("[SettingsRepo] setSourcePreference error: ${e.message}")
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun deleteSourcePreference(order: Long) {
+        require(order in 1..2) { "Preference order must be 1 or 2" }
+        try {
+            println("[SettingsRepo] deleteSourcePreference: order=$order")
+            sourcePref.deletePreference(order)
+            println("[SettingsRepo] deleteSourcePreference: success")
+        } catch (e: Throwable) {
+            println("[SettingsRepo] deleteSourcePreference error: ${e.message}")
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun clearSourcePreferences() {
+        try {
+            sourcePref.clearAllPreferences()
         } catch (_: Throwable) {
             // ignore
         }

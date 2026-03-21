@@ -358,6 +358,21 @@ suspend fun createDatabase(sqlDriverFactory: SqlDriverFactory, onProgress: ((Flo
         setSchemaVersion(driver, 5)
     }
 
+    if (currentVersion < 6) {
+        // Run V6 migration: Add source_preference table
+        println("[Migration] Starting V6 migration: Add source_preference table")
+
+        tryExec(driver, """
+            CREATE TABLE IF NOT EXISTS source_preference (
+                preference_order INTEGER PRIMARY KEY CHECK (preference_order IN (1, 2)),
+                source_id TEXT NOT NULL
+            )
+        """)
+
+        setSchemaVersion(driver, 6)
+        println("[Migration] V6 migration completed successfully")
+    }
+
     val database = Database(driver)
     // Seed initial data on first launch
     IngredientSeeder.seedIfNeeded(database, onProgress)

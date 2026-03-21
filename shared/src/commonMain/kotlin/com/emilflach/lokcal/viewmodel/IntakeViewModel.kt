@@ -2,13 +2,17 @@ package com.emilflach.lokcal.viewmodel
 
 import com.emilflach.lokcal.Food
 import com.emilflach.lokcal.Meal
-import com.emilflach.lokcal.data.AlbertHeijnSearch
 import com.emilflach.lokcal.data.FoodRepository
 import com.emilflach.lokcal.data.IntakeRepository
 import com.emilflach.lokcal.data.LabelService
 import com.emilflach.lokcal.data.OnlineFoodItem
-import com.emilflach.lokcal.data.OpenFoodFactsSearch
 import com.emilflach.lokcal.data.PortionService
+import com.emilflach.lokcal.data.SettingsRepository
+import com.emilflach.lokcal.data.scraper.AlbertHeijnFoodSource
+import com.emilflach.lokcal.data.scraper.FoodSource
+import com.emilflach.lokcal.data.scraper.OpenFoodFactsFoodSource
+import com.emilflach.lokcal.data.scraper.RateLimiter
+import com.emilflach.lokcal.data.scraper.SourceRegistry
 import com.emilflach.lokcal.util.NumberUtils
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -24,14 +28,18 @@ import kotlinx.coroutines.withContext
 class IntakeViewModel(
     private val foodRepo: FoodRepository,
     private val intakeRepo: IntakeRepository,
+    private val settingsRepo: SettingsRepository,
     initialMealType: String,
     private val dateIso: String,
 ) {
     data class SearchSection(
+        val scraperId: String = "",
+        val scraperName: String = "",
         val foods: List<Food> = emptyList(),
         val isSearching: Boolean = false,
         val error: String? = null,
-        val noResults: Boolean = false
+        val noResults: Boolean = false,
+        val remainingCooldown: Int = 0
     )
 
     data class UiState(
@@ -40,13 +48,12 @@ class IntakeViewModel(
         val foods: List<Food> = emptyList(),
         val selectedMealType: String,
         val isSearchingOnline: Boolean = false,
-        val ahSection: SearchSection = SearchSection(),
-        val offSection: SearchSection = SearchSection(),
+        val scraperSections: List<SearchSection> = emptyList(),
         val gramsById: Map<Long, String> = emptyMap(),
         val showScanner: Boolean = false,
     ) {
         val showOnlineSearchSections: Boolean
-            get() = ahSection.foods.isNotEmpty() || offSection.foods.isNotEmpty() || ahSection.isSearching || offSection.isSearching
+            get() = scraperSections.any { it.foods.isNotEmpty() || it.isSearching }
     }
 
     private val _state = MutableStateFlow(UiState(selectedMealType = initialMealType))
@@ -59,12 +66,15 @@ class IntakeViewModel(
     // Centralized services
     private val portionService = PortionService(intakeRepo)
     private val labelService = LabelService(intakeRepo, portionService)
-    private val openFoodFactsSearch = OpenFoodFactsSearch()
-    private val openFoodFactsResults = mutableMapOf<Long, OnlineFoodItem>()
-    private var openFoodFactsTempId = -200000L
-    private val albertHeijnSearch = AlbertHeijnSearch()
-    private val albertHeijnResults = mutableMapOf<Long, OnlineFoodItem>()
-    private var albertHeijnTempId = -100000L
+
+    // Source registry and rate limiting
+    private val sourceRegistry = SourceRegistry().apply {
+        register(AlbertHeijnFoodSource())
+        register(OpenFoodFactsFoodSource())
+    }
+    private val rateLimiter = RateLimiter()
+    private val scraperResults = mutableMapOf<String, MutableMap<Long, OnlineFoodItem>>()
+    private val scraperTempIds = mutableMapOf<String, Long>()
 
     init {
         performSearch(state.value.selectedMealType)
@@ -76,14 +86,11 @@ class IntakeViewModel(
         _state.value = _state.value.copy(
             query = value,
             gramsById = emptyMap(),
-            ahSection = SearchSection(),
-            offSection = SearchSection(),
+            scraperSections = emptyList(),
             isSearchingOnline = false,
         )
-        openFoodFactsResults.clear()
-        albertHeijnResults.clear()
-        albertHeijnTempId = -100000L
-        openFoodFactsTempId = -200000L
+        scraperResults.clear()
+        scraperTempIds.clear()
         performSearch(state.value.selectedMealType)
     }
 
@@ -172,7 +179,10 @@ class IntakeViewModel(
         val grams = NumberUtils.parseDecimal(gramsText, min = 0.0).coerceAtLeast(0.0)
         if (grams <= 0.0) return
 
-        val sourceItem = openFoodFactsResults[foodId] ?: albertHeijnResults[foodId]
+        // Find source item from any scraper results
+        val sourceItem = scraperResults.values.firstNotNullOfOrNull { it[foodId] }
+        val sourceScraperId = scraperResults.entries.firstOrNull { it.value.containsKey(foodId) }?.key
+
         scope.launch {
             if (foodId < 0 && sourceItem != null) {
                 try {
@@ -183,7 +193,7 @@ class IntakeViewModel(
                         gtin13 = sourceItem.gtin13,
                         imageUrl = sourceItem.imageUrl,
                         productUrl = sourceItem.productUrl,
-                        source = if (albertHeijnResults.containsKey(foodId)) "ah" else "manual",
+                        source = sourceScraperId ?: "manual",
                     )
                     // Add Dutch name as alias if available
                     sourceItem.dutchName?.let { dutchName ->
@@ -217,105 +227,129 @@ class IntakeViewModel(
             cancelOnlineSearch()
             return
         }
-        _state.value = _state.value.copy(
-            isSearchingOnline = true,
-            ahSection = SearchSection(isSearching = true),
-            offSection = SearchSection(isSearching = true),
-        )
-        // Cancel any previous job just in case
-        onlineSearchJob?.cancel()
-        onlineSearchJob = scope.launch {
-            try {
-                // Clear transient maps and counters
-                openFoodFactsResults.clear()
-                albertHeijnResults.clear()
 
-                // Launch OFF search
-                val offJob = launch {
-                    try {
-                        val offItems = withContext(Dispatchers.Default) { openFoodFactsSearch.search(q) }
-                        val offTransient = offItems.map {
-                            val tempId = openFoodFactsTempId--
-                            openFoodFactsResults[tempId] = it
-                            it.toFood(tempId, "off")
-                        }
-                        _state.value = _state.value.copy(
-                            offSection = SearchSection(
-                                foods = offTransient,
-                                isSearching = false,
-                                noResults = offTransient.isEmpty()
-                            )
-                        )
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (_: Throwable) {
-                        _state.value = _state.value.copy(
-                            offSection = _state.value.offSection.copy(
-                                isSearching = false,
-                                error = "Could not connect to OpenFoodFacts"
-                            )
-                        )
-                    } finally {
-                        checkSearchFinished()
-                    }
-                }
+        scope.launch {
+            val sources = getPreferredSources()
+            if (sources.isEmpty()) return@launch
 
-                // Launch AH search
-                val ahJob = launch {
-                    try {
-                        val ahItems = withContext(Dispatchers.Default) { albertHeijnSearch.search(q) }
-                        val ahTransient = ahItems.map {
-                            val tempId = albertHeijnTempId--
-                            albertHeijnResults[tempId] = it
-                            it.toFood(tempId, "ah")
-                        }
-                        _state.value = _state.value.copy(
-                            ahSection = SearchSection(
-                                foods = ahTransient,
-                                isSearching = false,
-                                noResults = ahTransient.isEmpty()
-                            )
-                        )
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (_: Throwable) {
-                        _state.value = _state.value.copy(
-                            ahSection = _state.value.ahSection.copy(
-                                isSearching = false,
-                                error = "Could not connect to Albert Heijn"
-                            )
-                        )
-                    } finally {
-                        checkSearchFinished()
-                    }
-                }
+            // Initialize sections with rate limit info
+            val sections = sources.map { source ->
+                val cooldown = rateLimiter.getRemainingCooldown(source.id, source.rateLimitSeconds)
+                SearchSection(
+                    scraperId = source.id,
+                    scraperName = source.displayName,
+                    isSearching = cooldown == 0,
+                    remainingCooldown = cooldown
+                )
+            }
 
-                // Wait for both jobs to finish (or be cancelled)
+            _state.value = _state.value.copy(
+                isSearchingOnline = true,
+                scraperSections = sections
+            )
+
+            // Clear transient maps
+            scraperResults.clear()
+            scraperTempIds.clear()
+
+            // Cancel any previous job
+            onlineSearchJob?.cancel()
+            onlineSearchJob = scope.launch {
                 try {
-                    offJob.join()
-                    ahJob.join()
+                    val jobs = sources.mapIndexed { index, source ->
+                        launch {
+                            searchWithSource(source, q, index)
+                        }
+                    }
+                    jobs.forEach { it.join() }
                 } catch (_: CancellationException) {
+                    // Search was cancelled
+                    _state.value = _state.value.copy(
+                        isSearchingOnline = false,
+                        scraperSections = _state.value.scraperSections.map { it.copy(isSearching = false) }
+                    )
+                } catch (_: Throwable) {
+                    _state.value = _state.value.copy(
+                        isSearchingOnline = false,
+                        scraperSections = _state.value.scraperSections.map { it.copy(isSearching = false) }
+                    )
                 }
-            } catch (_: CancellationException) {
-                // Search was cancelled: just turn off the loading flags, keep any partial results
-                _state.value = _state.value.copy(
-                    isSearchingOnline = false,
-                    ahSection = _state.value.ahSection.copy(isSearching = false),
-                    offSection = _state.value.offSection.copy(isSearching = false),
-                )
-            } catch (_: Throwable) {
-                _state.value = _state.value.copy(
-                    isSearchingOnline = false,
-                    ahSection = _state.value.ahSection.copy(isSearching = false),
-                    offSection = _state.value.offSection.copy(isSearching = false),
-                )
             }
         }
     }
 
+    private suspend fun searchWithSource(source: FoodSource, query: String, sectionIndex: Int) {
+        // Check rate limit
+        if (!rateLimiter.canRequest(source.id, source.rateLimitSeconds)) {
+            val cooldown = rateLimiter.getRemainingCooldown(source.id, source.rateLimitSeconds)
+            updateSourceSection(sectionIndex) {
+                it.copy(
+                    isSearching = false,
+                    error = "Please wait $cooldown seconds",
+                    remainingCooldown = cooldown
+                )
+            }
+            return
+        }
+
+        try {
+            // Record request and perform search
+            rateLimiter.recordRequest(source.id)
+            val items = withContext(Dispatchers.Default) { source.search(query) }
+
+            // Get or initialize temp ID counter for this source
+            val startId = scraperTempIds.getOrPut(source.id) { -100000L * (sectionIndex + 1) }
+            val results = scraperResults.getOrPut(source.id) { mutableMapOf() }
+
+            val transient = items.map { item ->
+                val tempId = scraperTempIds[source.id]!! - 1
+                scraperTempIds[source.id] = tempId
+                results[tempId] = item
+                item.toFood(tempId, source.id)
+            }
+
+            updateSourceSection(sectionIndex) {
+                it.copy(
+                    foods = transient,
+                    isSearching = false,
+                    noResults = transient.isEmpty()
+                )
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Throwable) {
+            updateSourceSection(sectionIndex) {
+                it.copy(
+                    isSearching = false,
+                    error = "Could not connect to ${source.displayName}"
+                )
+            }
+        } finally {
+            checkSearchFinished()
+        }
+    }
+
+    private fun updateSourceSection(index: Int, update: (SearchSection) -> SearchSection) {
+        val sections = _state.value.scraperSections.toMutableList()
+        if (index in sections.indices) {
+            sections[index] = update(sections[index])
+            _state.value = _state.value.copy(scraperSections = sections)
+        }
+    }
+
     private fun checkSearchFinished() {
-        if (!_state.value.ahSection.isSearching && !_state.value.offSection.isSearching) {
+        if (_state.value.scraperSections.all { !it.isSearching }) {
             _state.value = _state.value.copy(isSearchingOnline = false)
+        }
+    }
+
+    private suspend fun getPreferredSources(): List<FoodSource> {
+        val prefs = settingsRepo.getSourcePreferences()
+        return if (prefs.isNotEmpty()) {
+            sourceRegistry.getByIds(prefs)
+        } else {
+            // Default: use only OpenFoodFacts
+            sourceRegistry.getById("off")?.let { listOf(it) } ?: emptyList()
         }
     }
 
@@ -337,8 +371,7 @@ class IntakeViewModel(
         onlineSearchJob = null
         _state.value = _state.value.copy(
             isSearchingOnline = false,
-            ahSection = SearchSection(),
-            offSection = SearchSection(),
+            scraperSections = emptyList(),
         )
     }
 }
