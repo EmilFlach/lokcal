@@ -63,7 +63,7 @@ class OnlineSearchManager(
                     sourceName = source.displayName,
                     isSearching = false, // Start as false, will be set to true if we can request
                     remainingCooldown = cooldown,
-                    error = if (cooldown > 0) "Wait 10 seconds to search again" else null
+                    error = if (cooldown > 0) "Wait 10 seconds to search online again" else null
                 )
             }
             _isSearching = true
@@ -84,7 +84,7 @@ class OnlineSearchManager(
                                 updateSourceSection(index, onStateChanged) {
                                     it.copy(
                                         isSearching = false,
-                                        error = "Wait 10 seconds to search again",
+                                        error = "Wait 10 seconds to search online again",
                                         remainingCooldown = cooldown
                                     )
                                 }
@@ -127,7 +127,7 @@ class OnlineSearchManager(
             updateSourceSection(sectionIndex, onStateChanged) {
                 it.copy(
                     isSearching = false,
-                    error = "Wait 10 seconds to search again",
+                    error = "Wait 10 seconds to search online again",
                     remainingCooldown = cooldown
                 )
             }
