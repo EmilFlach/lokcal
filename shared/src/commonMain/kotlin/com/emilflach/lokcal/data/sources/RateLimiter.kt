@@ -1,4 +1,4 @@
-package com.emilflach.lokcal.data.scraper
+package com.emilflach.lokcal.data.sources
 
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
@@ -6,18 +6,18 @@ import kotlin.time.Instant
 
 /**
  * Rate limiter to prevent overwhelming external servers.
- * Enforces a minimum delay between consecutive requests per scraper.
+ * Enforces a minimum delay between consecutive requests per source.
  */
 class RateLimiter {
     private val lastRequestTime = mutableMapOf<String, Instant>()
 
     /**
-     * Check if a request can be made for the given scraper.
+     * Check if a request can be made for the given source.
      * Returns true if enough time has passed since the last request.
      */
-    fun canRequest(scraperId: String, rateLimitSeconds: Int): Boolean {
+    fun canRequest(sourceId: String, rateLimitSeconds: Int): Boolean {
         val now = Clock.System.now()
-        val lastRequest = lastRequestTime[scraperId] ?: return true
+        val lastRequest = lastRequestTime[sourceId] ?: return true
         val elapsed = now - lastRequest
         return elapsed >= rateLimitSeconds.seconds
     }
@@ -26,25 +26,25 @@ class RateLimiter {
      * Get remaining cooldown time in seconds.
      * Returns 0 if no cooldown is active.
      */
-    fun getRemainingCooldown(scraperId: String, rateLimitSeconds: Int): Int {
+    fun getRemainingCooldown(sourceId: String, rateLimitSeconds: Int): Int {
         val now = Clock.System.now()
-        val lastRequest = lastRequestTime[scraperId] ?: return 0
+        val lastRequest = lastRequestTime[sourceId] ?: return 0
         val elapsed = now - lastRequest
         val remaining = rateLimitSeconds.seconds - elapsed
         return if (remaining.isPositive()) remaining.inWholeSeconds.toInt() else 0
     }
 
     /**
-     * Record that a request was made for the given scraper.
+     * Record that a request was made for the given source.
      */
-    fun recordRequest(scraperId: String) {
-        lastRequestTime[scraperId] = Clock.System.now()
+    fun recordRequest(sourceId: String) {
+        lastRequestTime[sourceId] = Clock.System.now()
     }
 
     /**
-     * Reset the rate limiter for a specific scraper.
+     * Reset the rate limiter for a specific source.
      */
-    fun reset(scraperId: String) {
-        lastRequestTime.remove(scraperId)
+    fun reset(sourceId: String) {
+        lastRequestTime.remove(sourceId)
     }
 }

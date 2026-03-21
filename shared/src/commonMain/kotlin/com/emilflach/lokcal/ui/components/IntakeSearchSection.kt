@@ -14,6 +14,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.viewmodel.IntakeViewModel
+import com.emilflach.lokcal.viewmodel.OnlineSearchManager
 
 @Stable
 class FocusRequesters {
@@ -24,7 +25,7 @@ class FocusRequesters {
 
 fun LazyListScope.searchSection(
     title: String,
-    section: IntakeViewModel.SearchSection,
+    section: OnlineSearchManager.SearchSection,
     viewModel: IntakeViewModel,
     requesters: FocusRequesters,
     onDone: (itemAdded: Boolean) -> Unit

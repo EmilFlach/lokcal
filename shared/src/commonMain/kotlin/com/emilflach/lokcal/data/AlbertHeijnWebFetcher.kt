@@ -15,10 +15,10 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlin.math.floor
 
 /**
- * Scrapes an AH product page and extracts key fields using regex.
+ * Fetches an AH product page and extracts key fields using regex.
  * This keeps dependencies light and avoids coupling to AH's internal JSON structures.
  */
-open class AlbertHeijnScraper(
+open class AlbertHeijnWebFetcher(
     private val client: HttpClient = defaultClient
 ) {
     companion object {
@@ -31,7 +31,7 @@ open class AlbertHeijnScraper(
         }
     }
 
-    data class FoodScrapeResult(
+    data class FoodFetchResult(
         val name: String?,
         val kcalPer100g: Double?,
         val servingSizeGrams: Double?,
@@ -46,7 +46,7 @@ open class AlbertHeijnScraper(
         return resp.body()
     }
 
-    suspend fun scrape(url: String): FoodScrapeResult {
+    suspend fun fetchProduct(url: String): FoodFetchResult {
         val html = fetchHtml(url)
 
         val apolloState = extractApolloState(html)
@@ -60,7 +60,7 @@ open class AlbertHeijnScraper(
         val image = extractImageUrl(productJson) ?: ldJson?.get("image")?.jsonPrimitive?.contentOrNull?.let { unescapeUrl(it) }
         val gtin = extractGtin(productJson) ?: ldJson?.get("gtin13")?.jsonPrimitive?.contentOrNull
 
-        return FoodScrapeResult(
+        return FoodFetchResult(
             name = cleanName(unescapeHtml(name)),
             kcalPer100g = kcal,
             servingSizeGrams = servingGrams,
@@ -146,7 +146,6 @@ open class AlbertHeijnScraper(
             return try {
                 Json.decodeFromString<JsonObject>(jsonString)
             } catch (e: Exception) {
-                println("[DEBUG_LOG] LD+JSON parsing failed: ${e.message}")
                 null
             }
         }
@@ -159,7 +158,6 @@ open class AlbertHeijnScraper(
         return try {
             Json.decodeFromString<JsonObject>(jsonString)
         } catch (e: Exception) {
-            println("[DEBUG_LOG] LD+JSON parsing failed: ${e.message}")
             null
         }
     }
@@ -200,7 +198,6 @@ open class AlbertHeijnScraper(
         return try {
             Json.decodeFromString<JsonObject>(jsonString)
         } catch (e: Exception) {
-            println("[DEBUG_LOG] JSON parsing failed: ${e.message}")
             // Fallback to simpler regex if manual parsing fails for some reason
             regexGroup(html, "window\\.__APOLLO_STATE__\\s*=\\s*(\\{.*?\\});", ignoreCase = true)?.let {
                 try { Json.decodeFromString<JsonObject>(it) } catch (_: Exception) { null }

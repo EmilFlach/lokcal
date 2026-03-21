@@ -48,7 +48,6 @@ actual suspend fun copyDatabase(): Boolean {
         destination?.write(database)
         return true
     } catch (e: Exception) {
-        println(e)
         return false
     }
 }
@@ -68,7 +67,6 @@ actual suspend fun exportDatabaseToBackupDirectory(): Boolean {
         directory.stopAccessingSecurityScopedResource()
         return true
     } catch (e: Exception) {
-        println(e)
         directory.stopAccessingSecurityScopedResource()
         return false
     }
@@ -132,7 +130,6 @@ actual fun enableNightlyBackup(value: Boolean): Boolean {
         }
         true
     } catch (e: Exception) {
-        println("Failed to ${if (value) "enable" else "disable"} nightly backup: $e")
         false
     }
 }

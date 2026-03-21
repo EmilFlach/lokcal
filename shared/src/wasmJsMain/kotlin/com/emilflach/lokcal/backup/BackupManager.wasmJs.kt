@@ -45,7 +45,6 @@ actual suspend fun replaceDatabase(file: PlatformFile): Boolean {
 
         return deferred.await()
     } catch (e: Exception) {
-        println("Error replacing database: $e")
         return false
     }
 }
@@ -114,7 +113,6 @@ actual suspend fun copyDatabase(): Boolean {
         saveFile(bytes, "lokcal-backup-${currentTimeMillis().toLong()}.db")
         return true
     } catch (e: Exception) {
-        println("Error copying database: $e")
         return false
     }
 }

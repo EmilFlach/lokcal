@@ -15,7 +15,7 @@ Targets: Android, iOS, Desktop (JVM), Web (WASM).
 
 ## Key Paths
 - `shared/src/commonMain/kotlin/com/emilflach/lokcal/` — All shared source
-  - `data/` — Repositories (Food, Intake, Meal, Exercise, Weight, Settings) + scrapers
+  - `data/` — Repositories (Food, Intake, Meal, Exercise, Weight, Settings) + food sources
   - `viewmodel/` — StateFlow-based ViewModels
   - `ui/screens/`, `ui/components/`, `ui/dialogs/` — Compose UI
   - `util/` — SearchUtils, ExerciseMath, DateUtils, NumberUtils

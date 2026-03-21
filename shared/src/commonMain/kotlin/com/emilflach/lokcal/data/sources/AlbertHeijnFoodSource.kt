@@ -1,23 +1,23 @@
-package com.emilflach.lokcal.data.scraper
+package com.emilflach.lokcal.data.sources
 
-import com.emilflach.lokcal.data.AlbertHeijnScraper
+import com.emilflach.lokcal.data.AlbertHeijnWebFetcher
 import com.emilflach.lokcal.data.AlbertHeijnSearch
 import com.emilflach.lokcal.data.OnlineFoodItem
 
 /**
  * Albert Heijn food source implementation.
- * Searches the AH website and scrapes product pages.
+ * Searches the AH website and fetches product pages.
  */
 class AlbertHeijnFoodSource : FoodSource {
     override val id = "ah"
     override val displayName = "Albert Heijn"
     override val description = "Dutch supermarket chain with product information"
     override val country = "NL"
-    override val type = SourceType.SCRAPER
+    override val type = SourceType.WEB
     override val rateLimitSeconds = 10
 
     private val search = AlbertHeijnSearch()
-    private val scraper = AlbertHeijnScraper()
+    private val fetcher = AlbertHeijnWebFetcher()
 
     override suspend fun search(query: String): List<OnlineFoodItem> {
         return search.search(query)
@@ -25,7 +25,7 @@ class AlbertHeijnFoodSource : FoodSource {
 
     override suspend fun scrapeUrl(url: String): OnlineFoodItem? {
         return try {
-            val result = scraper.scrape(url)
+            val result = fetcher.fetchProduct(url)
             OnlineFoodItem(
                 name = result.name ?: url,
                 gtin13 = result.gtin13,

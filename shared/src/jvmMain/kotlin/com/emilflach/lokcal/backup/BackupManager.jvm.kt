@@ -11,7 +11,6 @@ actual suspend fun replaceDatabase(file: PlatformFile): Boolean {
         destination.write(file)
         return true
     } catch (e: Exception) {
-        println(e)
         return false
     }
 }
@@ -26,7 +25,6 @@ actual suspend fun copyDatabase(): Boolean {
         destination?.write(database)
         return true
     } catch (e: Exception) {
-        println(e)
         return false
     }
 }

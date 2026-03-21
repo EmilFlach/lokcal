@@ -1,4 +1,4 @@
-package com.emilflach.lokcal.data.scraper
+package com.emilflach.lokcal.data.sources
 
 import com.emilflach.lokcal.data.OnlineFoodItem
 import com.emilflach.lokcal.data.OpenFoodFactsSearch

@@ -197,12 +197,12 @@ internal fun AppNavigation(
                         onOpenMealsList = { backStack.add(Screen.MealsManage(currentDateIso())) },
                         onOpenWeightList = { backStack.add(Screen.WeightList(returnTo = Screen.ReturnTo.Settings)) },
                         onOpenFoodManage = { backStack.add(Screen.FoodManage(currentDateIso())) },
-                        onOpenScraperPreferences = { backStack.add(Screen.ScraperPreference) },
+                        onOpenSourcePreferences = { backStack.add(Screen.SourcePreference) },
                         onRequestHealthPermissions = { HealthManager.requestPermissions() },
                         settingsRepo = settingsRepo
                     )
                 }
-                entry<Screen.ScraperPreference> {
+                entry<Screen.SourcePreference> {
                     val viewModel = remember(settingsRepo) { SourcePreferenceViewModel(settingsRepo) }
                     SourcePreferenceScreen(
                         onBack = { backStack.removeLastOrNull() },

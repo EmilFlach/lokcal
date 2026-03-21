@@ -118,21 +118,22 @@ fun IntakeScreen(
                 modifier = Modifier.fillMaxSize(),
                 state = listState
             ) {
+                val totalSize = state.meals.size + state.foods.size
+
                 if (state.showOnlineSearchSections) {
-                    state.scraperSections.forEachIndexed { index, section ->
+                    state.sourceSections.forEachIndexed { index, section ->
                         searchSection(
-                            title = section.scraperName,
+                            title = section.sourceName,
                             section = section,
                             viewModel = viewModel,
                             requesters = requesters,
                             onDone = onDone
                         )
-                        if (index < state.scraperSections.size - 1) {
+                        if (index < state.sourceSections.size - 1) {
                             item { Spacer(Modifier.height(16.dp)) }
                         }
                     }
                 } else {
-                    val totalSize = state.meals.size + state.foods.size
 
                     itemsIndexed(items = state.meals) { index, item ->
                         AnimatedVisibility(

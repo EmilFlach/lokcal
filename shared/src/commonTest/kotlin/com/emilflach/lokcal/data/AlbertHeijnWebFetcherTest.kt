@@ -6,7 +6,7 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class AlbertHeijnScraperTest {
+class AlbertHeijnWebFetcherTest {
 
     private val htmlContent = """
         <!doctype html>
@@ -56,11 +56,11 @@ class AlbertHeijnScraperTest {
     """.trimIndent()
 
     @Test
-    fun testScrapeFromJsonWithInjectedHtml() = runTest {
-        val scraperWithMock = object : AlbertHeijnScraper() {
+    fun testFetchFromJsonWithInjectedHtml() = runTest {
+        val fetcherWithMock = object : AlbertHeijnWebFetcher() {
             override suspend fun fetchHtml(url: String): String = htmlContent
         }
-        val result = scraperWithMock.scrape("https://www.ah.nl/producten/product/wi194759/remia-friteslijn")
+        val result = fetcherWithMock.fetchProduct("https://www.ah.nl/producten/product/wi194759/remia-friteslijn")
 
         assertEquals("Remia Friteslijn", result.name)
         assertEquals(99.0, result.kcalPer100g)
@@ -72,7 +72,7 @@ class AlbertHeijnScraperTest {
 
     @OptIn(ExperimentalResourceApi::class)
     @Test
-    fun testScrapeFromRealHtmlFile() = runTest {
+    fun testFetchFromRealHtmlFile() = runTest {
         val realHtml = try {
             Res.readBytes("files/albertheijn/friteslijn.html").decodeToString()
         } catch (e: Exception) {
@@ -80,10 +80,10 @@ class AlbertHeijnScraperTest {
             return@runTest
         }
         
-        val scraperWithMock = object : AlbertHeijnScraper() {
+        val fetcherWithMock = object : AlbertHeijnWebFetcher() {
             override suspend fun fetchHtml(url: String): String = realHtml
         }
-        val result = scraperWithMock.scrape("https://www.ah.nl/producten/product/wi194759/remia-friteslijn")
+        val result = fetcherWithMock.fetchProduct("https://www.ah.nl/producten/product/wi194759/remia-friteslijn")
 
         assertEquals("Remia Friteslijn", result.name)
         assertEquals(99.0, result.kcalPer100g)
@@ -93,7 +93,7 @@ class AlbertHeijnScraperTest {
 
     @OptIn(ExperimentalResourceApi::class)
     @Test
-    fun testScrapeFritessausClassicFromRealHtmlFile() = runTest {
+    fun testFetchFritessausClassicFromRealHtmlFile() = runTest {
         val realHtml = try {
             Res.readBytes("files/albertheijn/fritessaus_classic.html").decodeToString()
         } catch (e: Exception) {
@@ -101,10 +101,10 @@ class AlbertHeijnScraperTest {
             return@runTest
         }
 
-        val scraperWithMock = object : AlbertHeijnScraper() {
+        val fetcherWithMock = object : AlbertHeijnWebFetcher() {
             override suspend fun fetchHtml(url: String): String = realHtml
         }
-        val result = scraperWithMock.scrape("https://www.ah.nl/producten/product/wi194760/remia-fritessaus-classic")
+        val result = fetcherWithMock.fetchProduct("https://www.ah.nl/producten/product/wi194760/remia-fritessaus-classic")
 
         assertEquals("Remia Fritessaus classic", result.name)
         assertEquals(300.0, result.kcalPer100g)
@@ -121,13 +121,13 @@ class AlbertHeijnScraperTest {
             return@runTest
         }
 
-        // Mock the scraper to return product HTML
-        val mockScraper = object : AlbertHeijnScraper() {
+        // Mock the fetcher to return product HTML
+        val mockFetcher = object : AlbertHeijnWebFetcher() {
             override suspend fun fetchHtml(url: String): String = htmlContent
         }
 
         // Test the extractTopProductLinks function by creating a custom AlbertHeijnSearch class
-        val testSearch = object : AlbertHeijnSearch(scraper = mockScraper) {
+        val testSearch = object : AlbertHeijnSearch(fetcher = mockFetcher) {
             override suspend fun fetchSearchHtml(url: String): String = searchHtml
         }
 
@@ -148,13 +148,13 @@ class AlbertHeijnScraperTest {
             return@runTest
         }
 
-        // Mock the scraper to return product HTML
-        val mockScraper = object : AlbertHeijnScraper() {
+        // Mock the fetcher to return product HTML
+        val mockFetcher = object : AlbertHeijnWebFetcher() {
             override suspend fun fetchHtml(url: String): String = htmlContent
         }
 
         // Test the extractTopProductLinks function by creating a custom AlbertHeijnSearch class
-        val testSearch = object : AlbertHeijnSearch(scraper = mockScraper) {
+        val testSearch = object : AlbertHeijnSearch(fetcher = mockFetcher) {
             override suspend fun fetchSearchHtml(url: String): String = searchHtml
         }
 
@@ -179,13 +179,13 @@ class AlbertHeijnScraperTest {
         println("[DEBUG] Contains 'webPath': ${searchHtml.contains("webPath")}")
         println("[DEBUG] Contains product link: ${searchHtml.contains("/producten/product/wi450151")}")
 
-        // Mock the scraper to return product HTML
-        val mockScraper = object : AlbertHeijnScraper() {
+        // Mock the fetcher to return product HTML
+        val mockFetcher = object : AlbertHeijnWebFetcher() {
             override suspend fun fetchHtml(url: String): String = htmlContent
         }
 
         // Test the extractTopProductLinks function by creating a custom AlbertHeijnSearch class
-        val testSearch = object : AlbertHeijnSearch(scraper = mockScraper) {
+        val testSearch = object : AlbertHeijnSearch(fetcher = mockFetcher) {
             override suspend fun fetchSearchHtml(url: String): String = searchHtml
         }
 
@@ -193,7 +193,7 @@ class AlbertHeijnScraperTest {
 
         // Should extract at least 5 products from the search results
         assertEquals(true, results.size >= 5, "Expected at least 5 results, got ${results.size}")
-        // All products should be scraped with the mocked scraper returning Friteslijn data
+        // All products should be fetched with the mocked fetcher returning Friteslijn data
         assertEquals("Remia Friteslijn", results[0].name)
     }
 }

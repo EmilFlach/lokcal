@@ -21,7 +21,7 @@ actual object BookmarkManager {
             val bookmark = file!!.bookmarkData()
             bookmarkFile.write(bookmark.bytes)
         } catch (e: Exception) {
-            println("Error saving bookmark: ${e.message}")
+            // Error saving bookmark
         }
     }
 
@@ -39,7 +39,6 @@ actual object BookmarkManager {
                 null
             }
         } catch (e: Exception) {
-            println("Error loading bookmark: ${e.message}")
             clear()
             null
         }
@@ -51,7 +50,7 @@ actual object BookmarkManager {
                 bookmarkFile.delete()
             }
         } catch (e: Exception) {
-            println("Error clearing bookmark: ${e.message}")
+            // Error clearing bookmark
         }
     }
 }

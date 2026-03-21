@@ -19,11 +19,11 @@ import kotlinx.serialization.json.Json
 
 /**
  * Searches the Albert Heijn website and returns up to the top 3 product results as OffItem models.
- * For each result, we scrape the product page using the existing AlbertHeijnScraper to obtain
+ * For each result, we fetch the product page using the existing AlbertHeijnWebFetcher to obtain
  * detailed fields (name, kcal/100g, serving size, image, gtin13).
  */
 open class AlbertHeijnSearch(
-    private val scraper: AlbertHeijnScraper = AlbertHeijnScraper(),
+    private val fetcher: AlbertHeijnWebFetcher = AlbertHeijnWebFetcher(),
     private val client: HttpClient = defaultClient,
 ) {
     companion object {
@@ -56,7 +56,7 @@ open class AlbertHeijnSearch(
             links.map { link ->
                 async {
                     val abs = if (link.startsWith("http")) link else BASE + link
-                    runCatching { scraper.scrape(abs) }.getOrNull()?.let { s ->
+                    runCatching { fetcher.fetchProduct(abs) }.getOrNull()?.let { s ->
                         OnlineFoodItem(
                             name = s.name ?: abs,
                             gtin13 = s.gtin13,
@@ -88,20 +88,14 @@ open class AlbertHeijnSearch(
         val pattern = """"webPath":"(/producten/product/wi\d+/[^"]+)""""
         val webPathRegex = Regex(pattern)
 
-        println("[extractTopProductLinks] HTML length: ${html.length}")
-        println("[extractTopProductLinks] Pattern: $pattern")
-        println("[extractTopProductLinks] Contains test string: ${html.contains(""""webPath":"/producten/product/wi""")}")
-
         for (match in webPathRegex.findAll(html)) {
             val path = match.groupValues.getOrNull(1)
-            println("[extractTopProductLinks] Found match: $path")
             if (path != null && !results.contains(path)) {
                 results.add(path)
                 if (results.size >= max) break
             }
         }
 
-        println("[extractTopProductLinks] Total results: ${results.size}")
         return results
     }
 }

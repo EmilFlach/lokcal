@@ -1,9 +1,9 @@
-package com.emilflach.lokcal.data.scraper
+package com.emilflach.lokcal.data.sources
 
 import com.emilflach.lokcal.data.OnlineFoodItem
 
 /**
- * Common interface for all food data sources (scrapers and APIs).
+ * Common interface for all food data sources (APIs or web fetching).
  */
 interface FoodSource {
     val id: String
@@ -19,5 +19,5 @@ interface FoodSource {
 
 enum class SourceType {
     API,      // REST API (e.g., OpenFoodFacts)
-    SCRAPER   // HTML scraping (e.g., Albert Heijn)
+    WEB       // Web-based source (e.g., Albert Heijn)
 }

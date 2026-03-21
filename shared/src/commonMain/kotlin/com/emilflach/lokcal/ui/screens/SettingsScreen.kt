@@ -57,7 +57,7 @@ fun SettingsScreen(
     onOpenMealsList: () -> Unit,
     onOpenWeightList: () -> Unit,
     onOpenFoodManage: () -> Unit,
-    onOpenScraperPreferences: () -> Unit,
+    onOpenSourcePreferences: () -> Unit,
     onRequestHealthPermissions: () -> Unit,
     settingsRepo: SettingsRepository,
 ) {
@@ -155,7 +155,7 @@ fun SettingsScreen(
                 colors = itemColors,
                 modifier = Modifier
                     .clip(getRoundedCornerShape(1, 2))
-                    .clickable { onOpenScraperPreferences() }
+                    .clickable { onOpenSourcePreferences() }
             )
             if (showKcalDialog) {
                 AlertDialog(

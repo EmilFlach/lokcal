@@ -1,4 +1,4 @@
-package com.emilflach.lokcal.data.scraper
+package com.emilflach.lokcal.data.sources
 
 /**
  * Central registry for all available food sources.

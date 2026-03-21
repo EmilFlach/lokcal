@@ -1,10 +1,10 @@
 package com.emilflach.lokcal.viewmodel
 
 import com.emilflach.lokcal.data.SettingsRepository
-import com.emilflach.lokcal.data.scraper.AlbertHeijnFoodSource
-import com.emilflach.lokcal.data.scraper.FoodSource
-import com.emilflach.lokcal.data.scraper.OpenFoodFactsFoodSource
-import com.emilflach.lokcal.data.scraper.SourceRegistry
+import com.emilflach.lokcal.data.sources.AlbertHeijnFoodSource
+import com.emilflach.lokcal.data.sources.FoodSource
+import com.emilflach.lokcal.data.sources.OpenFoodFactsFoodSource
+import com.emilflach.lokcal.data.sources.SourceRegistry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -46,8 +46,6 @@ class SourcePreferenceViewModel(
             val preferences = settingsRepo.getSourcePreferences()
             val allSources = sourceRegistry.getAll()
 
-            println("[SourcePreferenceVM] Loading sources - preferences: $preferences, allSources: ${allSources.map { it.id }}")
-
             val items = allSources.map { source ->
                 val index = preferences.indexOf(source.id)
                 SourceItem(
@@ -57,8 +55,6 @@ class SourcePreferenceViewModel(
                 )
             }
 
-            println("[SourcePreferenceVM] Loaded ${items.size} items: ${items.map { "${it.source.id}:${it.isSelected}" }}")
-
             _state.value = UiState(
                 sources = items,
                 isLoading = false
@@ -67,16 +63,12 @@ class SourcePreferenceViewModel(
     }
 
     fun toggleSource(sourceId: String) {
-        println("[SourcePreferenceVM] toggleSource called for: $sourceId")
         scope.launch {
             val currentPrefs = settingsRepo.getSourcePreferences()
             val isCurrentlySelected = currentPrefs.contains(sourceId)
 
-            println("[SourcePreferenceVM] Current prefs: $currentPrefs, isCurrentlySelected: $isCurrentlySelected")
-
             if (isCurrentlySelected) {
                 // Deselect - find and remove this source, then reindex remaining
-                println("[SourcePreferenceVM] Deselecting source: $sourceId")
                 val remainingSources = currentPrefs.filter { it != sourceId }
 
                 // Clear all preferences
@@ -89,15 +81,12 @@ class SourcePreferenceViewModel(
             } else {
                 // Select (if less than 2 selected)
                 if (currentPrefs.size >= 2) {
-                    println("[SourcePreferenceVM] Cannot select - already have 2 sources selected")
                     return@launch
                 }
                 val newPriority = currentPrefs.size + 1
-                println("[SourcePreferenceVM] Selecting source with priority: $newPriority")
                 settingsRepo.setSourcePreference(newPriority.toLong(), sourceId)
             }
 
-            println("[SourcePreferenceVM] Reloading sources after toggle")
             loadSources()
         }
     }

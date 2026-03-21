@@ -32,8 +32,8 @@ internal sealed interface Screen : NavKey {
         override fun browserInfo() = "settings" to emptyMap<String, String>()
     }
     @Serializable
-    data object ScraperPreference : Screen {
-        override fun browserInfo() = "scraper_preference" to emptyMap<String, String>()
+    data object SourcePreference : Screen {
+        override fun browserInfo() = "source_preference" to emptyMap<String, String>()
     }
     @Serializable
     data class MealsManage(val dateIso: String) : Screen {
@@ -83,7 +83,7 @@ internal val navigationConfig = SavedStateConfiguration {
             subclass(Screen.Intake::class, Screen.Intake.serializer())
             subclass(Screen.EditMeal::class, Screen.EditMeal.serializer())
             subclass(Screen.Settings::class, Screen.Settings.serializer())
-            subclass(Screen.ScraperPreference::class, Screen.ScraperPreference.serializer())
+            subclass(Screen.SourcePreference::class, Screen.SourcePreference.serializer())
             subclass(Screen.MealsManage::class, Screen.MealsManage.serializer())
             subclass(Screen.FoodManage::class, Screen.FoodManage.serializer())
             subclass(Screen.FoodEdit::class, Screen.FoodEdit.serializer())
