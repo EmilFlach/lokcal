@@ -21,11 +21,6 @@ class OpenFoodFactsFoodSource : FoodSource {
         return search.search(query)
     }
 
-    override suspend fun canHandle(url: String): Boolean {
-        return url.contains("openfoodfacts.org", ignoreCase = true) ||
-               url.contains("openfoodfacts.net", ignoreCase = true)
-    }
-
     override suspend fun scrapeUrl(url: String): OnlineFoodItem? {
         // OpenFoodFacts doesn't need URL scraping - use barcode from URL if available
         val barcode = url.split("/").lastOrNull { it.all { c -> c.isDigit() } }

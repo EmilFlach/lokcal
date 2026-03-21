@@ -6,9 +6,6 @@ import com.emilflach.lokcal.FoodAlias
 import com.emilflach.lokcal.ItemsMissingImage
 import com.emilflach.lokcal.data.FoodRepository
 import com.emilflach.lokcal.data.IntakeRepository
-import com.emilflach.lokcal.data.scraper.AlbertHeijnFoodSource
-import com.emilflach.lokcal.data.scraper.OpenFoodFactsFoodSource
-import com.emilflach.lokcal.data.scraper.SourceRegistry
 import com.emilflach.lokcal.ui.dialogs.StealImageItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -86,11 +83,6 @@ class FoodEditViewModel(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var searchJob: Job? = null
-
-    private val sourceRegistry = SourceRegistry().apply {
-        register(AlbertHeijnFoodSource())
-        register(OpenFoodFactsFoodSource())
-    }
 
     init {
         // initial load

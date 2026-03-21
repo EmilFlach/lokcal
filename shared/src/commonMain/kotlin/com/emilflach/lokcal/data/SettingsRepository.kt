@@ -34,10 +34,8 @@ class SettingsRepository(database: Database) {
     suspend fun getSourcePreferences(): List<String> {
         return try {
             val prefs = sourcePref.getPreferences().awaitAsList().map { it.source_id }
-            println("[SettingsRepo] getSourcePreferences: $prefs")
             prefs
         } catch (e: Throwable) {
-            println("[SettingsRepo] getSourcePreferences error: ${e.message}")
             e.printStackTrace()
             emptyList()
         }
@@ -46,23 +44,8 @@ class SettingsRepository(database: Database) {
     suspend fun setSourcePreference(order: Long, sourceId: String) {
         require(order in 1..2) { "Preference order must be 1 or 2" }
         try {
-            println("[SettingsRepo] setSourcePreference: order=$order, sourceId=$sourceId")
             sourcePref.setPreference(order, sourceId)
-            println("[SettingsRepo] setSourcePreference: success")
         } catch (e: Throwable) {
-            println("[SettingsRepo] setSourcePreference error: ${e.message}")
-            e.printStackTrace()
-        }
-    }
-
-    suspend fun deleteSourcePreference(order: Long) {
-        require(order in 1..2) { "Preference order must be 1 or 2" }
-        try {
-            println("[SettingsRepo] deleteSourcePreference: order=$order")
-            sourcePref.deletePreference(order)
-            println("[SettingsRepo] deleteSourcePreference: success")
-        } catch (e: Throwable) {
-            println("[SettingsRepo] deleteSourcePreference error: ${e.message}")
             e.printStackTrace()
         }
     }

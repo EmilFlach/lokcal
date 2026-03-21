@@ -14,7 +14,6 @@ interface FoodSource {
     val rateLimitSeconds: Int  // Minimum seconds between requests
 
     suspend fun search(query: String): List<OnlineFoodItem>
-    suspend fun canHandle(url: String): Boolean
     suspend fun scrapeUrl(url: String): OnlineFoodItem?
 }
 

@@ -147,7 +147,7 @@ fun SourcePreferenceScreen(
                                     IconButton(
                                         onClick = {
                                             if (canMoveUp) {
-                                                val otherSource = selectedSources.find { it.priority == item.priority!! - 1 }
+                                                val otherSource = selectedSources.find { it.priority == item.priority - 1 }
                                                 if (otherSource != null) {
                                                     viewModel.swapPriority(item.source.id, otherSource.source.id)
                                                 }
@@ -166,7 +166,7 @@ fun SourcePreferenceScreen(
                                     IconButton(
                                         onClick = {
                                             if (canMoveDown) {
-                                                val otherSource = selectedSources.find { it.priority == item.priority!! + 1 }
+                                                val otherSource = selectedSources.find { it.priority == item.priority + 1 }
                                                 if (otherSource != null) {
                                                     viewModel.swapPriority(item.source.id, otherSource.source.id)
                                                 }

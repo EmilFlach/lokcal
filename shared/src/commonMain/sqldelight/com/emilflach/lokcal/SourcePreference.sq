@@ -8,11 +8,6 @@ SELECT preference_order, source_id
 FROM source_preference
 ORDER BY preference_order;
 
-getPreferenceByOrder:
-SELECT source_id
-FROM source_preference
-WHERE preference_order = ?;
-
 setPreference:
 INSERT OR REPLACE INTO source_preference(preference_order, source_id)
 VALUES (?, ?);

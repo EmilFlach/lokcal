@@ -22,6 +22,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -149,12 +150,6 @@ class IntakeViewModel(
         return labelService.subtitleForFood(food, grams)
     }
 
-    fun logPortion(foodId: Long, portionG: Double) {
-        scope.launch {
-            intakeRepo.logOrUpdateFoodIntake(foodId, portionG, mealType(), dateIso, refreshId = true)
-        }
-    }
-
     fun logMealPortion(mealId: Long, portionG: Double) {
         scope.launch {
             intakeRepo.logOrUpdateMealIntake(mealId, portionG, mealType(), dateIso, refreshId = true)
@@ -261,7 +256,7 @@ class IntakeViewModel(
                             searchWithSource(source, q, index)
                         }
                     }
-                    jobs.forEach { it.join() }
+                    jobs.joinAll()
                 } catch (_: CancellationException) {
                     // Search was cancelled
                     _state.value = _state.value.copy(
@@ -298,7 +293,6 @@ class IntakeViewModel(
             val items = withContext(Dispatchers.Default) { source.search(query) }
 
             // Get or initialize temp ID counter for this source
-            val startId = scraperTempIds.getOrPut(source.id) { -100000L * (sectionIndex + 1) }
             val results = scraperResults.getOrPut(source.id) { mutableMapOf() }
 
             val transient = items.map { item ->

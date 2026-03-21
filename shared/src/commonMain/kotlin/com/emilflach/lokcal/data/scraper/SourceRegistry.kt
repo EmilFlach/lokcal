@@ -32,11 +32,4 @@ class SourceRegistry {
     fun getByIds(ids: List<String>): List<FoodSource> {
         return ids.mapNotNull { getById(it) }
     }
-
-    /**
-     * Find the appropriate source for a given URL.
-     */
-    suspend fun findForUrl(url: String): FoodSource? {
-        return sources.find { it.canHandle(url) }
-    }
 }

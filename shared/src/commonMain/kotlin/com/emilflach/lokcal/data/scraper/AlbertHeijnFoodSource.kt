@@ -23,10 +23,6 @@ class AlbertHeijnFoodSource : FoodSource {
         return search.search(query)
     }
 
-    override suspend fun canHandle(url: String): Boolean {
-        return url.contains("ah.nl", ignoreCase = true)
-    }
-
     override suspend fun scrapeUrl(url: String): OnlineFoodItem? {
         return try {
             val result = scraper.scrape(url)
@@ -39,7 +35,7 @@ class AlbertHeijnFoodSource : FoodSource {
                 imageUrl = result.imageUrl,
                 dutchName = result.name
             )
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }

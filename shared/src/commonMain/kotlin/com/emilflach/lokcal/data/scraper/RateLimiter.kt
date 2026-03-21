@@ -47,11 +47,4 @@ class RateLimiter {
     fun reset(scraperId: String) {
         lastRequestTime.remove(scraperId)
     }
-
-    /**
-     * Reset all rate limiters.
-     */
-    fun resetAll() {
-        lastRequestTime.clear()
-    }
 }
