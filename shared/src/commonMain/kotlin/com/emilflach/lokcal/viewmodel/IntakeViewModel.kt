@@ -35,9 +35,10 @@ class IntakeViewModel(
         val sourceSections: List<OnlineSearchManager.SearchSection> = emptyList(),
         val gramsById: Map<Long, String> = emptyMap(),
         val showScanner: Boolean = false,
+        val onlineSearchAttempted: Boolean = false,
     ) {
         val showOnlineSearchSections: Boolean
-            get() = sourceSections.any { it.foods.isNotEmpty() || it.isSearching }
+            get() = sourceSections.any { it.foods.isNotEmpty() || it.isSearching || it.error != null } || (onlineSearchAttempted && sourceSections.all { it.noResults })
     }
 
     private val _state = MutableStateFlow(UiState(selectedMealType = initialMealType))
@@ -65,6 +66,7 @@ class IntakeViewModel(
             gramsById = emptyMap(),
             sourceSections = emptyList(),
             isSearchingOnline = false,
+            onlineSearchAttempted = false,
         )
         performSearch(state.value.selectedMealType)
     }
@@ -195,6 +197,7 @@ class IntakeViewModel(
             return
         }
 
+        _state.value = _state.value.copy(onlineSearchAttempted = true)
         onlineSearchManager.search(state.value.query) {
             updateOnlineState()
         }

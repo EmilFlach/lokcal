@@ -165,15 +165,6 @@ class FoodRepository(database: Database) {
             )
         }
 
-        // Fuzzy fallback
-        val all = getAll()
-        if (all.isEmpty()) return emptyList()
-        return all.sortedWith(
-            compareByDescending<Food> { trackingCount(it) > 0 }
-                .thenBy { levScore(it) }
-                .thenByDescending { trackingCount(it) }
-                .thenBy { sourcePriority(it.source) }
-                .thenBy { it.name.lowercase() }
-        ).take(100)
+        return emptyList()
     }
 }

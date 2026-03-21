@@ -1,14 +1,16 @@
 package com.emilflach.lokcal.ui.components
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.unit.dp
@@ -30,39 +32,48 @@ fun LazyListScope.searchSection(
     requesters: FocusRequesters,
     onDone: (itemAdded: Boolean) -> Unit
 ) {
-    item {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            color = LocalRecipesColors.current.foregroundSupport,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-    }
 
-    if (section.isSearching) {
-        item {
-            CircularProgressIndicator(
-                modifier = Modifier.size(24.dp),
-                color = LocalRecipesColors.current.foregroundDefault,
-                strokeWidth = 2.dp
+    item {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val color = LocalRecipesColors.current
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = color.foregroundSupport,
+                modifier = Modifier.weight(1f)
             )
         }
-    } else if (section.error != null) {
+    }
+
+    if (section.error != null) {
         item {
+            val color = LocalRecipesColors.current
             Text(
                 text = section.error,
                 style = MaterialTheme.typography.bodyMedium,
-                color = LocalRecipesColors.current.foregroundSupport,
-                modifier = Modifier.padding(bottom = 8.dp)
+                color = color.foregroundSupport,
+                modifier = Modifier.padding(bottom = 16.dp)
             )
         }
-    } else if (section.noResults) {
+    } else if (section.isSearching) {
+        item {
+            val color = LocalRecipesColors.current
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                color = color.foregroundSupport,
+                trackColor = color.backgroundSurface1
+            )
+        }
+    } else if (section.noResults && section.foods.isEmpty()) {
         item {
             Text(
-                text = "No matching results found",
+                text = "No results found",
                 style = MaterialTheme.typography.bodyMedium,
                 color = LocalRecipesColors.current.foregroundSupport,
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier.padding(bottom = 16.dp)
             )
         }
     }

@@ -96,6 +96,17 @@ open class AlbertHeijnSearch(
             }
         }
 
+        if (results.isEmpty()) {
+            // Log if we have content but found no links
+            if (html.length > 500) {
+                println("[DEBUG_LOG] No links found in AH search results. HTML length: ${html.length}")
+                // Look for alternative indicators of "no results"
+                if (html.contains("niet gevonden") || html.contains("Probeer een andere zoekterm")) {
+                    println("[DEBUG_LOG] AH search explicitly returned 'no results' page.")
+                }
+            }
+        }
+
         return results
     }
 }

@@ -11,13 +11,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -131,6 +136,61 @@ fun IntakeScreen(
                         )
                         if (index < state.sourceSections.size - 1) {
                             item { Spacer(Modifier.height(16.dp)) }
+                        }
+                    }
+                    if (state.sourceSections.all { !it.isSearching && it.noResults && it.error == null }) {
+                        item {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 32.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = if (state.sourceSections.size > 1) "No results found online" else "No results found",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = color.foregroundDefault
+                                )
+                                Text(
+                                    text = "Try a different search term",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = color.foregroundSupport,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                            }
+                        }
+                    }
+                } else if (state.query.isNotBlank() && state.meals.isEmpty() && state.foods.isEmpty()) {
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = "No local matches found",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = color.foregroundDefault
+                            )
+                            Text(
+                                text = "Search the internet instead?",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = color.foregroundSupport,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                            Button(
+                                onClick = { viewModel.searchOnline() },
+                                modifier = Modifier.padding(top = 16.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = color.backgroundSurface2,
+                                    contentColor = color.foregroundDefault
+                                )
+                            ) {
+                                Text("Search Online")
+                            }
                         }
                     }
                 } else {
