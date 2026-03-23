@@ -34,5 +34,10 @@ plugins {
 }
 
 include(":shared")
-include(":androidApp")
+
+val isJetBrains = System.getProperty("idea.vendor.name") == "JetBrains"
+if (!isJetBrains) {
+    include(":androidApp")
+}
+
 
