@@ -1,10 +1,7 @@
 package com.emilflach.lokcal.viewmodel
 
 import com.emilflach.lokcal.data.SettingsRepository
-import com.emilflach.lokcal.data.sources.AlbertHeijnFoodSource
-import com.emilflach.lokcal.data.sources.FoodSource
-import com.emilflach.lokcal.data.sources.OpenFoodFactsFoodSource
-import com.emilflach.lokcal.data.sources.SourceRegistry
+import com.emilflach.lokcal.data.sources.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -35,6 +32,7 @@ class SourcePreferenceViewModel(
     private val sourceRegistry = SourceRegistry().apply {
         register(AlbertHeijnFoodSource())
         register(OpenFoodFactsFoodSource())
+        register(EsselungaFoodSource())
     }
 
     init {

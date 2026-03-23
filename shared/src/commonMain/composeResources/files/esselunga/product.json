@@ -1,0 +1,16 @@
+{
+  "displayableProduct": {
+    "code": "721558",
+    "description": "Esselunga Scamorza 250 g",
+    "imageURL": "https://images.services.esselunga.it/html/img_prodotti/esselunga/big/721558.jpg",
+    "barcode": "8002330014513",
+    "sanitizeDescription": "esselunga-scamorza-250-g"
+  },
+  "informations": [
+    {
+      "label": "Valori nutrizionali",
+      "value": "<table><thead><tr><th>Informazioni nutrizionali</th><th>per 100 g di prodotto</th><th>VNR**</th><th>per 50 g di prodotto</th><th>VNR**</th><th>%AR* per porzione (50 g)</th></tr></thead><tbody><tr><td>Energia </td><td>1291 kJ</td><td>&nbsp;</td><td>645 kJ</td><td>&nbsp;</td><td>8%</td></tr><tr><td></td><td>311 kcal</td><td>&nbsp;</td><td>155 kcal</td><td>&nbsp;</td><td>&nbsp;</td></tr><tr><td>Grassi </td><td>24,5 g</td><td>&nbsp;</td><td>12,3 g</td><td>&nbsp;</td><td>18%</td></tr></tbody></table>",
+      "type": "HTML"
+    }
+  ]
+}
