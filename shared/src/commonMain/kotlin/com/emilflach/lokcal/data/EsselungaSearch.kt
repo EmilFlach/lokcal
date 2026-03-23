@@ -8,6 +8,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.*
 
@@ -63,7 +64,7 @@ open class EsselungaSearch(
                         )
                     }
                 }
-                .map { it.await() }
+                .awaitAll()
         }
     }
 
@@ -90,7 +91,7 @@ open class EsselungaSearch(
                 ?.jsonArray
                 ?.filterIsInstance<JsonObject>()
                 ?: emptyList()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             emptyList()
         }
     }

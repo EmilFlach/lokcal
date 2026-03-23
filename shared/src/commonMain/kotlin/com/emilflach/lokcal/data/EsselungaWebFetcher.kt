@@ -69,7 +69,7 @@ open class EsselungaWebFetcher(
             val imageUrl = product?.get("imageURL")?.jsonPrimitive?.contentOrNull
 
             val nutritionHtml = root["informations"]?.jsonArray
-                ?.mapNotNull { it as? kotlinx.serialization.json.JsonObject }
+                ?.mapNotNull { it as? JsonObject }
                 ?.firstOrNull { it["label"]?.jsonPrimitive?.contentOrNull == "Valori nutrizionali" }
                 ?.get("value")?.jsonPrimitive?.contentOrNull
 
@@ -81,7 +81,7 @@ open class EsselungaWebFetcher(
                 productUrl = url,
                 gtin13 = gtin13,
             )
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             FoodFetchResult(null, null, null, null, url, null)
         }
     }
