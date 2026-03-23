@@ -1,6 +1,5 @@
 package com.emilflach.lokcal.ui.components
 
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
@@ -10,7 +9,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.unit.dp
@@ -34,27 +32,21 @@ fun LazyListScope.searchSection(
 ) {
 
     item {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val color = LocalRecipesColors.current
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = color.foregroundSupport,
-                modifier = Modifier.weight(1f)
-            )
-        }
+        val color = LocalRecipesColors.current
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = color.foregroundSupport,
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+        )
     }
 
     if (section.error != null) {
         item {
-            val color = LocalRecipesColors.current
             Text(
                 text = section.error,
                 style = MaterialTheme.typography.bodyMedium,
-                color = color.foregroundSupport,
+                color = LocalRecipesColors.current.foregroundSupport,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
         }
@@ -67,7 +59,7 @@ fun LazyListScope.searchSection(
                 trackColor = color.backgroundSurface1
             )
         }
-    } else if (section.noResults && section.foods.isEmpty()) {
+    } else if (section.foods.isEmpty()) {
         item {
             Text(
                 text = "No results found",

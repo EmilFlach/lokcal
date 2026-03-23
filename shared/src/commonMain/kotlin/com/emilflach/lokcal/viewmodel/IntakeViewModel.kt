@@ -2,22 +2,12 @@ package com.emilflach.lokcal.viewmodel
 
 import com.emilflach.lokcal.Food
 import com.emilflach.lokcal.Meal
-import com.emilflach.lokcal.data.FoodRepository
-import com.emilflach.lokcal.data.IntakeRepository
-import com.emilflach.lokcal.data.LabelService
-import com.emilflach.lokcal.data.OnlineFoodItem
-import com.emilflach.lokcal.data.PortionService
-import com.emilflach.lokcal.data.SettingsRepository
+import com.emilflach.lokcal.data.*
 import com.emilflach.lokcal.util.NumberUtils
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class IntakeViewModel(
     private val foodRepo: FoodRepository,
@@ -36,6 +26,7 @@ class IntakeViewModel(
         val gramsById: Map<Long, String> = emptyMap(),
         val showScanner: Boolean = false,
         val onlineSearchAttempted: Boolean = false,
+        val showGlobalNoResults: Boolean = false,
     ) {
         val showOnlineSearchSections: Boolean
             get() = sourceSections.any { it.foods.isNotEmpty() || it.isSearching || it.error != null } || (onlineSearchAttempted && sourceSections.all { it.noResults })
@@ -67,6 +58,7 @@ class IntakeViewModel(
             sourceSections = emptyList(),
             isSearchingOnline = false,
             onlineSearchAttempted = false,
+            showGlobalNoResults = false,
         )
         performSearch(state.value.selectedMealType)
     }
@@ -206,7 +198,8 @@ class IntakeViewModel(
     private fun updateOnlineState() {
         _state.value = _state.value.copy(
             isSearchingOnline = onlineSearchManager.isSearching,
-            sourceSections = onlineSearchManager.sections
+            sourceSections = onlineSearchManager.sections,
+            showGlobalNoResults = onlineSearchManager.showGlobalNoResults
         )
     }
 

@@ -3,24 +3,18 @@ package com.emilflach.lokcal.viewmodel
 import com.emilflach.lokcal.Food
 import com.emilflach.lokcal.data.OnlineFoodItem
 import com.emilflach.lokcal.data.SettingsRepository
-import com.emilflach.lokcal.data.sources.AlbertHeijnFoodSource
-import com.emilflach.lokcal.data.sources.FoodSource
-import com.emilflach.lokcal.data.sources.OpenFoodFactsFoodSource
-import com.emilflach.lokcal.data.sources.RateLimiter
-import com.emilflach.lokcal.data.sources.SourceRegistry
-import com.emilflach.lokcal.data.sources.SourceType
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.emilflach.lokcal.data.sources.*
+import kotlinx.coroutines.*
 
 class OnlineSearchManager(
     private val settingsRepo: SettingsRepository,
     private val scope: CoroutineScope
 ) {
+    companion object {
+        private const val RATE_LIMIT_MESSAGE = "Wait 10 seconds to search online again"
+        private const val CANCELLED_MESSAGE = "Search cancelled"
+    }
+
     data class SearchSection(
         val sourceId: String = "",
         val sourceName: String = "",
@@ -47,6 +41,11 @@ class OnlineSearchManager(
     private var _sections = emptyList<SearchSection>()
     val sections: List<SearchSection> get() = _sections
 
+    val showGlobalNoResults: Boolean
+        get() = _sections.isNotEmpty() && _sections.all {
+            !it.isSearching && it.error == null && (it.noResults || it.foods.isEmpty())
+        }
+
     fun search(query: String, onStateChanged: () -> Unit) {
         val q = query.trim()
         if (q.isEmpty()) return
@@ -55,18 +54,18 @@ class OnlineSearchManager(
             val sources = getPreferredSources()
             if (sources.isEmpty()) return@launch
 
-            // Initialize sections with rate limit info
+            // Initialize sections
             _sections = sources.map { source ->
                 val cooldown = rateLimiter.getRemainingCooldown(source.id, source.rateLimitSeconds)
                 SearchSection(
                     sourceId = source.id,
                     sourceName = source.displayName,
-                    isSearching = false, // Start as false, will be set to true if we can request
+                    isSearching = cooldown <= 0,
                     remainingCooldown = cooldown,
-                    error = if (cooldown > 0) "Wait 10 seconds to search online again" else null
+                    error = if (cooldown > 0) RATE_LIMIT_MESSAGE else null
                 )
             }
-            _isSearching = true
+            _isSearching = _sections.any { it.isSearching }
             onStateChanged()
 
             // Clear transient maps
@@ -77,33 +76,19 @@ class OnlineSearchManager(
             onlineSearchJob?.cancel()
             onlineSearchJob = scope.launch {
                 try {
-                    val jobs = sources.mapIndexed { index, source ->
+                    val jobs = sources.map { source ->
                         launch {
                             val cooldown = rateLimiter.getRemainingCooldown(source.id, source.rateLimitSeconds)
                             if (cooldown > 0) {
-                                updateSourceSection(index, onStateChanged) {
-                                    it.copy(
-                                        isSearching = false,
-                                        error = "Wait 10 seconds to search online again",
-                                        remainingCooldown = cooldown
-                                    )
-                                }
-                                checkSearchFinished(onStateChanged)
+                                updateSection(source.id, onStateChanged) { it.copy(isSearching = false) }
                                 return@launch
                             }
-
-                            updateSourceSection(index, onStateChanged) { it.copy(isSearching = true) }
-                            searchWithSource(source, q, index, onStateChanged)
+                            searchWithSource(source, q, onStateChanged)
                         }
                     }
                     jobs.joinAll()
                 } catch (_: CancellationException) {
-                    _isSearching = false
-                    _sections = _sections.map { 
-                        if (it.isSearching) it.copy(isSearching = false, error = "Search cancelled", progress = null) 
-                        else it.copy(isSearching = false) 
-                    }
-                    onStateChanged()
+                    handleCancellation(onStateChanged)
                 } catch (_: Throwable) {
                     _isSearching = false
                     _sections = _sections.map { it.copy(isSearching = false) }
@@ -118,90 +103,90 @@ class OnlineSearchManager(
     private suspend fun searchWithSource(
         source: FoodSource,
         query: String,
-        sectionIndex: Int,
         onStateChanged: () -> Unit
     ) {
         // Check rate limit
         if (!rateLimiter.canRequest(source.id, source.rateLimitSeconds)) {
             val cooldown = rateLimiter.getRemainingCooldown(source.id, source.rateLimitSeconds)
-            updateSourceSection(sectionIndex, onStateChanged) {
+            updateSection(source.id, onStateChanged) {
                 it.copy(
                     isSearching = false,
-                    error = "Wait 10 seconds to search online again",
+                    error = RATE_LIMIT_MESSAGE,
                     remainingCooldown = cooldown
                 )
             }
-            checkSearchFinished(onStateChanged)
             return
         }
 
         try {
-            // Record request and perform search
             rateLimiter.recordRequest(source.id)
 
-            // Update with initial progress if source is WEB (AH)
+            // Initial progress for WEB sources
             if (source.type == SourceType.WEB) {
-                updateSourceSection(sectionIndex, onStateChanged) {
-                    it.copy(progress = 0.1f)
-                }
+                updateSection(source.id, onStateChanged) { it.copy(progress = 0.1f) }
             }
 
             val items = withContext(Dispatchers.Default) { source.search(query) }
 
-            // Get or initialize temp ID counter for this source
+            // Process results
             val results = sourceResults.getOrPut(source.id) { mutableMapOf() }
             if (!sourceTempIds.containsKey(source.id)) {
                 sourceTempIds[source.id] = (sourceTempIds.size + 1) * -1000L
             }
 
-            val transient = items.map { item ->
+            val foods = items.map { item ->
                 val tempId = sourceTempIds[source.id]!! - 1
                 sourceTempIds[source.id] = tempId
                 results[tempId] = item
                 item.toFood(tempId, source.id)
             }
 
-            updateSourceSection(sectionIndex, onStateChanged) {
+            updateSection(source.id, onStateChanged) {
                 it.copy(
-                    foods = transient,
+                    foods = foods,
                     isSearching = false,
-                    noResults = transient.isEmpty(),
+                    noResults = items.isEmpty(),
                     progress = null
                 )
             }
         } catch (e: CancellationException) {
-            updateSourceSection(sectionIndex, onStateChanged) {
-                it.copy(
-                    isSearching = false,
-                    error = "Search cancelled",
-                    progress = null
-                )
+            updateSection(source.id, onStateChanged) {
+                it.copy(isSearching = false, error = CANCELLED_MESSAGE, progress = null, noResults = false)
             }
             throw e
         } catch (_: Throwable) {
-            updateSourceSection(sectionIndex, onStateChanged) {
+            updateSection(source.id, onStateChanged) {
                 it.copy(
                     isSearching = false,
                     error = "Could not connect to ${source.displayName}",
-                    progress = null
+                    progress = null,
+                    noResults = false
                 )
             }
-        } finally {
-            checkSearchFinished(onStateChanged)
         }
     }
 
-    private fun updateSourceSection(
-        index: Int,
+    private fun updateSection(
+        sourceId: String,
         onStateChanged: () -> Unit,
-        update: (SearchSection) -> SearchSection
+        transform: (SearchSection) -> SearchSection
     ) {
-        val newSections = _sections.toMutableList()
-        if (index in newSections.indices) {
-            newSections[index] = update(newSections[index])
+        val index = _sections.indexOfFirst { it.sourceId == sourceId }
+        if (index != -1) {
+            val newSections = _sections.toMutableList()
+            newSections[index] = transform(newSections[index])
             _sections = newSections
             onStateChanged()
         }
+    }
+
+    private fun handleCancellation(onStateChanged: () -> Unit) {
+        _isSearching = false
+        _sections = _sections.map {
+            if (it.isSearching) it.copy(isSearching = false, error = CANCELLED_MESSAGE, progress = null, noResults = false)
+            else it.copy(isSearching = false)
+        }
+        onStateChanged()
     }
 
     private fun checkSearchFinished(onStateChanged: () -> Unit) {
@@ -236,14 +221,10 @@ class OnlineSearchManager(
         sourceTempIds.clear()
     }
 
-    fun cancel() {
+    fun cancel(onStateChanged: () -> Unit = {}) {
         onlineSearchJob?.cancel()
         onlineSearchJob = null
-        _isSearching = false
-        _sections = _sections.map { 
-            if (it.isSearching) it.copy(isSearching = false, error = "Search cancelled", progress = null) 
-            else it.copy(isSearching = false) 
-        }
+        handleCancellation(onStateChanged)
     }
 
     private fun OnlineFoodItem.toFood(tempId: Long, source: String) = Food(
