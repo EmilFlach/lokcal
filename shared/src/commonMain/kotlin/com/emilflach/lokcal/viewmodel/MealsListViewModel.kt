@@ -4,17 +4,15 @@ import com.emilflach.lokcal.AllItemFrequencies
 import com.emilflach.lokcal.ItemsMissingImage
 import com.emilflach.lokcal.Meal
 import com.emilflach.lokcal.data.IntakeRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
+import com.emilflach.lokcal.data.MealRepository
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
 class MealsListViewModel(
-    private val intakeRepo: IntakeRepository
+    private val intakeRepo: IntakeRepository,
+    private val mealRepo: MealRepository
 ) {
     enum class Tab {
         ALL, MISSING_IMAGES
@@ -98,9 +96,9 @@ class MealsListViewModel(
         searchJob = scope.launch {
             val q = _search.value.trim()
             val result = if (q.isBlank()) {
-                intakeRepo.listAllMeals().sortedBy { it.name.lowercase() }
+                mealRepo.listAllMeals().sortedBy { it.name.lowercase() }
             } else {
-                intakeRepo.searchMeals(q)
+                mealRepo.searchMeals(q)
             }
             _meals.value = result
         }

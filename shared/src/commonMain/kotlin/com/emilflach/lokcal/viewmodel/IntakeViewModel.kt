@@ -12,7 +12,8 @@ import kotlinx.coroutines.flow.asStateFlow
 class IntakeViewModel(
     private val foodRepo: FoodRepository,
     private val intakeRepo: IntakeRepository,
-    private val settingsRepo: SettingsRepository,
+    private val mealRepo: MealRepository,
+    settingsRepo: SettingsRepository,
     initialMealType: String,
     private val dateIso: String,
 ) {
@@ -82,7 +83,7 @@ class IntakeViewModel(
             } else {
                 val foodTracking = trackingCounts.filterKeys { it.first == "FOOD" }.mapKeys { it.key.second }
                 val mealTracking = trackingCounts.filterKeys { it.first == "MEAL" }.mapKeys { it.key.second }
-                intakeRepo.searchMeals(_state.value.query, mealTracking) to foodRepo.search(_state.value.query, foodTracking)
+                mealRepo.searchMeals(_state.value.query, mealTracking) to foodRepo.search(_state.value.query, foodTracking)
             }
             _state.value = _state.value.copy(meals = meals, foods = foods)
         }
@@ -201,10 +202,5 @@ class IntakeViewModel(
             sourceSections = onlineSearchManager.sections,
             showGlobalNoResults = onlineSearchManager.showGlobalNoResults
         )
-    }
-
-    private fun cancelOnlineSearch() {
-        onlineSearchManager.cancel()
-        updateOnlineState()
     }
 }

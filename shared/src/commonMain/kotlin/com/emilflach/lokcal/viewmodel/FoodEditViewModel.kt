@@ -6,20 +6,18 @@ import com.emilflach.lokcal.FoodAlias
 import com.emilflach.lokcal.ItemsMissingImage
 import com.emilflach.lokcal.data.FoodRepository
 import com.emilflach.lokcal.data.IntakeRepository
+import com.emilflach.lokcal.data.MealRepository
 import com.emilflach.lokcal.ui.dialogs.StealImageItem
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 class FoodEditViewModel(
     private val repo: FoodRepository,
     private val intakeRepo: IntakeRepository,
+    private val mealRepo: MealRepository
 ) {
     enum class Tab {
         ALL, MISSING_IMAGES
@@ -212,7 +210,7 @@ class FoodEditViewModel(
             val foods = repo.search(query).map {
                 StealImageItem(it.id, it.name, it.image_url, "FOOD")
             }
-            val meals = intakeRepo.searchMeals(query).map {
+            val meals = mealRepo.searchMeals(query).map {
                 StealImageItem(it.id, it.name, it.image_url, "MEAL")
             }
             _edit.value = _edit.value.copy(stealResults = (foods + meals).sortedBy { it.name.lowercase() })

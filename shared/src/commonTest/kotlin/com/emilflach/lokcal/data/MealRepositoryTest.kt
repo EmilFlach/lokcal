@@ -155,4 +155,30 @@ class MealRepositoryTest {
         assertEquals(350.0, totalG)
         assertEquals(575.0, totalKcal, 0.01) // (100*1) + (200*2) + (150*0.5)
     }
+
+    @Test
+    fun testSearchMeals() = runTest {
+        val food1 = foodRepository.insertManual("Food", 100.0, null, null, null, null, null)
+
+        intakeRepository.createMeal("Breakfast Bowl", 1.0, listOf(food1 to 100.0))
+        intakeRepository.createMeal("Lunch Salad", 1.0, listOf(food1 to 100.0))
+        intakeRepository.createMeal("Breakfast Smoothie", 1.0, listOf(food1 to 100.0))
+
+        val results = repository.searchMeals("breakfast")
+        assertEquals(2, results.size)
+        assertTrue(results.any { it.name == "Breakfast Bowl" })
+        assertTrue(results.any { it.name == "Breakfast Smoothie" })
+    }
+
+    @Test
+    fun testListAllMeals() = runTest {
+        val food1 = foodRepository.insertManual("Food", 100.0, null, null, null, null, null)
+
+        intakeRepository.createMeal("Meal1", 1.0, listOf(food1 to 100.0))
+        intakeRepository.createMeal("Meal2", 1.0, listOf(food1 to 100.0))
+        intakeRepository.createMeal("Meal3", 1.0, listOf(food1 to 100.0))
+
+        val all = repository.listAllMeals()
+        assertEquals(3, all.size)
+    }
 }

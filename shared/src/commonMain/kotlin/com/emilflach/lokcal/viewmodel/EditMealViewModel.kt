@@ -3,25 +3,19 @@ package com.emilflach.lokcal.viewmodel
 import com.emilflach.lokcal.Food
 import com.emilflach.lokcal.Meal
 import com.emilflach.lokcal.data.FoodRepository
-import com.emilflach.lokcal.data.IntakeRepository
 import com.emilflach.lokcal.data.LabelService
 import com.emilflach.lokcal.data.MealRepository
 import com.emilflach.lokcal.data.PortionService
 import com.emilflach.lokcal.ui.dialogs.StealImageItem
 import com.emilflach.lokcal.util.NumberUtils
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
 class EditMealViewModel(
     private val repo: MealRepository,
     private val foodRepo: FoodRepository,
-    private val intakeRepo: IntakeRepository,
     private val mealId: Long,
 ) {
     // Services for portion defaults and labels
@@ -146,7 +140,7 @@ class EditMealViewModel(
             val foods = foodRepo.search(query).map {
                 StealImageItem(it.id, it.name, it.image_url, "FOOD")
             }
-            val meals = intakeRepo.searchMeals(query).map {
+            val meals = repo.searchMeals(query).map {
                 StealImageItem(it.id, it.name, it.image_url, "MEAL")
             }
             updateState { copy(stealResults = (foods + meals).sortedBy { it.name.lowercase() }) }

@@ -74,16 +74,8 @@ class FoodRepository(database: Database) {
         return queries.selectAliasesByFoodId(foodId).awaitAsList()
     }
 
-    suspend fun getAliasesByType(foodId: Long, type: String): List<FoodAlias> {
-        return queries.selectAliasesByType(foodId, type).awaitAsList()
-    }
-
     suspend fun deleteAlias(aliasId: Long) {
         queries.deleteAlias(aliasId)
-    }
-
-    suspend fun updateAlias(aliasId: Long, alias: String, type: String) {
-        queries.updateAlias(alias, type, aliasId)
     }
 
     /**
@@ -101,14 +93,6 @@ class FoodRepository(database: Database) {
         if (digitsOnly.length == 13) {
             val byBarcode = queries.selectByGtin13(digitsOnly).awaitAsList()
             if (byBarcode.isNotEmpty()) return byBarcode
-        }
-
-        fun sourcePriority(src: String?): Int = when (src?.lowercase()) {
-            "manual" -> 0
-            "nevo" -> 1
-            "mealie" -> 2
-            "ah" -> 3
-            else -> 4
         }
 
         fun fields(f: Food): List<String> = listOf(f.name)
@@ -138,12 +122,11 @@ class FoodRepository(database: Database) {
             if (filtered.isNotEmpty()) {
                 return filtered.sortedWith(
                     compareByDescending<Food> { trackingCount(it) > 0 }
+                        .thenByDescending { trackingCount(it) }
                         .thenBy { if (exactMatch(it)) 0 else 1 }
                         .thenBy { if (prefixMatch(it)) 0 else 1 }
                         .thenBy { tokensPosSum(it) }
-                        .thenByDescending { trackingCount(it) }
                         .thenBy { levScore(it) }
-                        .thenBy { sourcePriority(it.source) }
                         .thenBy { it.name.lowercase() }
                 )
             }
@@ -155,14 +138,27 @@ class FoodRepository(database: Database) {
         if (candidatesLike.isNotEmpty()) {
             return candidatesLike.sortedWith(
                 compareByDescending<Food> { trackingCount(it) > 0 }
+                    .thenByDescending { trackingCount(it) }
                     .thenBy { if (exactMatch(it)) 0 else 1 }
                     .thenBy { if (prefixMatch(it)) 0 else 1 }
                     .thenBy { containsPos(it) }
-                    .thenByDescending { trackingCount(it) }
                     .thenBy { levScore(it) }
-                    .thenBy { sourcePriority(it.source) }
                     .thenBy { it.name.lowercase() }
             )
+        }
+
+        // Levenshtein fallback
+        val all = queries.selectAll().awaitAsList()
+        val withScore = all.map { it to levScore(it) }
+            .filter { it.second <= 2 }
+        
+        if (withScore.isNotEmpty()) {
+            return withScore.sortedWith(
+                compareByDescending<Pair<Food, Int>> { trackingCount(it.first) > 0 }
+                    .thenByDescending { trackingCount(it.first) }
+                    .thenBy { it.second } // distance
+                    .thenBy { it.first.name.lowercase() }
+            ).map { it.first }
         }
 
         return emptyList()

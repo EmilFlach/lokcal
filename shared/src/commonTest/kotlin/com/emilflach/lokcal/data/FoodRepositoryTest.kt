@@ -298,4 +298,21 @@ class FoodRepositoryTest {
         assertEquals("Often Eaten", results[0].name)
         assertEquals("Rarely Eaten", results[1].name)
     }
+
+    @Test
+    fun testTrackingCountOverPrefix() = runTest {
+        val id1 = repository.insertManual("Apple Fresh", 52.0, null, null, null, null, null)
+        val id2 = repository.insertManual("Pineapple", 50.0, null, null, null, null, null)
+
+        val trackingCounts = mapOf(
+            id2 to 100L, // Highly tracked, but only "contains" match for "apple"
+            id1 to 1L    // Rarely tracked, but "prefix" match for "apple"
+        )
+
+        val results = repository.search("apple", trackingCounts)
+        
+        // After change: Highly tracked "Pineapple" should win over "Apple Fresh"
+        assertEquals("Pineapple", results[0].name)
+        assertEquals("Apple Fresh", results[1].name)
+    }
 }

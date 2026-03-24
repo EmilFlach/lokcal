@@ -1,20 +1,8 @@
 package com.emilflach.lokcal
 
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import com.emilflach.lokcal.data.ExerciseRepository
-import com.emilflach.lokcal.data.FoodRepository
-import com.emilflach.lokcal.data.IntakeRepository
-import com.emilflach.lokcal.data.MealRepository
-import com.emilflach.lokcal.data.SettingsRepository
-import com.emilflach.lokcal.data.SqlDriverFactory
-import com.emilflach.lokcal.data.WeightRepository
-import com.emilflach.lokcal.data.createDatabase
+import androidx.compose.runtime.*
+import com.emilflach.lokcal.data.*
 import com.emilflach.lokcal.navigation.AppNavigation
 import com.emilflach.lokcal.theme.AppTheme
 import com.emilflach.lokcal.ui.screens.AppLoadingScreen
@@ -46,8 +34,8 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
     val mainViewModel = remember(intakeRepo, exerciseRepo, weightRepo, settingsRepo) {
         MainViewModel(intakeRepo, exerciseRepo, weightRepo, settingsRepo, currentDateIso())
     }
-    val mealsListViewModel = remember(intakeRepo) { MealsListViewModel(intakeRepo) }
-    val foodEditViewModel = remember(foodRepo, intakeRepo) { FoodEditViewModel(foodRepo, intakeRepo) }
+    val mealsListViewModel = remember(intakeRepo, mealRepo) { MealsListViewModel(intakeRepo, mealRepo) }
+    val foodEditViewModel = remember(foodRepo, intakeRepo, mealRepo) { FoodEditViewModel(foodRepo, intakeRepo, mealRepo) }
 
     AppNavigation(
         foodRepo = foodRepo,

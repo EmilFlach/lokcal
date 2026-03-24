@@ -1,56 +1,18 @@
 package com.emilflach.lokcal.navigation
 
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import com.emilflach.lokcal.data.ExerciseRepository
-import com.emilflach.lokcal.data.FoodRepository
-import com.emilflach.lokcal.data.IntakeRepository
-import com.emilflach.lokcal.data.MealRepository
-import com.emilflach.lokcal.data.SettingsRepository
-import com.emilflach.lokcal.data.WeightRepository
+import com.emilflach.lokcal.data.*
 import com.emilflach.lokcal.health.HealthManager
 import com.emilflach.lokcal.theme.LocalRecipesColors
-import com.emilflach.lokcal.ui.screens.EditMealScreen
-import com.emilflach.lokcal.ui.screens.ExerciseListScreen
-import com.emilflach.lokcal.ui.screens.FoodEditScreen
-import com.emilflach.lokcal.ui.screens.FoodManageScreen
-import com.emilflach.lokcal.ui.screens.IntakeScreen
-import com.emilflach.lokcal.ui.screens.MainScreen
-import com.emilflach.lokcal.ui.screens.MealTimeScreen
-import com.emilflach.lokcal.ui.screens.MealsListScreen
-import com.emilflach.lokcal.ui.screens.SettingsScreen
-import com.emilflach.lokcal.ui.screens.SourcePreferenceScreen
-import com.emilflach.lokcal.ui.screens.StatisticsScreen
-import com.emilflach.lokcal.ui.screens.WeightListScreen
+import com.emilflach.lokcal.ui.screens.*
 import com.emilflach.lokcal.util.currentDateIso
-import com.emilflach.lokcal.viewmodel.EditMealViewModel
-import com.emilflach.lokcal.viewmodel.ExerciseListViewModel
-import com.emilflach.lokcal.viewmodel.FoodEditViewModel
-import com.emilflach.lokcal.viewmodel.IntakeViewModel
-import com.emilflach.lokcal.viewmodel.MainViewModel
-import com.emilflach.lokcal.viewmodel.MealTimeViewModel
-import com.emilflach.lokcal.viewmodel.MealsListViewModel
-import com.emilflach.lokcal.viewmodel.SourcePreferenceViewModel
-import com.emilflach.lokcal.viewmodel.StatisticsViewModel
-import com.emilflach.lokcal.viewmodel.WeightListViewModel
+import com.emilflach.lokcal.viewmodel.*
 import kotlinx.datetime.LocalDate
 
 @Composable
@@ -144,8 +106,8 @@ internal fun AppNavigation(
                         EnterTransition.None togetherWith ExitTransition.None
                     }
                 ) { s ->
-                    val intakeVm = remember(foodRepo, intakeRepo, settingsRepo, s.mealType, s.dateIso) {
-                        IntakeViewModel(foodRepo, intakeRepo, settingsRepo, s.mealType, s.dateIso)
+                    val intakeVm = remember(foodRepo, intakeRepo, mealRepo, settingsRepo, s.mealType, s.dateIso) {
+                        IntakeViewModel(foodRepo, intakeRepo, mealRepo, settingsRepo, s.mealType, s.dateIso)
                     }
                     IntakeScreen(
                         viewModel = intakeVm,
@@ -161,7 +123,7 @@ internal fun AppNavigation(
                     )
                 }
                 entry<Screen.EditMeal> { s ->
-                    val editVm = remember(intakeRepo, s.mealId) { EditMealViewModel(mealRepo, foodRepo, intakeRepo, s.mealId) }
+                    val editVm = remember(intakeRepo, s.mealId) { EditMealViewModel(mealRepo, foodRepo, s.mealId) }
                     EditMealScreen(
                         viewModel = editVm,
                         onBack = { backStack.removeLastOrNull(); refreshToggle = !refreshToggle },
@@ -217,7 +179,7 @@ internal fun AppNavigation(
                     )
                 }
                 entry<Screen.EditMealFromList> { s ->
-                    val editVm = remember(intakeRepo, s.mealId) { EditMealViewModel(mealRepo, foodRepo, intakeRepo, s.mealId) }
+                    val editVm = remember(intakeRepo, s.mealId) { EditMealViewModel(mealRepo, foodRepo, s.mealId) }
                     EditMealScreen(
                         viewModel = editVm,
                         onBack = { mealsListViewModel.refresh(); backStack.removeLastOrNull(); refreshToggle = !refreshToggle },
