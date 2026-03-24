@@ -22,7 +22,7 @@ object NumberUtils {
      * - Truncates to [maxLength]
      * - Trims leading zeros like "00" unless it's the "0." case
      */
-    fun sanitizeDecimalInput(text: String, maxLength: Int = 4): String {
+    fun sanitizeDecimalInput(text: String, maxLength: Int = 6): String {
         val filtered = buildString {
             var hasSep = false
             for (ch in text) {

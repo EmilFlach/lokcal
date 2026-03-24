@@ -33,6 +33,7 @@ class SourcePreferenceViewModel(
         register(AlbertHeijnFoodSource())
         register(OpenFoodFactsFoodSource())
         register(EsselungaFoodSource())
+        register(KrogerFoodSource())
     }
 
     init {

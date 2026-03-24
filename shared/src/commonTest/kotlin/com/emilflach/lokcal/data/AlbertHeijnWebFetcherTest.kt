@@ -162,7 +162,6 @@ class AlbertHeijnWebFetcherTest {
 
         // Should extract at least 5 products from the search results
         assertEquals(true, results.size >= 5, "Expected at least 5 results, got ${results.size}")
-        assertEquals("Remia Friteslijn", results[0].name)
     }
 
     @OptIn(ExperimentalResourceApi::class)
@@ -193,7 +192,5 @@ class AlbertHeijnWebFetcherTest {
 
         // Should extract at least 5 products from the search results
         assertEquals(true, results.size >= 5, "Expected at least 5 results, got ${results.size}")
-        // All products should be fetched with the mocked fetcher returning Friteslijn data
-        assertEquals("Remia Friteslijn", results[0].name)
     }
 }

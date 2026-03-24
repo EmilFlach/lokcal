@@ -30,6 +30,7 @@ class OnlineSearchManager(
         register(AlbertHeijnFoodSource())
         register(OpenFoodFactsFoodSource())
         register(EsselungaFoodSource())
+        register(KrogerFoodSource())
     }
     private val rateLimiter = RateLimiter()
     private val sourceResults = mutableMapOf<String, MutableMap<Long, OnlineFoodItem>>()

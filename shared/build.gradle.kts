@@ -5,6 +5,8 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.compose.reload.gradle.ComposeHotRun
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import java.io.FileInputStream
+import java.util.*
 
 plugins {
     alias(libs.plugins.multiplatform)
@@ -15,6 +17,21 @@ plugins {
     alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.sqlDelight)
 }
+
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) FileInputStream(f).use { load(it as java.io.InputStream) }
+}
+val generateKrogerConfig by tasks.registering(GenerateSecretsTask::class) {
+    packageName = "com.emilflach.lokcal.data"
+    objectName = "KrogerConfig"
+    secrets.set(mapOf(
+        "CLIENT_ID" to localProps.getProperty("kroger.clientId", ""),
+        "CLIENT_SECRET" to localProps.getProperty("kroger.clientSecret", ""),
+    ))
+    outputDir = layout.buildDirectory.dir("generated/secrets/commonMain/kotlin")
+}
+
 kotlin {
     android {
         namespace = "com.emilflach.lokcal"
@@ -58,6 +75,7 @@ kotlin {
             // Include the large JSON as a resource without bundling .kt sources
             resources.srcDirs("src/commonMain/resources", "src/commonMain/kotlin")
             resources.exclude("**/*.kt")
+            kotlin.srcDir(generateKrogerConfig)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
