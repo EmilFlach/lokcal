@@ -1,14 +1,7 @@
 package com.emilflach.lokcal.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -16,15 +9,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ImageSearch
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -37,8 +22,10 @@ import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.GramQuantityControls
 import com.emilflach.lokcal.ui.components.MealTimeItem
 import com.emilflach.lokcal.ui.dialogs.StealImageDialog
+import com.emilflach.lokcal.util.getTopPaddingForNativeNavigation
+import com.emilflach.lokcal.util.usesNativeNavigation
 import com.emilflach.lokcal.viewmodel.EditMealViewModel
-import io.ktor.http.encodeURLParameter
+import io.ktor.http.*
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -56,35 +43,40 @@ fun EditMealScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Edit ${state.name}") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {
-                        viewModel.deleteMeal(onDeleted)
-                    }) {
-                        Icon(Icons.Outlined.Delete, contentDescription = "Delete meal")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colors.backgroundPage,
-                    titleContentColor = colors.foregroundDefault,
-                    navigationIconContentColor = colors.foregroundDefault,
-                    actionIconContentColor = colors.foregroundDefault,
+        topBar = if (!usesNativeNavigation) {
+            {
+                TopAppBar(
+                    title = { Text("Edit ${state.name}") },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = {
+                            viewModel.deleteMeal(onDeleted)
+                        }) {
+                            Icon(Icons.Outlined.Delete, contentDescription = "Delete meal")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = colors.backgroundPage,
+                        titleContentColor = colors.foregroundDefault,
+                        navigationIconContentColor = colors.foregroundDefault,
+                        actionIconContentColor = colors.foregroundDefault,
+                    )
                 )
-            )
+            }
+        } else {
+            {}
         }
     ) { inner ->
+        val topPadding = getTopPaddingForNativeNavigation()
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(colors.backgroundPage)
-                .padding(inner)
+                .then(if (usesNativeNavigation) Modifier.padding(top = topPadding) else Modifier.padding(inner))
                 .padding(horizontal = 16.dp)
         ) {
             Spacer(Modifier.height(12.dp))

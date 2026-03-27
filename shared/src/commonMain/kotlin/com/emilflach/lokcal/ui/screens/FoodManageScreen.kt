@@ -2,14 +2,7 @@ package com.emilflach.lokcal.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -18,25 +11,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SecondaryTabRow
-import androidx.compose.material3.Tab
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
@@ -48,6 +24,8 @@ import coil3.compose.AsyncImage
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.getRoundedCornerShape
 import com.emilflach.lokcal.ui.util.rememberKtorImageLoader
+import com.emilflach.lokcal.util.getTopPaddingForNativeNavigation
+import com.emilflach.lokcal.util.usesNativeNavigation
 import com.emilflach.lokcal.viewmodel.FoodEditViewModel
 import kotlinx.coroutines.launch
 
@@ -98,32 +76,37 @@ fun FoodManageScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Foods") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { onOpenEdit(null) }) {
-                        Icon(Icons.Filled.Add, contentDescription = "Add food")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colors.backgroundPage,
-                    titleContentColor = colors.foregroundDefault,
-                    navigationIconContentColor = colors.foregroundDefault,
-                    actionIconContentColor = colors.foregroundDefault,
+        topBar = if (!usesNativeNavigation) {
+            {
+                TopAppBar(
+                    title = { Text("Foods") },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { onOpenEdit(null) }) {
+                            Icon(Icons.Filled.Add, contentDescription = "Add food")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = colors.backgroundPage,
+                        titleContentColor = colors.foregroundDefault,
+                        navigationIconContentColor = colors.foregroundDefault,
+                        actionIconContentColor = colors.foregroundDefault,
+                    )
                 )
-            )
+            }
+        } else {
+            {}
         }
     ) { inner ->
+        val topPadding = getTopPaddingForNativeNavigation()
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(inner)
+                .then(if (usesNativeNavigation) Modifier.padding(top = topPadding) else Modifier.padding(inner))
         ) {
             SecondaryTabRow(
                 selectedTabIndex = selectedTab.ordinal,

@@ -1,29 +1,22 @@
 package com.emilflach.lokcal.ui.screens
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.PagerSnapDistance
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.GradientBackground
 import com.emilflach.lokcal.ui.components.main.MainMealList
 import com.emilflach.lokcal.ui.components.main.MainSummary
+import com.emilflach.lokcal.ui.components.main.MainSummaryGraph
+import com.emilflach.lokcal.ui.components.main.MainSummaryKcal
+import com.emilflach.lokcal.util.usesNativeNavigation
 import com.emilflach.lokcal.viewmodel.DayState
 import com.emilflach.lokcal.viewmodel.MainViewModel
 
@@ -64,21 +57,47 @@ fun MainScreen(
                     .windowInsetsPadding(WindowInsets.safeDrawing)
             ) {
 
-                MainSummary(
-                    state = uiState.dayState,
-                    formattedDate = viewModel.formattedDate(),
-                    onDateClick = { viewModel.setToCurrentDate() },
-                    selectedDate = uiState.selectedDate,
-                    last7 = uiState.last7Deltas,
-                    animationTrigger = animationTrigger,
-                    onOpenExercise = onOpenExercise,
-                    onOpenWeightToday = onOpenWeightToday,
-                    onOpenWeightList = onOpenWeightList,
-                    onOpenStatistics = onOpenStatistics,
-                    onOpenSettings = onOpenSettings,
-                    isCompact = isCompact,
-                    hideGraphs = hideGraphs
-                )
+                if (!usesNativeNavigation) {
+                    MainSummary(
+                        state = uiState.dayState,
+                        formattedDate = viewModel.formattedDate(),
+                        onDateClick = { viewModel.setToCurrentDate() },
+                        selectedDate = uiState.selectedDate,
+                        last7 = uiState.last7Deltas,
+                        animationTrigger = animationTrigger,
+                        onOpenExercise = onOpenExercise,
+                        onOpenWeightToday = onOpenWeightToday,
+                        onOpenWeightList = onOpenWeightList,
+                        onOpenStatistics = onOpenStatistics,
+                        onOpenSettings = onOpenSettings,
+                        isCompact = isCompact,
+                        hideGraphs = hideGraphs
+                    )
+                } else {
+                    // Show only the kcal/graph section when using native navigation (header is in nav bar)
+                    BoxWithConstraints(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .background(LocalRecipesColors.current.backgroundPage, MaterialTheme.shapes.medium)
+                            .padding(if (isCompact) 12.dp else 16.dp)
+                    ) {
+                        Column {
+                            MainSummaryKcal(
+                                state = uiState.dayState,
+                                colors = LocalRecipesColors.current,
+                                fadeAlpha = 1f,
+                                onOpenExercise = { onOpenExercise(uiState.selectedDate.toString()) },
+                                isCompact = isCompact
+                            )
+
+                            if (!hideGraphs) {
+                                Spacer(Modifier.height(16.dp))
+                                MainSummaryGraph(uiState.last7Deltas, this@BoxWithConstraints.maxWidth)
+                            }
+                        }
+                    }
+                }
 
                 HorizontalPager(
                     state = pagerState,

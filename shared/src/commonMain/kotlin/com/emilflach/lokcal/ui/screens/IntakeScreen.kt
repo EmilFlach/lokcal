@@ -22,7 +22,9 @@ import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.camera.CameraManager
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.*
+import com.emilflach.lokcal.util.getTopSafeAreaInset
 import com.emilflach.lokcal.util.showBarcodeScanner
+import com.emilflach.lokcal.util.usesNativeNavigation
 import com.emilflach.lokcal.viewmodel.IntakeViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -82,11 +84,12 @@ fun IntakeScreen(
             )
         }
     ) { innerPadding ->
+        val topPadding = if (usesNativeNavigation) getTopSafeAreaInset() + 128.dp else 0.dp
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(color.backgroundPage)
-                .padding(innerPadding)
+                .then(if (usesNativeNavigation) Modifier.padding(top = topPadding) else Modifier.padding(innerPadding))
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start

@@ -2,29 +2,14 @@ package com.emilflach.lokcal.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.AutoGraph
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -37,11 +22,9 @@ import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.data.ExerciseRepository
 import com.emilflach.lokcal.health.HealthManager
 import com.emilflach.lokcal.theme.LocalRecipesColors
-import com.emilflach.lokcal.ui.components.MealTimeItem
-import com.emilflach.lokcal.ui.components.MealTimeTotalKcal
-import com.emilflach.lokcal.ui.components.MealTopBar
-import com.emilflach.lokcal.ui.components.MinuteQuantityControls
-import com.emilflach.lokcal.ui.components.getRoundedCornerShape
+import com.emilflach.lokcal.ui.components.*
+import com.emilflach.lokcal.util.getTopPaddingForNativeNavigation
+import com.emilflach.lokcal.util.usesNativeNavigation
 import com.emilflach.lokcal.viewmodel.ExerciseListViewModel
 import kotlin.math.roundToInt
 
@@ -78,11 +61,12 @@ fun ExerciseListScreen(
             )
         },
     ) { paddingValues ->
+        val topPadding = getTopPaddingForNativeNavigation()
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(colors.backgroundPage)
-                .padding(paddingValues)
+                .then(if (usesNativeNavigation) Modifier.padding(top = topPadding) else Modifier.padding(paddingValues))
                 .padding(horizontal = 16.dp)
         ) {
             LazyColumn(

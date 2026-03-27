@@ -1,39 +1,58 @@
 package com.emilflach.lokcal.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 
 
 internal val LocalThemeIsDark = compositionLocalOf { mutableStateOf(true) }
+internal val LocalOnThemeToggle = staticCompositionLocalOf<() -> Unit> { {} }
 
 @Composable
 internal fun AppTheme(
     content: @Composable () -> Unit
 ) {
-    val systemIsDark = isSystemInDarkTheme()
-    val isDarkState = remember(systemIsDark) { mutableStateOf(systemIsDark) }
+    val systemIsDark = getSystemIsDarkTheme()
+    // Use remember without key so we can toggle it manually
+    var isDark by remember { mutableStateOf(systemIsDark) }
+
+    println("AppTheme: systemIsDark = $systemIsDark, isDark = $isDark")
+
     CompositionLocalProvider(
-        LocalThemeIsDark provides isDarkState,
-        LocalRecipesColors provides if (isDarkState.value) RecipesColors.Dark else RecipesColors.Light
+        LocalThemeIsDark provides remember { mutableStateOf(isDark) },
+        LocalRecipesColors provides if (isDark) RecipesColors.Dark else RecipesColors.Light
     ) {
-        val isDark by isDarkState
-        SystemAppearance(!isDark)
         val recipes = LocalRecipesColors.current
+        val colorScheme = colorSchemeFromRecipes(recipes)
+
+        println("AppTheme: recipes.isDark = ${recipes.isDark}")
+        println("AppTheme: background = ${colorScheme.background}, surface = ${colorScheme.surface}")
+
+        SystemAppearance(!isDark)
         MaterialTheme(
-            colorScheme = colorSchemeFromRecipes(recipes),
-            content = { Surface(content = content) }
+            colorScheme = colorScheme,
+            content = {
+                Surface(
+                    color = colorScheme.background,
+                    contentColor = colorScheme.onBackground,
+                    content = {
+                        // Debug: Theme toggle button accessible to all screens
+                        CompositionLocalProvider(
+                            LocalOnThemeToggle provides { isDark = !isDark }
+                        ) {
+                            content()
+                        }
+                    }
+                )
+            }
         )
     }
 }
+
+@Composable
+internal expect fun getSystemIsDarkTheme(): Boolean
 
 
 private fun colorSchemeFromRecipes(c: RecipesColors) =

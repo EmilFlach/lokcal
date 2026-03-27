@@ -1,23 +1,12 @@
 package com.emilflach.lokcal.ui.components.main
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.InsertChart
-import androidx.compose.material.icons.outlined.MonitorWeight
-import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.emilflach.lokcal.theme.LocalOnThemeToggle
 import com.emilflach.lokcal.theme.RecipesColors
 
 @Composable
@@ -55,6 +45,17 @@ fun MainSummaryHeader(
             modifier = Modifier.clickable { onDateClick() }
         )
         Spacer(Modifier.weight(1f))
+
+        // Debug: Theme toggle button
+        val onThemeToggle = LocalOnThemeToggle.current
+        IconButton(onClick = onThemeToggle) {
+            Icon(
+                imageVector = if (colors.isDark) Icons.Outlined.LightMode else Icons.Outlined.DarkMode,
+                contentDescription = "Toggle theme",
+                tint = colors.foregroundSupport
+            )
+        }
+
         Box(contentAlignment = Alignment.TopEnd) {
             IconButton(
                 onClick = if (showWeightBadge) onOpenWeightToday else onOpenWeightList,

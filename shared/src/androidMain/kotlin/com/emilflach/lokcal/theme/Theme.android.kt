@@ -1,6 +1,7 @@
 package com.emilflach.lokcal.theme
 
 import android.app.Activity
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalView
@@ -17,3 +18,6 @@ internal actual fun SystemAppearance(isDark: Boolean) {
         }
     }
 }
+
+@Composable
+internal actual fun getSystemIsDarkTheme(): Boolean = isSystemInDarkTheme()

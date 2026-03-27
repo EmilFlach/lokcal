@@ -9,23 +9,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
-import com.emilflach.lokcal.ui.components.FocusRequesters
-import com.emilflach.lokcal.ui.components.MealTimeFab
-import com.emilflach.lokcal.ui.components.MealTimeTopBarTrailingActions
-import com.emilflach.lokcal.ui.components.MealTimeTotalKcal
-import com.emilflach.lokcal.ui.components.MealTopBar
-import com.emilflach.lokcal.ui.components.mealTimeItemsList
-import com.emilflach.lokcal.ui.components.mealTimeSuggestionsSection
+import com.emilflach.lokcal.ui.components.*
+import com.emilflach.lokcal.util.getTopPaddingForNativeNavigation
+import com.emilflach.lokcal.util.usesNativeNavigation
 import com.emilflach.lokcal.viewmodel.MealTimeViewModel
 import kotlin.math.roundToInt
 
@@ -67,16 +59,17 @@ fun MealTimeScreen(
             MealTimeFab(onAdd = { onAdd(viewModel.mealType) })
         }
     ) { paddingValues ->
+        val topPadding = getTopPaddingForNativeNavigation()
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(color.backgroundPage)
-                .padding(paddingValues)
+                .then(if (!usesNativeNavigation) Modifier.padding(paddingValues) else Modifier)
                 .padding(horizontal = 16.dp)
         ) {
                 LazyColumn(
                     Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 80.dp)
+                    contentPadding = PaddingValues(top = topPadding, bottom = 80.dp)
                 ) {
                     item {
                         MealTimeTotalKcal(state.totalKcal.roundToInt())

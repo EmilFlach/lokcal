@@ -18,6 +18,8 @@ import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.util.getTopPaddingForNativeNavigation
+import com.emilflach.lokcal.util.usesNativeNavigation
 import com.emilflach.lokcal.viewmodel.SourcePreferenceViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -34,27 +36,32 @@ fun SourcePreferenceScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Search Sources") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colors.backgroundPage,
-                    titleContentColor = colors.foregroundDefault,
-                    navigationIconContentColor = colors.foregroundDefault,
+        topBar = if (!usesNativeNavigation) {
+            {
+                TopAppBar(
+                    title = { Text("Search Sources") },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = colors.backgroundPage,
+                        titleContentColor = colors.foregroundDefault,
+                        navigationIconContentColor = colors.foregroundDefault,
+                    )
                 )
-            )
+            }
+        } else {
+            {}
         },
         containerColor = colors.backgroundPage
     ) { paddingValues ->
+        val topPadding = getTopPaddingForNativeNavigation()
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .then(if (usesNativeNavigation) Modifier.padding(top = topPadding) else Modifier.padding(paddingValues))
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
