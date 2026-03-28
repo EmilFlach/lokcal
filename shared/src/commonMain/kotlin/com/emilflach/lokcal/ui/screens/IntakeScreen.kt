@@ -6,12 +6,14 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -22,9 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.camera.CameraManager
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.*
-import com.emilflach.lokcal.util.getTopSafeAreaInset
 import com.emilflach.lokcal.util.showBarcodeScanner
-import com.emilflach.lokcal.util.usesNativeNavigation
 import com.emilflach.lokcal.viewmodel.IntakeViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -55,7 +55,7 @@ fun IntakeScreen(
         }
     }
 
-    Scaffold(
+    PlatformScaffold(
         topBar = {
             MealTopBar(
                 title = state.selectedMealType,
@@ -83,22 +83,18 @@ fun IntakeScreen(
                 isSearchingOnline = state.isSearchingOnline,
             )
         }
-    ) { innerPadding ->
-        val topPadding = if (usesNativeNavigation) getTopSafeAreaInset() + 128.dp else 0.dp
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(color.backgroundPage)
-                .then(if (usesNativeNavigation) Modifier.padding(top = topPadding) else Modifier.padding(innerPadding))
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-
             val requesters = remember { FocusRequesters() }
-
             LazyColumn(
-                contentPadding = PaddingValues(vertical = 16.dp),
+                contentPadding = paddingValues,
                 modifier = Modifier.fillMaxSize(),
                 state = listState
             ) {

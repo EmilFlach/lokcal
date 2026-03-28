@@ -23,8 +23,6 @@ import com.emilflach.lokcal.data.ExerciseRepository
 import com.emilflach.lokcal.health.HealthManager
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.*
-import com.emilflach.lokcal.util.getTopPaddingForNativeNavigation
-import com.emilflach.lokcal.util.usesNativeNavigation
 import com.emilflach.lokcal.viewmodel.ExerciseListViewModel
 import kotlin.math.roundToInt
 
@@ -52,7 +50,7 @@ fun ExerciseListScreen(
         onBack()
     }
 
-    Scaffold(
+    PlatformScaffold(
         topBar = {
             MealTopBar(
                 title = "Exercise",
@@ -61,17 +59,15 @@ fun ExerciseListScreen(
             )
         },
     ) { paddingValues ->
-        val topPadding = getTopPaddingForNativeNavigation()
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(colors.backgroundPage)
-                .then(if (usesNativeNavigation) Modifier.padding(top = topPadding) else Modifier.padding(paddingValues))
                 .padding(horizontal = 16.dp)
         ) {
             LazyColumn(
                 Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 80.dp)
+                contentPadding = paddingValues
             ) {
                 item {
                     MealTimeTotalKcal(state.totalKcal.roundToInt())

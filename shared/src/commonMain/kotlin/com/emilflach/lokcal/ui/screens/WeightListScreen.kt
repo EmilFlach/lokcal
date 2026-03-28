@@ -29,9 +29,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.WeightLog
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.components.PlatformScaffold
 import com.emilflach.lokcal.ui.components.getRoundedCornerShape
-import com.emilflach.lokcal.util.getTopPaddingForNativeNavigation
-import com.emilflach.lokcal.util.usesNativeNavigation
 import com.emilflach.lokcal.viewmodel.WeightListViewModel
 import ir.ehsannarmani.compose_charts.LineChart
 import ir.ehsannarmani.compose_charts.models.*
@@ -103,9 +102,8 @@ fun WeightListScreen(
         }
     }
 
-    Scaffold(
-        topBar = if (!usesNativeNavigation) {
-            {
+    PlatformScaffold(
+        topBar = {
                 TopAppBar(
                     title = { Text("Weight") },
                     navigationIcon = {
@@ -126,12 +124,8 @@ fun WeightListScreen(
                     )
                 )
             }
-        } else {
-            {}
-        }
     ) { padding ->
-        val topPadding = getTopPaddingForNativeNavigation()
-        Column(Modifier.then(if (usesNativeNavigation) Modifier.padding(top = topPadding) else Modifier.padding(padding))) {
+        Column(Modifier.padding(padding)) {
             WeightChart(viewModel)
             LazyColumn(
                 modifier = Modifier

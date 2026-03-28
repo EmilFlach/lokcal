@@ -20,8 +20,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
-import com.emilflach.lokcal.util.getTopSafeAreaInset
-import com.emilflach.lokcal.util.usesNativeNavigation
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,38 +65,32 @@ fun MealTopBar(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy((-1).dp)
     ) {
-        // Only show TopAppBar if not using native navigation
-        if (!usesNativeNavigation) {
-            TopAppBar(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                navigationIcon = {
-                    IconButton(onClick = { onBack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                title = {
-                    Text(title.lowercase().replaceFirstChar { it.titlecase() })
-                },
-                actions = {
-                    trailingActions?.invoke()
-                },
-                colors = colors
-            )
-        }
+        TopAppBar(
+            modifier = Modifier
+                .fillMaxWidth(),
+            navigationIcon = {
+                IconButton(onClick = { onBack() }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back"
+                    )
+                }
+            },
+            title = {
+                Text(title.lowercase().replaceFirstChar { it.titlecase() })
+            },
+            actions = {
+                trailingActions?.invoke()
+            },
+            colors = colors
+        )
 
         AnimatedVisibility(
             visible = searchVisible,
             enter = fadeIn(animationSpec = tween(250))
         ) {
             val color = LocalRecipesColors.current
-            val topPadding = if (usesNativeNavigation) getTopSafeAreaInset() + 80.dp else 0.dp
-            Row (
-                Modifier.padding(top = topPadding)
-            ){
+            Row {
                 TextField(
                     value = query,
                     onValueChange = onQueryChange,

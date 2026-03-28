@@ -138,7 +138,7 @@ struct NativeNavigationView: View {
             }
 
         case .intake(let mealType, let dateIso):
-            IntakeView(
+            IntakeSearchableView(
                 mealType: mealType,
                 dateIso: dateIso,
                 navigationPath: $navigationPath,
@@ -434,11 +434,31 @@ private struct MealTimeView: UIViewControllerRepresentable {
 
 // MARK: - Intake View
 
+private struct IntakeSearchableView: View {
+    let mealType: String
+    let dateIso: String
+    @Binding var navigationPath: NavigationPath
+    let onDone: (Bool) -> Void
+    @State private var searchText = ""
+
+    var body: some View {
+        IntakeView(
+            mealType: mealType,
+            dateIso: dateIso,
+            navigationPath: $navigationPath,
+            onDone: onDone,
+            searchQuery: searchText
+        )
+        .searchable(text: $searchText, prompt: "Search foods and meals")
+    }
+}
+
 private struct IntakeView: UIViewControllerRepresentable {
     let mealType: String
     let dateIso: String
     @Binding var navigationPath: NavigationPath
     let onDone: (Bool) -> Void
+    let searchQuery: String
 
     func makeUIViewController(context: Context) -> UIViewController {
         ScreenFactoriesKt.IntakeViewController(
@@ -447,11 +467,15 @@ private struct IntakeView: UIViewControllerRepresentable {
             onDone: { itemAdded in
                 onDone(itemAdded.boolValue)
             },
-            autoFocusSearch: true
+            autoFocusSearch: false, // Don't auto-focus since we're using native search
+            searchQuery: searchQuery
         )
     }
 
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+        // Update ViewModel when search query changes
+        ScreenFactoriesKt.getIntakeViewModel(mealType: mealType, dateIso: dateIso).setQuery(value: searchQuery)
+    }
 }
 
 // MARK: - EditMeal View

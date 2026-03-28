@@ -21,10 +21,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.components.PlatformScaffold
 import com.emilflach.lokcal.ui.components.getRoundedCornerShape
 import com.emilflach.lokcal.ui.util.rememberKtorImageLoader
-import com.emilflach.lokcal.util.getTopPaddingForNativeNavigation
-import com.emilflach.lokcal.util.usesNativeNavigation
 import com.emilflach.lokcal.viewmodel.MealsListViewModel
 import kotlinx.coroutines.launch
 
@@ -75,9 +74,8 @@ fun MealsListScreen(
         onBack()
     }
 
-    Scaffold(
-        topBar = if (!usesNativeNavigation) {
-            {
+    PlatformScaffold(
+        topBar = {
                 TopAppBar(
                     title = { Text("Meals") },
                     navigationIcon = {
@@ -93,15 +91,11 @@ fun MealsListScreen(
                     )
                 )
             }
-        } else {
-            {}
-        }
     ) { inner ->
-        val topPadding = getTopPaddingForNativeNavigation()
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .then(if (usesNativeNavigation) Modifier.padding(top = topPadding) else Modifier.padding(inner))
+                .padding(inner)
         ) {
             SecondaryTabRow(
                 selectedTabIndex = selectedTab.ordinal,

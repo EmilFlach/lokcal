@@ -16,9 +16,8 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.components.PlatformScaffold
 import com.emilflach.lokcal.ui.dialogs.StealImageDialog
-import com.emilflach.lokcal.util.getTopPaddingForNativeNavigation
-import com.emilflach.lokcal.util.usesNativeNavigation
 import io.ktor.http.*
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -49,35 +48,31 @@ fun FoodEditScreen(
         viewModel.save(onSaved)
     }
 
-    Scaffold(
-        topBar = if (!usesNativeNavigation) {
-            {
-                TopAppBar(
-                    title = { Text(if (isEdit) "Edit food" else "Add food") },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+    PlatformScaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(if (isEdit) "Edit food" else "Add food") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    if (isEdit) {
+                        IconButton(onClick = {
+                            viewModel.delete(onDeleted)
+                        }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete")
                         }
-                    },
-                    actions = {
-                        if (isEdit) {
-                            IconButton(onClick = {
-                                viewModel.delete(onDeleted)
-                            }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete")
-                            }
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = colors.backgroundPage,
-                        titleContentColor = colors.foregroundDefault,
-                        navigationIconContentColor = colors.foregroundDefault,
-                        actionIconContentColor = colors.foregroundDefault,
-                    )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colors.backgroundPage,
+                    titleContentColor = colors.foregroundDefault,
+                    navigationIconContentColor = colors.foregroundDefault,
+                    actionIconContentColor = colors.foregroundDefault,
                 )
-            }
-        } else {
-            {}
+            )
         },
         floatingActionButtonPosition = FabPosition.Center,
         floatingActionButton = {
@@ -88,14 +83,14 @@ fun FoodEditScreen(
             ) {
                 Icon(imageVector = Icons.Filled.Save, contentDescription = "Save food")
             }
-        }
+        },
+        hasFab = true
     ) { inner ->
         val scroll = rememberScrollState()
-        val topPadding = getTopPaddingForNativeNavigation()
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .then(if (usesNativeNavigation) Modifier.padding(top = topPadding) else Modifier.padding(inner))
+                .padding(inner)
                 .verticalScroll(scroll)
                 .padding(horizontal = 16.dp, vertical = 12.dp)
                 .navigationBarsPadding(),

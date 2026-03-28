@@ -24,9 +24,8 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.components.PlatformScaffold
 import com.emilflach.lokcal.ui.components.getRoundedCornerShape
-import com.emilflach.lokcal.util.getTopPaddingForNativeNavigation
-import com.emilflach.lokcal.util.usesNativeNavigation
 import com.emilflach.lokcal.viewmodel.StatisticsViewModel
 import ir.ehsannarmani.compose_charts.LineChart
 import ir.ehsannarmani.compose_charts.models.*
@@ -49,9 +48,8 @@ fun StatisticsScreen(
     val graphMode by viewModel.graphMode.collectAsState()
     val colors = LocalRecipesColors.current
 
-    Scaffold(
-        topBar = if (!usesNativeNavigation) {
-            {
+    PlatformScaffold(
+        topBar = {
                 TopAppBar(
                     title = { Text("Statistics") },
                     navigationIcon = {
@@ -63,22 +61,17 @@ fun StatisticsScreen(
                         containerColor = Color.Transparent
                     )
                 )
-            }
-        } else {
-            {}
-        },
+            },
         containerColor = colors.backgroundPage
-    ) { padding ->
-        val topPadding = getTopPaddingForNativeNavigation()
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .then(if (usesNativeNavigation) Modifier else Modifier.padding(padding))
                 .padding(horizontal = 16.dp)
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(top = topPadding, bottom = 16.dp)
+                contentPadding = paddingValues
             ) {
                 item {
                     Surface(

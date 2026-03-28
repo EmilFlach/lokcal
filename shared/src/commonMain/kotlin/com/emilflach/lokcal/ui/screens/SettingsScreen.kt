@@ -20,9 +20,8 @@ import com.emilflach.lokcal.backup.BackupManager
 import com.emilflach.lokcal.data.SettingsRepository
 import com.emilflach.lokcal.health.HealthManager
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.components.PlatformScaffold
 import com.emilflach.lokcal.ui.components.getRoundedCornerShape
-import com.emilflach.lokcal.util.getTopPaddingForNativeNavigation
-import com.emilflach.lokcal.util.usesNativeNavigation
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -43,33 +42,28 @@ fun SettingsScreen(
         onBack()
     }
 
-    Scaffold(
-        topBar = if (!usesNativeNavigation) {
-            {
-                TopAppBar(
-                    title = { Text("Settings") },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = colors.backgroundPage,
-                        titleContentColor = colors.foregroundDefault,
-                        navigationIconContentColor = colors.foregroundDefault,
-                        actionIconContentColor = colors.foregroundDefault,
-                    )
+    PlatformScaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Settings") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colors.backgroundPage,
+                    titleContentColor = colors.foregroundDefault,
+                    navigationIconContentColor = colors.foregroundDefault,
+                    actionIconContentColor = colors.foregroundDefault,
                 )
-            }
-        } else {
-            {}
+            )
         }
     ) { padding ->
-        val topPadding = getTopPaddingForNativeNavigation()
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .then(if (usesNativeNavigation) Modifier.padding(top = topPadding) else Modifier.padding(padding))
+                .padding(padding)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {

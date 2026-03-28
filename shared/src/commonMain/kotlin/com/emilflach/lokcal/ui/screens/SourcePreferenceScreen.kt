@@ -18,8 +18,7 @@ import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
-import com.emilflach.lokcal.util.getTopPaddingForNativeNavigation
-import com.emilflach.lokcal.util.usesNativeNavigation
+import com.emilflach.lokcal.ui.components.PlatformScaffold
 import com.emilflach.lokcal.viewmodel.SourcePreferenceViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -35,9 +34,8 @@ fun SourcePreferenceScreen(
         onBack()
     }
 
-    Scaffold(
-        topBar = if (!usesNativeNavigation) {
-            {
+    PlatformScaffold(
+        topBar = {
                 TopAppBar(
                     title = { Text("Search Sources") },
                     navigationIcon = {
@@ -51,17 +49,13 @@ fun SourcePreferenceScreen(
                         navigationIconContentColor = colors.foregroundDefault,
                     )
                 )
-            }
-        } else {
-            {}
-        },
+            },
         containerColor = colors.backgroundPage
     ) { paddingValues ->
-        val topPadding = getTopPaddingForNativeNavigation()
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .then(if (usesNativeNavigation) Modifier.padding(top = topPadding) else Modifier.padding(paddingValues))
+                .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {

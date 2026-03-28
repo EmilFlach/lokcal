@@ -21,9 +21,8 @@ import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.GramQuantityControls
 import com.emilflach.lokcal.ui.components.MealTimeItem
+import com.emilflach.lokcal.ui.components.PlatformScaffold
 import com.emilflach.lokcal.ui.dialogs.StealImageDialog
-import com.emilflach.lokcal.util.getTopPaddingForNativeNavigation
-import com.emilflach.lokcal.util.usesNativeNavigation
 import com.emilflach.lokcal.viewmodel.EditMealViewModel
 import io.ktor.http.*
 
@@ -42,9 +41,8 @@ fun EditMealScreen(
         onBack()
     }
 
-    Scaffold(
-        topBar = if (!usesNativeNavigation) {
-            {
+    PlatformScaffold(
+        topBar = {
                 TopAppBar(
                     title = { Text("Edit ${state.name}") },
                     navigationIcon = {
@@ -67,16 +65,12 @@ fun EditMealScreen(
                     )
                 )
             }
-        } else {
-            {}
-        }
     ) { inner ->
-        val topPadding = getTopPaddingForNativeNavigation()
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(colors.backgroundPage)
-                .then(if (usesNativeNavigation) Modifier.padding(top = topPadding) else Modifier.padding(inner))
+                .padding(inner)
                 .padding(horizontal = 16.dp)
         ) {
             Spacer(Modifier.height(12.dp))

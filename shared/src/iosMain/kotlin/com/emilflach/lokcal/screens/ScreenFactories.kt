@@ -116,21 +116,38 @@ fun getMealTimeViewModel(mealType: String, dateIso: String, refreshKey: Int = 0)
 }
 
 // Intake Screen
+private var intakeViewModels = mutableMapOf<String, IntakeViewModel>()
+
 fun IntakeViewController(
     mealType: String,
     dateIso: String,
     onDone: (Boolean) -> Unit,
-    autoFocusSearch: Boolean = true
+    autoFocusSearch: Boolean = true,
+    searchQuery: String = ""
 ) = ComposeUIViewController {
     AppTheme {
-        val intakeVm = remember(globalFoodRepo, globalIntakeRepo, globalMealRepo, globalSettingsRepo, mealType, dateIso) {
+        val key = "$mealType-$dateIso"
+        val intakeVm = intakeViewModels.getOrPut(key) {
             IntakeViewModel(globalFoodRepo, globalIntakeRepo, globalMealRepo, globalSettingsRepo, mealType, dateIso)
         }
+
+        // Sync search query from SwiftUI to ViewModel
+        LaunchedEffect(searchQuery) {
+            intakeVm.setQuery(searchQuery)
+        }
+
         IntakeScreen(
             viewModel = intakeVm,
             onDone = onDone,
             autoFocusSearch = autoFocusSearch
         )
+    }
+}
+
+fun getIntakeViewModel(mealType: String, dateIso: String): IntakeViewModel {
+    val key = "$mealType-$dateIso"
+    return intakeViewModels.getOrPut(key) {
+        IntakeViewModel(globalFoodRepo, globalIntakeRepo, globalMealRepo, globalSettingsRepo, mealType, dateIso)
     }
 }
 
