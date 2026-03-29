@@ -440,16 +440,96 @@ private struct IntakeSearchableView: View {
     @Binding var navigationPath: NavigationPath
     let onDone: (Bool) -> Void
     @State private var searchText = ""
+    @FocusState private var isSearchFocused: Bool
+    @State private var keyboardHeight: CGFloat = 0
 
     var body: some View {
-        IntakeView(
-            mealType: mealType,
-            dateIso: dateIso,
-            navigationPath: $navigationPath,
-            onDone: onDone,
-            searchQuery: searchText
-        )
-        .searchable(text: $searchText, prompt: "Search foods and meals")
+        ZStack(alignment: .bottom) {
+            IntakeView(
+                mealType: mealType,
+                dateIso: dateIso,
+                navigationPath: $navigationPath,
+                onDone: onDone,
+                searchQuery: searchText
+            )
+            .onTapGesture {
+                // Dismiss keyboard when tapping on the content
+                isSearchFocused = false
+            }
+
+            // Floating search bar with liquid glass effect above keyboard
+            HStack(spacing: 8) {
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 16))
+                    TextField("Search foods and meals", text: $searchText)
+                        .focused($isSearchFocused)
+                        .textFieldStyle(.plain)
+                        .autocorrectionDisabled()
+                        .submitLabel(.done)
+                        .onSubmit {
+                            isSearchFocused = false
+                        }
+                    if !searchText.isEmpty {
+                        Button {
+                            searchText = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(.ultraThinMaterial)
+                .cornerRadius(25)
+                .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
+
+                Button {
+                    let vm = ScreenFactoriesKt.getIntakeViewModel(mealType: mealType, dateIso: dateIso)
+                    vm.searchOnline()
+                } label: {
+                    Image(systemName: "magnifyingglass.circle")
+                        .font(.system(size: 22))
+                        .frame(width: 48, height: 48)
+                }
+                .background(.ultraThinMaterial)
+                .cornerRadius(12)
+                .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
+
+                Button {
+                    let vm = ScreenFactoriesKt.getIntakeViewModel(mealType: mealType, dateIso: dateIso)
+                    vm.setShowScanner(show: true)
+                } label: {
+                    Image(systemName: "barcode.viewfinder")
+                        .font(.system(size: 22))
+                        .frame(width: 40, height: 48)
+                }
+                .background(.ultraThinMaterial)
+                .cornerRadius(12)
+                .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, keyboardHeight > 0 ? keyboardHeight + 8 : 16)
+            .animation(.easeOut(duration: 0.25), value: keyboardHeight)
+        }
+        .onAppear {
+            // Subscribe to keyboard notifications
+            NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { notification in
+                if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
+                    keyboardHeight = keyboardFrame.height
+                }
+            }
+            NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { _ in
+                keyboardHeight = 0
+            }
+
+            // Auto-focus search when screen appears
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                isSearchFocused = true
+            }
+        }
     }
 }
 
