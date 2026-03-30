@@ -82,7 +82,9 @@ fun IntakeScreen(
                 onSearchOnline = viewModel::searchOnline,
                 isSearchingOnline = state.isSearchingOnline,
             )
-        }
+        },
+        scrollState = listState,
+        navBarBackgroundColor = color.backgroundPage
     ) { paddingValues ->
         Column(
             modifier = Modifier

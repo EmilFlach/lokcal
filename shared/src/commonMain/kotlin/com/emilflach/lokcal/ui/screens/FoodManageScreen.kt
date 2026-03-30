@@ -74,6 +74,11 @@ fun FoodManageScreen(
             }
     }
 
+    val activeListState = when (selectedTab) {
+        FoodEditViewModel.Tab.ALL -> allListState
+        FoodEditViewModel.Tab.MISSING_IMAGES -> missingListState
+    }
+
     PlatformScaffold(
         topBar = {
                 TopAppBar(
@@ -95,7 +100,9 @@ fun FoodManageScreen(
                         actionIconContentColor = colors.foregroundDefault,
                     )
                 )
-            }
+            },
+        scrollState = activeListState,
+        navBarBackgroundColor = colors.backgroundPage
     ) { inner ->
         Column(
             modifier = Modifier

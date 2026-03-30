@@ -74,6 +74,11 @@ fun MealsListScreen(
         onBack()
     }
 
+    val activeListState = when (selectedTab) {
+        MealsListViewModel.Tab.ALL -> allListState
+        MealsListViewModel.Tab.MISSING_IMAGES -> missingListState
+    }
+
     PlatformScaffold(
         topBar = {
                 TopAppBar(
@@ -90,7 +95,9 @@ fun MealsListScreen(
                         actionIconContentColor = colors.foregroundDefault,
                     )
                 )
-            }
+            },
+        scrollState = activeListState,
+        navBarBackgroundColor = colors.backgroundPage
     ) { inner ->
         Column(
             modifier = Modifier

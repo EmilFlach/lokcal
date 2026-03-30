@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
@@ -35,6 +36,7 @@ fun ExerciseListScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val colors = LocalRecipesColors.current
+    val listState = rememberLazyListState()
 
     val healthSupported = HealthManager.showAutomaticExerciseLogging()
     val healthGranted by HealthManager.permissionsGranted.collectAsState()
@@ -58,6 +60,8 @@ fun ExerciseListScreen(
                 showSearch = false,
             )
         },
+        scrollState = listState,
+        navBarBackgroundColor = colors.backgroundPage
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -67,7 +71,8 @@ fun ExerciseListScreen(
         ) {
             LazyColumn(
                 Modifier.fillMaxSize(),
-                contentPadding = paddingValues
+                contentPadding = paddingValues,
+                state = listState
             ) {
                 item {
                     MealTimeTotalKcal(state.totalKcal.roundToInt())

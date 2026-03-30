@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.runtime.*
@@ -32,6 +33,7 @@ fun MealTimeScreen(
     }
     val state by viewModel.state.collectAsState()
     val requesters = remember { FocusRequesters() }
+    val listState = rememberLazyListState()
 
     LaunchedEffect(Unit) {
         if (shouldHighlightLatest) {
@@ -54,7 +56,9 @@ fun MealTimeScreen(
         floatingActionButton = {
             MealTimeFab(onAdd = { onAdd(viewModel.mealType) })
         },
-        hasFab = true
+        hasFab = true,
+        scrollState = listState,
+        navBarBackgroundColor = color.backgroundPage
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -64,7 +68,8 @@ fun MealTimeScreen(
         ) {
                 LazyColumn(
                     Modifier.fillMaxSize(),
-                    contentPadding = paddingValues
+                    contentPadding = paddingValues,
+                    state = listState
                 ) {
                     item {
                         MealTimeTotalKcal(state.totalKcal.roundToInt())

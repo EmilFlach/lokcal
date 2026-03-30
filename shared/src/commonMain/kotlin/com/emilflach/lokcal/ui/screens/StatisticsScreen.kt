@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -47,6 +48,7 @@ fun StatisticsScreen(
     val insights by viewModel.insights.collectAsState()
     val graphMode by viewModel.graphMode.collectAsState()
     val colors = LocalRecipesColors.current
+    val listState = rememberLazyListState()
 
     PlatformScaffold(
         topBar = {
@@ -62,7 +64,9 @@ fun StatisticsScreen(
                     )
                 )
             },
-        containerColor = colors.backgroundPage
+        containerColor = colors.backgroundPage,
+        scrollState = listState,
+        navBarBackgroundColor = colors.backgroundPage
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -71,7 +75,8 @@ fun StatisticsScreen(
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = paddingValues
+                contentPadding = paddingValues,
+                state = listState
             ) {
                 item {
                     Surface(

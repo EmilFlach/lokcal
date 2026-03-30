@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -56,6 +57,7 @@ fun WeightListScreen(
     val input by viewModel.input.collectAsState()
     val error by viewModel.error.collectAsState()
     val focusRequester = remember { FocusRequester() }
+    val listState = rememberLazyListState()
 
     LaunchedEffect(openAdd) {
         if (openAdd) viewModel.openAddDialog(true)
@@ -123,7 +125,9 @@ fun WeightListScreen(
                         actionIconContentColor = colors.foregroundDefault,
                     )
                 )
-            }
+            },
+        scrollState = listState,
+        navBarBackgroundColor = colors.backgroundPage
     ) { padding ->
         Column(Modifier.padding(padding)) {
             WeightChart(viewModel)
@@ -131,6 +135,7 @@ fun WeightListScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp),
+                state = listState
             ) {
                 items(items) { item: WeightLog ->
                     ListItem(

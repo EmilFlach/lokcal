@@ -103,6 +103,7 @@ kotlin {
             implementation(libs.filekit.dialogs.compose)
             implementation(libs.compose.charts)
             implementation(libs.kscan)
+            implementation(libs.haze)
         }
 
         commonTest.dependencies {
