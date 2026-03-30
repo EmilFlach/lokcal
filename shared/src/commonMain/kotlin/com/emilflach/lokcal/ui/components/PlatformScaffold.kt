@@ -54,7 +54,7 @@ fun PlatformScaffold(
         topBar = if (usesNativeNavigation) { {} } else topBar,
         bottomBar = bottomBar,
         snackbarHost = snackbarHost,
-        floatingActionButton = floatingActionButton,
+        floatingActionButton = if (usesNativeNavigation) { {} } else floatingActionButton,
         floatingActionButtonPosition = floatingActionButtonPosition,
         containerColor = containerColor,
         contentColor = contentColor

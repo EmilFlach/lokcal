@@ -53,6 +53,8 @@ fun initializeRepositories(
  */
 fun getGlobalMainViewModel(): MainViewModel = globalMainViewModel
 
+fun getGlobalFoodEditViewModel(): FoodEditViewModel = globalFoodEditViewModel
+
 // Main Screen
 fun MainViewController(
     dateIso: String,

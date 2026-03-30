@@ -136,6 +136,46 @@ struct NativeNavigationView: View {
                     }
                 }
             }
+            .overlay(alignment: .bottom) {
+                Button {
+                    navigationPath.append(NavigationDestination.intake(mealType: mealType, dateIso: dateIso))
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 22))
+                        Text("Add food")
+                            .fontWeight(.semibold)
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 14)
+                    .background {
+                        Capsule()
+                            .fill(Color(red: 0xD9/255, green: 0x91/255, blue: 0x0D/255))
+                            .overlay(
+                                Capsule()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [
+                                                .white.opacity(0.2),
+                                                .white.opacity(0.08),
+                                                .clear
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                            )
+                    }
+                    .overlay(
+                        Capsule()
+                            .stroke(.white.opacity(0.3), lineWidth: 0.5)
+                    )
+                }
+                .shadow(color: Color(red: 0xD9/255, green: 0x91/255, blue: 0x0D/255).opacity(0.25), radius: 10, y: 5)
+                .shadow(color: .black.opacity(0.18), radius: 7, y: 3)
+                .padding(.bottom, 16)
+            }
 
         case .intake(let mealType, let dateIso):
             IntakeSearchableView(
@@ -265,17 +305,19 @@ struct NativeNavigationView: View {
             }
 
         case .foodEdit(let foodId, _):
+            let onSaved = {
+                navigationPath.removeLast()
+                refreshKey += 1
+            }
+            let onDeleted = {
+                navigationPath.removeLast()
+                refreshKey += 1
+            }
             FoodEditView(
                 foodId: foodId,
                 navigationPath: $navigationPath,
-                onSaved: {
-                    navigationPath.removeLast()
-                    refreshKey += 1
-                },
-                onDeleted: {
-                    navigationPath.removeLast()
-                    refreshKey += 1
-                }
+                onSaved: onSaved,
+                onDeleted: onDeleted
             )
             .ignoresSafeArea(.all)
             .navigationTitle(foodId == nil ? "Add Food" : "Edit Food")
@@ -284,11 +326,21 @@ struct NativeNavigationView: View {
                 if foodId != nil {
                     ToolbarItem(placement: .primaryAction) {
                         Button(role: .destructive) {
-                            // TODO: Trigger delete from ViewModel
-                            // For now, this will be handled by the Compose screen
+                            ScreenFactoriesKt.getGlobalFoodEditViewModel().delete {
+                                onDeleted()
+                            }
                         } label: {
                             Image(systemName: "trash")
                         }
+                    }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        ScreenFactoriesKt.getGlobalFoodEditViewModel().save {
+                            onSaved()
+                        }
+                    } label: {
+                        Image(systemName: "checkmark")
                     }
                 }
             }
