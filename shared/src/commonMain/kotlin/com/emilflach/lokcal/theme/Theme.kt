@@ -15,10 +15,7 @@ internal fun AppTheme(
     content: @Composable () -> Unit
 ) {
     val systemIsDark = getSystemIsDarkTheme()
-    // Use remember without key so we can toggle it manually
-    var isDark by remember { mutableStateOf(systemIsDark) }
-
-    println("AppTheme: systemIsDark = $systemIsDark, isDark = $isDark")
+    var isDark by remember(systemIsDark) { mutableStateOf(systemIsDark) }
 
     CompositionLocalProvider(
         LocalThemeIsDark provides remember { mutableStateOf(isDark) },
@@ -26,9 +23,6 @@ internal fun AppTheme(
     ) {
         val recipes = LocalRecipesColors.current
         val colorScheme = colorSchemeFromRecipes(recipes)
-
-        println("AppTheme: recipes.isDark = ${recipes.isDark}")
-        println("AppTheme: background = ${colorScheme.background}, surface = ${colorScheme.surface}")
 
         SystemAppearance(!isDark)
         MaterialTheme(

@@ -24,13 +24,5 @@ internal actual fun getSystemIsDarkTheme(): Boolean {
     val style = traitCollection.userInterfaceStyle
     val isDark = style == UIUserInterfaceStyle.UIUserInterfaceStyleDark
 
-    // Debug logging
-    println("iOS Dark Mode Detection:")
-    println("  keyWindow: $keyWindow")
-    println("  userInterfaceStyle value: $style")
-    println("  UIUserInterfaceStyleLight value: ${UIUserInterfaceStyle.UIUserInterfaceStyleLight}")
-    println("  UIUserInterfaceStyleDark value: ${UIUserInterfaceStyle.UIUserInterfaceStyleDark}")
-    println("  Comparison result: $isDark")
-
     return isDark
 }
