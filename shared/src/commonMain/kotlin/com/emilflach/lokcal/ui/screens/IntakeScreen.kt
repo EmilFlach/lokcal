@@ -116,8 +116,8 @@ fun IntakeScreen(
                         )
                     }
                 } else {
-                    if (state.query.isNotBlank()) {
-                        item {
+                    item {
+                        AnimatedVisibility(state.query.isNotBlank()) {
                             SearchOnlineLink(
                                 query = state.query,
                                 onSearchOnline = { viewModel.searchOnline() },

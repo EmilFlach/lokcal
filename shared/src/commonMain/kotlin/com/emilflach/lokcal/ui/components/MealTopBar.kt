@@ -3,6 +3,7 @@ package com.emilflach.lokcal.ui.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -90,7 +91,9 @@ fun MealTopBar(
             enter = fadeIn(animationSpec = tween(250))
         ) {
             val color = LocalRecipesColors.current
-            Row {
+            Row (
+                Modifier.background(color.backgroundPage)
+            ) {
                 TextField(
                     value = query,
                     onValueChange = onQueryChange,
