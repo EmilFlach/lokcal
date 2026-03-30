@@ -20,7 +20,7 @@ import com.emilflach.lokcal.util.usesNativeNavigation
  * On iOS with native navigation:
  * - Hides the topBar (since iOS uses SwiftUI navigation bar)
  * - Provides top padding for the native navigation bar (safe area + 80dp)
- * - Adds extra bottom padding: 120dp with FAB, 0dp without
+ * - Adds extra bottom padding: 100dp with FAB, 0dp without
  *
  * On other platforms:
  * - Behaves like a standard Scaffold
@@ -60,8 +60,8 @@ fun PlatformScaffold(
         contentColor = contentColor
     ) { paddingValues ->
         val adjustedPadding = if (usesNativeNavigation) {
-            // On iOS with native nav, provide top padding = safe area + nav bar height (90dp)
-            val topPadding = getTopSafeAreaInset() + 90.dp
+            // On iOS with native nav, provide top padding = safe area + nav bar height (80dp)
+            val topPadding = getTopSafeAreaInset() + 80.dp
             val bottomPadding = paddingValues.calculateBottomPadding() + if (hasFab) 100.dp else 0.dp
             PaddingValues(
                 start = paddingValues.calculateStartPadding(LayoutDirection.Ltr),

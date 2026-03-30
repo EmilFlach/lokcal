@@ -114,6 +114,15 @@ fun IntakeScreen(
                         )
                     }
                 } else {
+                    if (state.query.isNotBlank()) {
+                        item {
+                            SearchOnlineLink(
+                                query = state.query,
+                                onSearchOnline = { viewModel.searchOnline() },
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            )
+                        }
+                    }
                     itemsIndexed(items = state.meals) { index, item ->
                         AnimatedVisibility(
                             visible = showItems,
