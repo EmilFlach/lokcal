@@ -4,25 +4,35 @@
 Privacy-first calorie tracking app built with Kotlin Multiplatform (KMP) + Compose Multiplatform.
 Targets: Android, iOS, Desktop (JVM), Web (WASM).
 
-## Build Rules
-- **Only build Android for testing** — never build the full multi-platform project
-- Fast unit tests: `./gradlew :shared:jvmTest`
-- Android instrumented tests: `./gradlew :androidApp:connectedDebugAndroidTest`
+## Build & Test Strategy
 
-## Modules
-- `:androidApp` — Android wrapper app
-- `:shared` — All KMP shared code (commonMain, androidMain, jvmMain, iosMain, wasmJsMain)
+**Rules:** Compile fast targets (JVM) first to catch errors. Never run `:build` (builds all platforms). Always compile → test → fix.
 
-## Key Paths
-- `shared/src/commonMain/kotlin/com/emilflach/lokcal/` — All shared source
-  - `data/` — Repositories (Food, Intake, Meal, Exercise, Weight, Settings) + food sources
-  - `viewmodel/` — StateFlow-based ViewModels
-  - `ui/screens/`, `ui/components/`, `ui/dialogs/` — Compose UI
-  - `util/` — SearchUtils, ExerciseMath, DateUtils, NumberUtils
-  - `App.kt` — Navigation root (sealed Screen + NavDisplay)
-- `shared/src/commonMain/sqldelight/` — SQLDelight schema files
-- `shared/src/commonTest/` — Shared tests
-- `gradle/libs.versions.toml` — Version catalog
+### Platform Commands
+
+| Changed | Compile | Test | Speed |
+|---------|---------|------|-------|
+| `commonMain/` or `jvmMain/`<br>(util, data, viewmodel, UI) | `:shared:compileKotlinJvm` | `:shared:jvmTest` | 5-30s<br>**Default — use for 95% of changes** |
+| `androidMain/` or `androidApp/`<br>(platform actuals, wrapper) | `:androidApp:compileDebugKotlin` | `:androidApp:connectedDebugAndroidTest` | 15s-3m<br>Requires device |
+| `iosMain/`<br>(iOS platform actuals) | `:shared:compileKotlinIosSimulatorArm64`<br>`:shared:compileKotlinIosX64` (Intel) | `:shared:iosSimulatorArm64Test`<br>`:shared:iosX64Test` (Intel) | 20-60s |
+| `wasmJsMain/`<br>(web platform actuals) | `:shared:compileKotlinWasmJs` | `:shared:wasmJsTest` | 20-80s<br>Requires Node.js |
+| Pre-release verification | `:androidApp:assembleDebug` (APK) | `:shared:allTests` (all platforms) | 30s-10m<br>❌ Avoid `:build` |
+
+### Test Files in `shared/src/commonTest/`
+Utils: `NumberUtilsTest`, `ExerciseMathTest` • Repos: `FoodRepositoryTest`, `IntakeRepositoryTest`, `MealRepositoryTest`, `ExerciseRepositoryTest`, `WeightRepositoryTest` • Scrapers: `AlbertHeijnWebFetcherTest`, `EsselungaWebFetcherTest`, `EsselungaSearchTest`, `KrogerSearchTest` • UI: `ComposeTest`
+
+Run specific: `./gradlew :shared:jvmTest --tests "com.emilflach.lokcal.data.FoodRepositoryTest"`
+
+## Code Structure
+**Modules:** `:androidApp` (Android wrapper), `:shared` (KMP code: commonMain, androidMain, jvmMain, iosMain, wasmJsMain)
+
+**Key paths in `shared/src/commonMain/kotlin/com/emilflach/lokcal/`:**
+- `data/` — Repositories + food sources
+- `viewmodel/` — StateFlow ViewModels
+- `ui/screens/`, `ui/components/`, `ui/dialogs/` — Compose UI
+- `util/` — SearchUtils, ExerciseMath, DateUtils, NumberUtils
+- `App.kt` — Navigation (sealed Screen + NavDisplay)
+- `../sqldelight/` — Database schema
 
 ## Stack
 - Kotlin 2.2.21, Compose Multiplatform 1.9.3
@@ -32,6 +42,4 @@ Targets: Android, iOS, Desktop (JVM), Web (WASM).
 - Navigation: `androidx.navigation3` with `NavDisplay` + `rememberNavBackStack`
 
 ## Architecture
-- Repository pattern with multiplatform ViewModels (StateFlow)
-- `expect`/`actual` for platform-specific: BackupManager, HealthManager, CameraManager, DriverFactory
-- Navigation: single `App.kt` with `sealed interface Screen : NavKey` + `NavDisplay`
+Repository pattern • ViewModels (StateFlow) • `expect`/`actual` for platform code (BackupManager, HealthManager, CameraManager, DriverFactory)
