@@ -1,9 +1,6 @@
 package com.emilflach.lokcal.ui.components
 
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
@@ -73,11 +70,13 @@ fun GramQuantityControls(
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
             },
         ) {
-            Icon(imageVector = Icons.Filled.Add, contentDescription = "Add a portion")
-            Spacer(Modifier.width(4.dp))
+            Icon(
+                modifier = Modifier.offset(-(4).dp),
+                imageVector = Icons.Filled.Add,
+                contentDescription = "Add a portion")
             Text(text = "${portionGrams.toInt()}g")
         }
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(6.dp))
         OutlinedIconButton(
             onClick = {
                 val (newText, commitVal) = portionService.subtractPortionGrams(text, portionGrams)
@@ -89,7 +88,9 @@ fun GramQuantityControls(
         ) {
             Icon(imageVector = Icons.Filled.Remove, contentDescription = "Subtract a portion")
         }
-        IconButton(onClick = {
+        IconButton(
+            modifier = Modifier.size(32.dp),
+            onClick = {
             onDelete()
             haptic.performHapticFeedback(HapticFeedbackType.Confirm)
         }) {
@@ -99,6 +100,7 @@ fun GramQuantityControls(
                 tint = colors.foregroundSupport
             )
         }
+        Spacer(Modifier.width(4.dp))
     }
 }
 
@@ -153,12 +155,15 @@ fun PortionQuantityControls(
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
             },
         ) {
-            Icon(imageVector = Icons.Filled.Add, contentDescription = "Add a portion")
+            Icon(
+                modifier = Modifier.offset(-(4).dp),
+                imageVector = Icons.Filled.Add,
+                contentDescription = "Add a portion")
             Spacer(Modifier.width(4.dp))
             Text(text = "1")
         }
 
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(6.dp))
 
         OutlinedIconButton(
             onClick = {
@@ -172,7 +177,9 @@ fun PortionQuantityControls(
             Icon(imageVector = Icons.Filled.Remove, contentDescription = "Subtract a portion")
         }
 
-        IconButton(onClick = {
+        IconButton(
+            modifier = Modifier.size(32.dp),
+            onClick = {
             onDelete()
             haptic.performHapticFeedback(HapticFeedbackType.Confirm)
         }) {
@@ -182,6 +189,7 @@ fun PortionQuantityControls(
                 tint = colors.foregroundSupport
             )
         }
+        Spacer(Modifier.width(4.dp))
     }
 }
 
@@ -232,7 +240,7 @@ fun MinuteQuantityControls(
             Spacer(Modifier.width(4.dp))
             Text(text = "30 min")
         }
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(6.dp))
         OutlinedIconButton(
             onClick = {
                 val current = parseDecimal(text)

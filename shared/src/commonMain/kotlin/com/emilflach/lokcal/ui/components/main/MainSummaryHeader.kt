@@ -6,7 +6,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.outlined.InsertChart
+import androidx.compose.material.icons.outlined.MonitorWeight
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -18,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.emilflach.lokcal.theme.LocalOnThemeToggle
 import com.emilflach.lokcal.theme.RecipesColors
 
 @Composable
@@ -45,16 +46,6 @@ fun MainSummaryHeader(
             modifier = Modifier.clickable { onDateClick() }
         )
         Spacer(Modifier.weight(1f))
-
-        // Debug: Theme toggle button
-        val onThemeToggle = LocalOnThemeToggle.current
-        IconButton(onClick = onThemeToggle) {
-            Icon(
-                imageVector = if (colors.isDark) Icons.Outlined.LightMode else Icons.Outlined.DarkMode,
-                contentDescription = "Toggle theme",
-                tint = colors.foregroundSupport
-            )
-        }
 
         Box(contentAlignment = Alignment.TopEnd) {
             IconButton(
