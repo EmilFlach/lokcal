@@ -1,18 +1,13 @@
 package com.emilflach.lokcal.data
 
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.request.accept
-import io.ktor.client.request.get
-import io.ktor.client.request.header
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.encodeURLParameter
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
@@ -80,31 +75,22 @@ open class AlbertHeijnSearch(
     }
 
     private fun extractTopProductLinks(html: String, max: Int = 5): List<String> {
-        // Search results are rendered client-side and embedded in the HTML via JSON
-        // Extract product links using regex across the entire HTML
+        // AH embeds product data as escaped JSON in the HTML
+        // Format: \\"webPath\\":\\"/producten/product/wi194759/remia-friteslijn\\"
+        val pattern = """\\\"webPath\\\":\\\"/producten/product/wi\d+/[^\\\"]+\\\""""
         val results = mutableListOf<String>()
 
-        // Try a simpler pattern first
-        val pattern = """"webPath":"(/producten/product/wi\d+/[^"]+)""""
-        val webPathRegex = Regex(pattern)
-
-        for (match in webPathRegex.findAll(html)) {
-            val path = match.groupValues.getOrNull(1)
+        for (match in Regex(pattern).findAll(html)) {
+            // Extract the path: /producten/product/wi123/name
+            val path = Regex("""/producten/product/wi\d+/[^\\\"]+""").find(match.value)?.value
             if (path != null && !results.contains(path)) {
                 results.add(path)
                 if (results.size >= max) break
             }
         }
 
-        if (results.isEmpty()) {
-            // Log if we have content but found no links
-            if (html.length > 500) {
-                println("[DEBUG_LOG] No links found in AH search results. HTML length: ${html.length}")
-                // Look for alternative indicators of "no results"
-                if (html.contains("niet gevonden") || html.contains("Probeer een andere zoekterm")) {
-                    println("[DEBUG_LOG] AH search explicitly returned 'no results' page.")
-                }
-            }
+        if (results.isEmpty() && html.length > 500) {
+            println("[DEBUG_LOG] No product links found in AH search results (HTML length: ${html.length})")
         }
 
         return results
