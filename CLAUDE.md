@@ -14,7 +14,7 @@ Targets: Android, iOS, Desktop (JVM), Web (WASM).
 |---------|---------|------|-------|
 | `commonMain/` or `jvmMain/`<br>(util, data, viewmodel, UI) | `:shared:compileKotlinJvm` | `:shared:jvmTest` | 5-30s<br>**Default — use for 95% of changes** |
 | `androidMain/` or `androidApp/`<br>(platform actuals, wrapper) | `:androidApp:compileDebugKotlin` | `:androidApp:connectedDebugAndroidTest` | 15s-3m<br>Requires device |
-| `iosMain/`<br>(iOS platform actuals) | `:shared:compileKotlinIosSimulatorArm64`<br>`:shared:compileKotlinIosX64` (Intel) | `:shared:iosSimulatorArm64Test`<br>`:shared:iosX64Test` (Intel) | 20-60s |
+| `iosMain/` or `iosApp/`<br>(iOS platform actuals, wrapper) | `:shared:compileKotlinIosSimulatorArm64`<br>`:shared:compileKotlinIosX64` (Intel) | `:shared:iosSimulatorArm64Test`<br>`:shared:iosX64Test` (Intel) | 20-60s |
 | `wasmJsMain/`<br>(web platform actuals) | `:shared:compileKotlinWasmJs` | `:shared:wasmJsTest` | 20-80s<br>Requires Node.js |
 | Pre-release verification | `:androidApp:assembleDebug` (APK) | `:shared:allTests` (all platforms) | 30s-10m<br>❌ Avoid `:build` |
 
