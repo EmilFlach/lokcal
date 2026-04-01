@@ -1,6 +1,6 @@
+
 import androidx.compose.runtime.*
 import androidx.compose.ui.window.ComposeUIViewController
-import com.emilflach.lokcal.App
 import com.emilflach.lokcal.Database
 import com.emilflach.lokcal.data.*
 import com.emilflach.lokcal.screens.initializeRepositories
@@ -10,13 +10,10 @@ import com.emilflach.lokcal.util.currentDateIso
 import com.emilflach.lokcal.viewmodel.FoodEditViewModel
 import com.emilflach.lokcal.viewmodel.MainViewModel
 import com.emilflach.lokcal.viewmodel.MealsListViewModel
-import platform.UIKit.UIViewController
 
-// Legacy fullscreen app (kept for backward compatibility)
-fun MainViewController(): UIViewController = ComposeUIViewController { App(sqlDriverFactory = SqlDriverFactory()) }
-
-// Used by native navigation
-fun initApp(onReady: () -> Unit) = ComposeUIViewController {
+// Called from Swift: AppKt.initializeApp(onReady:) `iosApp/iosApp/MainView.swift`
+@Suppress("unused")
+fun initializeApp(onReady: () -> Unit) = ComposeUIViewController {
     AppTheme {
         var seedingProgress by remember { mutableStateOf<Float?>(null) }
         val database by produceState<Database?>(null) {

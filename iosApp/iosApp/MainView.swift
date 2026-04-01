@@ -59,7 +59,7 @@ struct LoadingView: UIViewControllerRepresentable {
     let onReady: () -> Void
 
     func makeUIViewController(context: Context) -> UIViewController {
-        MainIosKt.doInitApp(onReady: onReady)
+        AppKt.initializeApp(onReady: onReady)
     }
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
