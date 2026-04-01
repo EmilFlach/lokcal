@@ -52,6 +52,12 @@ class MealTimeViewModel(
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state.asStateFlow()
 
+    private val _showSaveMealDialog = MutableStateFlow(false)
+    val showSaveMealDialog: StateFlow<Boolean> = _showSaveMealDialog.asStateFlow()
+
+    fun showSaveMealDialog() { _showSaveMealDialog.value = true }
+    fun hideSaveMealDialog() { _showSaveMealDialog.value = false }
+
     // Centralized services
     private val portionService = PortionService(intakeRepo)
     private val labelService = LabelService(intakeRepo, portionService)

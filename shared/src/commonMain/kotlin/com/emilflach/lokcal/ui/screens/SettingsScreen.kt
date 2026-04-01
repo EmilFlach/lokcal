@@ -15,6 +15,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.backup.BackupManager
@@ -22,6 +23,7 @@ import com.emilflach.lokcal.data.SettingsRepository
 import com.emilflach.lokcal.health.HealthManager
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.PlatformScaffold
+import com.emilflach.lokcal.ui.components.SingleInputAlertDialog
 import com.emilflach.lokcal.ui.components.getRoundedCornerShape
 import kotlinx.coroutines.launch
 
@@ -138,35 +140,25 @@ fun SettingsScreen(
                             }
                     )
                     if (showKcalDialog) {
-                        AlertDialog(
-                            containerColor = colors.backgroundSurface1,
-                            onDismissRequest = { showKcalDialog = false },
-                            confirmButton = {
-                                TextButton(onClick = {
-                                    val v = kcalInput.trim().toDoubleOrNull()
-                                    if (v != null && v > 0) {
-                                        scope.launch {
-                                            settingsRepo.setStartingKcal(v)
-                                            currentKcal = settingsRepo.getStartingKcal()
-                                            showKcalDialog = false
-                                        }
+                        SingleInputAlertDialog(
+                            title = "Set starting kcal",
+                            fieldLabel = "kcal",
+                            initialValue = kcalInput,
+                            confirmText = "Save",
+                            dismissText = "Cancel",
+                            keyboardType = KeyboardType.Number,
+                            error = null,
+                            onConfirm = { value ->
+                                val v = value.trim().toDoubleOrNull()
+                                if (v != null && v > 0) {
+                                    scope.launch {
+                                        settingsRepo.setStartingKcal(v)
+                                        currentKcal = settingsRepo.getStartingKcal()
+                                        showKcalDialog = false
                                     }
-                                }) { Text("Save") }
-                            },
-                            dismissButton = {
-                                TextButton(onClick = { showKcalDialog = false }) { Text("Cancel") }
-                            },
-                            title = { Text("Set starting kcal") },
-                            text = {
-                                Column {
-                                    OutlinedTextField(
-                                        label = { Text("kcal") },
-                                        value = kcalInput,
-                                        onValueChange = { kcalInput = it.filter { ch -> ch.isDigit() } },
-                                        singleLine = true
-                                    )
                                 }
-                            }
+                            },
+                            onDismiss = { showKcalDialog = false }
                         )
                     }
                 }

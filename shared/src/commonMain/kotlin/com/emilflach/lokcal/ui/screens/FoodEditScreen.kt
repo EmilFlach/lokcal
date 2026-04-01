@@ -17,6 +17,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.PlatformScaffold
+import com.emilflach.lokcal.ui.components.SingleInputAlertDialog
 import com.emilflach.lokcal.ui.dialogs.StealImageDialog
 import io.ktor.http.*
 
@@ -269,32 +270,15 @@ private fun AddAliasDialog(
     onDismiss: () -> Unit,
     onAdd: (String) -> Unit
 ) {
-    var aliasText by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(
-                onClick = { if (aliasText.isNotBlank()) onAdd(aliasText.trim()) },
-                enabled = aliasText.isNotBlank()
-            ) {
-                Text("Add")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        },
-        title = { Text("Add Alias") },
-        text = {
-            OutlinedTextField(
-                value = aliasText,
-                onValueChange = { aliasText = it },
-                label = { Text("Alias (brand name, translation, etc.)") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
+    SingleInputAlertDialog(
+        title = "Add Alias",
+        fieldLabel = "Alias (brand name, translation, etc.)",
+        initialValue = "",
+        confirmText = "Add",
+        dismissText = "Cancel",
+        keyboardType = KeyboardType.Text,
+        error = null,
+        onConfirm = { value -> if (value.isNotBlank()) onAdd(value.trim()) },
+        onDismiss = onDismiss
     )
 }

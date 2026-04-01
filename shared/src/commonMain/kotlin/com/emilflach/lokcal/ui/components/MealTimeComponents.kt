@@ -12,23 +12,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BookmarkRemove
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.outlined.BookmarkAdd
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconToggleButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -39,58 +24,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.util.NumberUtils
-import com.emilflach.lokcal.util.NumberUtils.sanitizeDecimalInput
 import com.emilflach.lokcal.viewmodel.MealTimeViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SaveMealAction(viewModel: MealTimeViewModel) {
-    val color = LocalRecipesColors.current
-    val haptic = LocalHapticFeedback.current
-    var showAlert by remember { mutableStateOf(false) }
-    var name by remember { mutableStateOf("") }
-    var portions by remember { mutableStateOf("1") }
-
-    IconButton(onClick = { showAlert = true }) {
+    IconButton(onClick = { viewModel.showSaveMealDialog() }) {
         Icon(imageVector = Icons.Filled.Save, contentDescription = "Save as meal")
-    }
-
-    if (showAlert) {
-        AlertDialog(
-            containerColor = color.backgroundSurface1,
-            onDismissRequest = { showAlert = false },
-            title = { Text("Save as meal") },
-            text = {
-                Column {
-                    Text(text = "Name")
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        singleLine = true,
-                    )
-                    Spacer(Modifier.height(32.dp))
-                    Text(text = "Total portions")
-                    OutlinedTextField(
-                        value = portions,
-                        onValueChange = { portions = sanitizeDecimalInput(it) },
-                        singleLine = true,
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.saveAsMealFromInputs(name, portions)
-                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                    showAlert = false
-                }) { Text("Save") }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    showAlert = false
-                    haptic.performHapticFeedback(HapticFeedbackType.Reject)
-                }) { Text("Cancel") }
-            }
-        )
     }
 }
 

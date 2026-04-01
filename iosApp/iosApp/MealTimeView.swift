@@ -40,7 +40,8 @@ struct MealTimeScreen: View {
             }
             ToolbarItem(placement: .primaryAction) {
                 Button {
-                    // TODO: Trigger save meal dialog - handled in Compose
+                    let vm = ScreenFactoriesKt.getMealTimeViewModel(mealType: mealType, dateIso: dateIso, refreshKey: Int32(refreshKey))
+                    vm.showSaveMealDialog()
                 } label: {
                     Image(systemName: "square.and.arrow.down")
                 }

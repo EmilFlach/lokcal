@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -20,8 +19,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -31,12 +28,12 @@ import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.WeightLog
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.PlatformScaffold
+import com.emilflach.lokcal.ui.components.SingleInputAlertDialog
 import com.emilflach.lokcal.ui.components.getRoundedCornerShape
 import com.emilflach.lokcal.viewmodel.WeightListViewModel
 import ir.ehsannarmani.compose_charts.LineChart
 import ir.ehsannarmani.compose_charts.models.*
 import ir.ehsannarmani.compose_charts.models.DrawStyle.Stroke
-import kotlinx.coroutines.delay
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -56,7 +53,6 @@ fun WeightListScreen(
     val showAddDialog by viewModel.showAddDialog.collectAsState()
     val input by viewModel.input.collectAsState()
     val error by viewModel.error.collectAsState()
-    val focusRequester = remember { FocusRequester() }
     val listState = rememberLazyListState()
 
     LaunchedEffect(openAdd) {
@@ -64,44 +60,24 @@ fun WeightListScreen(
     }
 
     if (showAddDialog) {
-        AlertDialog(
-            containerColor = colors.backgroundSurface1,
-            onDismissRequest = { viewModel.openAddDialog(false) },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.saveToday()
-                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                }) { Text("Save") }
+        SingleInputAlertDialog(
+            title = "Add today's weight",
+            fieldLabel = "kg",
+            initialValue = input,
+            confirmText = "Save",
+            dismissText = "Cancel",
+            keyboardType = KeyboardType.Decimal,
+            error = error,
+            onConfirm = { value ->
+                viewModel.onInputChanged(value)
+                viewModel.saveToday()
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
             },
-            dismissButton = {
-                TextButton(onClick = {
-                    viewModel.openAddDialog(false)
-                    haptic.performHapticFeedback(HapticFeedbackType.Reject)
-                }) { Text("Cancel") }
-            },
-            title = { Text("Add today's weight") },
-            text = {
-                Column {
-                    OutlinedTextField(
-                        value = input,
-                        onValueChange = { new -> viewModel.onInputChanged(new) },
-                        label = { Text("kg") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.focusRequester(focusRequester)
-
-                    )
-                    if (error != null) {
-                        Spacer(Modifier.height(8.dp))
-                        Text(error!!, color = MaterialTheme.colorScheme.error)
-                    }
-                }
+            onDismiss = {
+                viewModel.openAddDialog(false)
+                haptic.performHapticFeedback(HapticFeedbackType.Reject)
             }
         )
-        LaunchedEffect(Unit) {
-            delay(100)
-            focusRequester.requestFocus()
-        }
     }
 
     PlatformScaffold(
