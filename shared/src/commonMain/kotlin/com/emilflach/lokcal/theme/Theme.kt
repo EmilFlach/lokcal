@@ -6,42 +6,33 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.*
 
+@Composable
+internal expect fun PlatformRippleOverride(content: @Composable () -> Unit)
+
 
 internal val LocalThemeIsDark = compositionLocalOf { mutableStateOf(true) }
-internal val LocalOnThemeToggle = staticCompositionLocalOf<() -> Unit> { {} }
 
 @Composable
 internal fun AppTheme(
     content: @Composable () -> Unit
 ) {
-    val systemIsDark = getSystemIsDarkTheme()
-    var isDark by remember(systemIsDark) { mutableStateOf(systemIsDark) }
+    val isDark = getSystemIsDarkTheme()
 
     CompositionLocalProvider(
         LocalThemeIsDark provides remember { mutableStateOf(isDark) },
         LocalRecipesColors provides if (isDark) RecipesColors.Dark else RecipesColors.Light
     ) {
-        val recipes = LocalRecipesColors.current
-        val colorScheme = colorSchemeFromRecipes(recipes)
+        val colorScheme = colorSchemeFromRecipes(LocalRecipesColors.current)
 
         SystemAppearance(!isDark)
-        MaterialTheme(
-            colorScheme = colorScheme,
-            content = {
-                Surface(
-                    color = colorScheme.background,
-                    contentColor = colorScheme.onBackground,
-                    content = {
-                        // Debug: Theme toggle button accessible to all screens
-                        CompositionLocalProvider(
-                            LocalOnThemeToggle provides { isDark = !isDark }
-                        ) {
-                            content()
-                        }
-                    }
-                )
+        MaterialTheme(colorScheme = colorScheme) {
+            Surface(
+                color = colorScheme.background,
+                contentColor = colorScheme.onBackground,
+            ) {
+                PlatformRippleOverride(content)
             }
-        )
+        }
     }
 }
 

@@ -8,6 +8,9 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowInsetsControllerCompat
 
 @Composable
+internal actual fun PlatformRippleOverride(content: @Composable () -> Unit) = content()
+
+@Composable
 internal actual fun SystemAppearance(isDark: Boolean) {
     val view = LocalView.current
     LaunchedEffect(isDark) {
