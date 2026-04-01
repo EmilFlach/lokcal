@@ -184,19 +184,6 @@ fun SettingsScreen(
                         .clickable { onOpenSourcePreferences() }
                 )
             }
-            item { Spacer(Modifier.height(2.dp)) }
-            item {
-                ListItem(
-                    headlineContent = { Text("Search sources") },
-                    supportingContent = {
-                        Text("Configure online food search sources", color = colors.foregroundSupport)
-                    },
-                    colors = itemColors,
-                    modifier = Modifier
-                        .clip(getRoundedCornerShape(1, 2))
-                        .clickable { onOpenSourcePreferences() }
-                )
-            }
 
             // Section: Health (conditional)
             if (HealthManager.showAutomaticExerciseLogging()) {
