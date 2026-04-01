@@ -11,6 +11,17 @@
 		A93A953F29CC810D00F8E227 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A93A953E29CC810D00F8E227 /* Assets.xcassets */; };
 		A93A954229CC810D00F8E227 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A93A954129CC810D00F8E227 /* Preview Assets.xcassets */; };
 		B0F0A0021A2B3C4D5E6F0002 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B0F0A0011A2B3C4D5E6F0001 /* libsqlite3.tbd */; };
+		C0A1B2C301D4E5F607A8B901 /* MealTimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A1B2C301D4E5F607A8B911 /* MealTimeView.swift */; };
+		C0A1B2C301D4E5F607A8B902 /* IntakeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A1B2C301D4E5F607A8B912 /* IntakeView.swift */; };
+		C0A1B2C301D4E5F607A8B903 /* EditMealView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A1B2C301D4E5F607A8B913 /* EditMealView.swift */; };
+		C0A1B2C301D4E5F607A8B904 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A1B2C301D4E5F607A8B914 /* SettingsView.swift */; };
+		C0A1B2C301D4E5F607A8B905 /* ManageViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A1B2C301D4E5F607A8B915 /* ManageViews.swift */; };
+		C0A1B2C301D4E5F607A8B906 /* ExerciseListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A1B2C301D4E5F607A8B916 /* ExerciseListView.swift */; };
+		C0A1B2C301D4E5F607A8B907 /* WeightListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A1B2C301D4E5F607A8B917 /* WeightListView.swift */; };
+		C0A1B2C301D4E5F607A8B908 /* StatisticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A1B2C301D4E5F607A8B918 /* StatisticsView.swift */; };
+		C0A1B2C301D4E5F607A8B909 /* KeyboardToolbarManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A1B2C301D4E5F607A8B919 /* KeyboardToolbarManager.swift */; };
+		C0A1B2C301D4E5F607A8B90A /* NativeNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A1B2C301D4E5F607A8B91A /* NativeNavigationView.swift */; };
+		C0A1B2C301D4E5F607A8B90B /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A1B2C301D4E5F607A8B91B /* MainView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,6 +30,17 @@
 		A93A953E29CC810D00F8E227 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A93A954129CC810D00F8E227 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		B0F0A0011A2B3C4D5E6F0001 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = System/Library/Frameworks/libsqlite3.tbd; sourceTree = SDKROOT; };
+		C0A1B2C301D4E5F607A8B911 /* MealTimeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealTimeView.swift; sourceTree = "<group>"; };
+		C0A1B2C301D4E5F607A8B912 /* IntakeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntakeView.swift; sourceTree = "<group>"; };
+		C0A1B2C301D4E5F607A8B913 /* EditMealView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditMealView.swift; sourceTree = "<group>"; };
+		C0A1B2C301D4E5F607A8B914 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		C0A1B2C301D4E5F607A8B915 /* ManageViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManageViews.swift; sourceTree = "<group>"; };
+		C0A1B2C301D4E5F607A8B916 /* ExerciseListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseListView.swift; sourceTree = "<group>"; };
+		C0A1B2C301D4E5F607A8B917 /* WeightListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightListView.swift; sourceTree = "<group>"; };
+		C0A1B2C301D4E5F607A8B918 /* StatisticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticsView.swift; sourceTree = "<group>"; };
+		C0A1B2C301D4E5F607A8B919 /* KeyboardToolbarManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardToolbarManager.swift; sourceTree = "<group>"; };
+		C0A1B2C301D4E5F607A8B91A /* NativeNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeNavigationView.swift; sourceTree = "<group>"; };
+		C0A1B2C301D4E5F607A8B91B /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +76,17 @@
 			isa = PBXGroup;
 			children = (
 				A93A953A29CC810C00F8E227 /* iosApp.swift */,
+				C0A1B2C301D4E5F607A8B911 /* MealTimeView.swift */,
+				C0A1B2C301D4E5F607A8B912 /* IntakeView.swift */,
+				C0A1B2C301D4E5F607A8B913 /* EditMealView.swift */,
+				C0A1B2C301D4E5F607A8B914 /* SettingsView.swift */,
+				C0A1B2C301D4E5F607A8B915 /* ManageViews.swift */,
+				C0A1B2C301D4E5F607A8B916 /* ExerciseListView.swift */,
+				C0A1B2C301D4E5F607A8B917 /* WeightListView.swift */,
+				C0A1B2C301D4E5F607A8B918 /* StatisticsView.swift */,
+				C0A1B2C301D4E5F607A8B919 /* KeyboardToolbarManager.swift */,
+				C0A1B2C301D4E5F607A8B91A /* NativeNavigationView.swift */,
+				C0A1B2C301D4E5F607A8B91B /* MainView.swift */,
 				A93A953E29CC810D00F8E227 /* Assets.xcassets */,
 				A93A954029CC810D00F8E227 /* Preview Content */,
 			);
@@ -167,6 +200,17 @@
 			buildActionMask = 2147483647;
 			files = (
 				A93A953B29CC810C00F8E227 /* iosApp.swift in Sources */,
+				C0A1B2C301D4E5F607A8B901 /* MealTimeView.swift in Sources */,
+				C0A1B2C301D4E5F607A8B902 /* IntakeView.swift in Sources */,
+				C0A1B2C301D4E5F607A8B903 /* EditMealView.swift in Sources */,
+				C0A1B2C301D4E5F607A8B904 /* SettingsView.swift in Sources */,
+				C0A1B2C301D4E5F607A8B905 /* ManageViews.swift in Sources */,
+				C0A1B2C301D4E5F607A8B906 /* ExerciseListView.swift in Sources */,
+				C0A1B2C301D4E5F607A8B907 /* WeightListView.swift in Sources */,
+				C0A1B2C301D4E5F607A8B908 /* StatisticsView.swift in Sources */,
+				C0A1B2C301D4E5F607A8B909 /* KeyboardToolbarManager.swift in Sources */,
+				C0A1B2C301D4E5F607A8B90A /* NativeNavigationView.swift in Sources */,
+				C0A1B2C301D4E5F607A8B90B /* MainView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
