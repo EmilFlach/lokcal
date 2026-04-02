@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,6 +26,7 @@ import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.PlatformScaffold
 import com.emilflach.lokcal.ui.components.getRoundedCornerShape
 import com.emilflach.lokcal.ui.util.rememberKtorImageLoader
+import com.emilflach.lokcal.util.usesNativeNavigation
 import com.emilflach.lokcal.viewmodel.FoodEditViewModel
 import kotlinx.coroutines.launch
 
@@ -89,6 +91,20 @@ fun FoodManageScreen(
                         }
                     },
                     actions = {
+                        if (!usesNativeNavigation) {
+                            IconButton(onClick = {
+                                viewModel.setSelectedTab(
+                                    if (selectedTab == FoodEditViewModel.Tab.MISSING_IMAGES) FoodEditViewModel.Tab.ALL
+                                    else FoodEditViewModel.Tab.MISSING_IMAGES
+                                )
+                            }) {
+                                Icon(
+                                    Icons.Filled.FilterList,
+                                    contentDescription = "Filter",
+                                    tint = if (selectedTab == FoodEditViewModel.Tab.MISSING_IMAGES) colors.foregroundBrand else colors.foregroundDefault
+                                )
+                            }
+                        }
                         IconButton(onClick = { onOpenEdit(null) }) {
                             Icon(Icons.Filled.Add, contentDescription = "Add food")
                         }
@@ -105,78 +121,56 @@ fun FoodManageScreen(
         navBarBackgroundColor = colors.backgroundPage
     ) { inner ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(inner)
+            modifier = if (usesNativeNavigation) Modifier.fillMaxSize()
+                       else Modifier.fillMaxSize().padding(inner)
         ) {
-            SecondaryTabRow(
-                selectedTabIndex = selectedTab.ordinal,
-                containerColor = Color.Transparent,
-                contentColor = colors.foregroundBrand,
-                divider = {}
-            ) {
-                FoodEditViewModel.Tab.entries.forEach { tab ->
-                    Tab(
-                        selected = selectedTab == tab,
-                        onClick = { viewModel.setSelectedTab(tab) },
-                        text = {
-                            Text(
-                                when (tab) {
-                                    FoodEditViewModel.Tab.ALL -> "All"
-                                    FoodEditViewModel.Tab.MISSING_IMAGES -> "Missing Images"
-                                }
-                            )
-                        },
-                        selectedContentColor = colors.foregroundBrand,
-                        unselectedContentColor = colors.foregroundSupport
-                    )
-                }
-            }
-            Spacer(Modifier.height(16.dp))
-
             when (selectedTab) {
                 FoodEditViewModel.Tab.ALL -> {
-                    TextField(
-                        value = search,
-                        onValueChange = { viewModel.setSearch(it) },
-                        singleLine = true,
-                        shape = MaterialTheme.shapes.extraLarge,
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = colors.backgroundSurface1,
-                            unfocusedContainerColor = colors.backgroundSurface1,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                        ),
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search",
-                                modifier = Modifier.padding(start = 16.dp)
-                            )
-                        },
-                        trailingIcon = {
-                            IconButton(onClick = {
-                                viewModel.setSearch("")
-                                coroutineScope.launch {
-                                    allListState.scrollToItem(0)
-                                }
-                            }, modifier = Modifier.padding(end = 8.dp)) {
+                    if (!usesNativeNavigation) {
+                        TextField(
+                            value = search,
+                            onValueChange = { viewModel.setSearch(it) },
+                            singleLine = true,
+                            shape = MaterialTheme.shapes.extraLarge,
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = colors.backgroundSurface1,
+                                unfocusedContainerColor = colors.backgroundSurface1,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                            ),
+                            leadingIcon = {
                                 Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "Clear search",
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Search",
+                                    modifier = Modifier.padding(start = 16.dp)
                                 )
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .padding(bottom = 16.dp)
-                    )
+                            },
+                            trailingIcon = {
+                                IconButton(onClick = {
+                                    viewModel.setSearch("")
+                                    coroutineScope.launch {
+                                        allListState.scrollToItem(0)
+                                    }
+                                }, modifier = Modifier.padding(end = 8.dp)) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Clear search",
+                                    )
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 16.dp)
+                        )
+                    }
 
                     LazyColumn(
                         state = allListState,
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp)
+                        contentPadding = if (usesNativeNavigation)
+                            PaddingValues(top = inner.calculateTopPadding(), bottom = inner.calculateBottomPadding(), start = 16.dp, end = 16.dp)
+                        else PaddingValues(16.dp)
                     ) {
                         items(foods, key = { it.id }) { food ->
                             ListItem(
@@ -218,7 +212,9 @@ fun FoodManageScreen(
                     LazyColumn(
                         state = missingListState,
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp)
+                        contentPadding = if (usesNativeNavigation)
+                            PaddingValues(top = inner.calculateTopPadding(), bottom = inner.calculateBottomPadding(), start = 16.dp, end = 16.dp)
+                        else PaddingValues(16.dp)
                     ) {
                         if (missingImages.isEmpty()) {
                             item {

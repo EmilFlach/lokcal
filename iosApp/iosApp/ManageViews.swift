@@ -8,10 +8,44 @@ struct MealsListScreen: View {
     @Binding var navigationPath: NavigationPath
 
     var body: some View {
-        MealsListView(navigationPath: $navigationPath, dateIso: dateIso)
+        MealsListSearchableView(navigationPath: $navigationPath, dateIso: dateIso)
             .ignoresSafeArea(.all)
             .navigationTitle("Meals")
             .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+// MARK: - MealsList Searchable View
+
+struct MealsListSearchableView: View {
+    @Binding var navigationPath: NavigationPath
+    let dateIso: String
+    @State private var searchText = ""
+    @State private var isSearchPresented = false
+    @State private var showMissingImages = false
+
+    var body: some View {
+        MealsListView(
+            navigationPath: $navigationPath,
+            dateIso: dateIso,
+            searchQuery: searchText,
+            showMissingImages: showMissingImages
+        )
+        .searchable(text: $searchText, isPresented: $isSearchPresented, placement: .toolbar, prompt: "Search meals")
+        .autocorrectionDisabled()
+        .textInputAutocapitalization(.never)
+        .toolbar {
+            ToolbarItemGroup(placement: .primaryAction) {
+                Menu {
+                    Picker("Filter", selection: $showMissingImages) {
+                        Text("All").tag(false)
+                        Text("Missing Images").tag(true)
+                    }
+                } label: {
+                    Image(systemName: showMissingImages ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                }
+            }
+        }
     }
 }
 
@@ -22,19 +56,49 @@ struct FoodManageScreen: View {
     @Binding var navigationPath: NavigationPath
 
     var body: some View {
-        FoodManageView(navigationPath: $navigationPath, dateIso: dateIso)
+        FoodManageSearchableView(navigationPath: $navigationPath, dateIso: dateIso)
             .ignoresSafeArea(.all)
             .navigationTitle("Foods")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        navigationPath.append(NavigationDestination.foodEdit(foodId: nil, dateIso: dateIso))
-                    } label: {
-                        Image(systemName: "plus")
+    }
+}
+
+// MARK: - FoodManage Searchable View
+
+struct FoodManageSearchableView: View {
+    @Binding var navigationPath: NavigationPath
+    let dateIso: String
+    @State private var searchText = ""
+    @State private var isSearchPresented = false
+    @State private var showMissingImages = false
+
+    var body: some View {
+        FoodManageView(
+            navigationPath: $navigationPath,
+            dateIso: dateIso,
+            searchQuery: searchText,
+            showMissingImages: showMissingImages
+        )
+        .searchable(text: $searchText, isPresented: $isSearchPresented, placement: .toolbar, prompt: "Search foods")
+        .autocorrectionDisabled()
+        .textInputAutocapitalization(.never)
+        .toolbar {
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button {
+                    navigationPath.append(NavigationDestination.foodEdit(foodId: nil, dateIso: dateIso))
+                } label: {
+                    Image(systemName: "plus")
+                }
+                Menu {
+                    Picker("Filter", selection: $showMissingImages) {
+                        Text("All").tag(false)
+                        Text("Missing Images").tag(true)
                     }
+                } label: {
+                    Image(systemName: showMissingImages ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
                 }
             }
+        }
     }
 }
 
@@ -93,6 +157,8 @@ struct FoodEditScreen: View {
 struct MealsListView: UIViewControllerRepresentable {
     @Binding var navigationPath: NavigationPath
     let dateIso: String
+    let searchQuery: String
+    let showMissingImages: Bool
 
     func makeUIViewController(context: Context) -> UIViewController {
         ScreenFactoriesKt.MealsListViewController(
@@ -104,11 +170,17 @@ struct MealsListView: UIViewControllerRepresentable {
                     mealId: mealId.int64Value,
                     dateIso: dateIso
                 ))
-            }
+            },
+            searchQuery: searchQuery,
+            showMissingImages: showMissingImages
         )
     }
 
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+        let vm = ScreenFactoriesKt.getGlobalMealsListViewModel()
+        vm.setSearch(value: searchQuery)
+        vm.setShowMissingImages(show: showMissingImages)
+    }
 }
 
 // MARK: - FoodManage ViewController Wrapper
@@ -116,6 +188,8 @@ struct MealsListView: UIViewControllerRepresentable {
 struct FoodManageView: UIViewControllerRepresentable {
     @Binding var navigationPath: NavigationPath
     let dateIso: String
+    let searchQuery: String
+    let showMissingImages: Bool
 
     func makeUIViewController(context: Context) -> UIViewController {
         ScreenFactoriesKt.FoodManageViewController(
@@ -127,11 +201,17 @@ struct FoodManageView: UIViewControllerRepresentable {
                     foodId: foodId?.int64Value,
                     dateIso: dateIso
                 ))
-            }
+            },
+            searchQuery: searchQuery,
+            showMissingImages: showMissingImages
         )
     }
 
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+        let vm = ScreenFactoriesKt.getGlobalFoodEditViewModel()
+        vm.setSearch(value: searchQuery)
+        vm.setShowMissingImages(show: showMissingImages)
+    }
 }
 
 // MARK: - FoodEdit ViewController Wrapper

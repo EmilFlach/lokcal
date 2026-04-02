@@ -55,6 +55,8 @@ fun getGlobalMainViewModel(): MainViewModel = globalMainViewModel
 
 fun getGlobalFoodEditViewModel(): FoodEditViewModel = globalFoodEditViewModel
 
+fun getGlobalMealsListViewModel(): MealsListViewModel = globalMealsListViewModel
+
 // Main Screen
 fun MainViewController(
     dateIso: String,
@@ -210,9 +212,17 @@ fun SourcePreferenceViewController(
 // MealsList Screen
 fun MealsListViewController(
     onBack: () -> Unit,
-    onOpenMeal: (Long) -> Unit
+    onOpenMeal: (Long) -> Unit,
+    searchQuery: String = "",
+    showMissingImages: Boolean = false
 ) = ComposeUIViewController {
     AppTheme {
+        LaunchedEffect(searchQuery) {
+            globalMealsListViewModel.setSearch(searchQuery)
+        }
+        LaunchedEffect(showMissingImages) {
+            globalMealsListViewModel.setShowMissingImages(showMissingImages)
+        }
         MealsListScreen(
             viewModel = globalMealsListViewModel,
             onBack = onBack,
@@ -242,9 +252,17 @@ fun EditMealFromListViewController(
 // FoodManage Screen
 fun FoodManageViewController(
     onBack: () -> Unit,
-    onOpenEdit: (Long?) -> Unit
+    onOpenEdit: (Long?) -> Unit,
+    searchQuery: String = "",
+    showMissingImages: Boolean = false
 ) = ComposeUIViewController {
     AppTheme {
+        LaunchedEffect(searchQuery) {
+            globalFoodEditViewModel.setSearch(searchQuery)
+        }
+        LaunchedEffect(showMissingImages) {
+            globalFoodEditViewModel.setShowMissingImages(showMissingImages)
+        }
         FoodManageScreen(
             viewModel = globalFoodEditViewModel,
             onBack = onBack,

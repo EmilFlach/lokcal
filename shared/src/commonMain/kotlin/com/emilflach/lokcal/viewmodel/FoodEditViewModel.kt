@@ -113,6 +113,10 @@ class FoodEditViewModel(
         _selectedTab.value = tab
     }
 
+    fun setShowMissingImages(show: Boolean) {
+        _selectedTab.value = if (show) Tab.MISSING_IMAGES else Tab.ALL
+    }
+
     fun setSearch(value: String) {
         _search.value = value
         reloadFoods()
