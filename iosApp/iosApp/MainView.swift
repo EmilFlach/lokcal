@@ -7,6 +7,8 @@ struct MainScreen: View {
     @Binding var navigationPath: NavigationPath
     @Binding var refreshKey: Int
     @State private var mainScreenTitle = ""
+    @State private var showWeightBadge = false
+    @State private var badgePulse = false
 
     var body: some View {
         MainView(navigationPath: $navigationPath, refreshKey: refreshKey)
@@ -17,21 +19,26 @@ struct MainScreen: View {
             .onAppear {
                 ScreenFactoriesKt.getGlobalMainViewModel().refresh()
                 mainScreenTitle = getFormattedDate()
+                showWeightBadge = getShowWeightPrompt()
             }
             .onReceive(Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()) { _ in
                 let newTitle = getFormattedDate()
                 if newTitle != mainScreenTitle {
                     mainScreenTitle = newTitle
                 }
+                let newBadge = getShowWeightPrompt()
+                if newBadge != showWeightBadge {
+                    showWeightBadge = newBadge
+                }
             }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: {
-                        ScreenFactoriesKt.getGlobalMainViewModel().setToCurrentDate()
-                    }) {
-                        Image(systemName: "calendar")
+            .onReceive(Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()) { _ in
+                if showWeightBadge {
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        badgePulse.toggle()
                     }
                 }
+            }
+            .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {
                     Button(action: {
                         navigationPath.append(NavigationDestination.statistics)
@@ -39,9 +46,19 @@ struct MainScreen: View {
                         Image(systemName: "chart.bar")
                     }
                     Button(action: {
-                        navigationPath.append(NavigationDestination.weightList(openAdd: false, returnToSettings: false, dateIso: nil, refreshId: refreshKey))
+                        let currentDate = getCurrentDateIso()
+                        navigationPath.append(NavigationDestination.weightList(openAdd: showWeightBadge, returnToSettings: false, dateIso: showWeightBadge ? currentDate : nil, refreshId: refreshKey))
                     }) {
                         Image(systemName: "scalemass")
+                            .overlay(alignment: .topTrailing) {
+                                if showWeightBadge {
+                                    Circle()
+                                        .fill(Color(red: 0xD9/255, green: 0x91/255, blue: 0x0D/255))
+                                        .frame(width: 7, height: 7)
+                                        .opacity(badgePulse ? 0.3 : 1.0)
+                                        .offset(x: 4, y: -4)
+                                }
+                            }
                     }
                     Button(action: {
                         navigationPath.append(NavigationDestination.settings)

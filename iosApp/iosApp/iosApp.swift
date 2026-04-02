@@ -23,3 +23,7 @@ func getFormattedDate() -> String {
     let vm = ScreenFactoriesKt.getGlobalMainViewModel()
     return vm.formattedDate()
 }
+
+func getShowWeightPrompt() -> Bool {
+    (ScreenFactoriesKt.getGlobalMainViewModel().uiState.value as? MainUiState)?.dayState.showWeightPrompt == true
+}
