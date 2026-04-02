@@ -96,45 +96,41 @@ fun WeightListScreen(
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = colors.backgroundPage,
-                        titleContentColor = colors.foregroundDefault,
-                        navigationIconContentColor = colors.foregroundDefault,
-                        actionIconContentColor = colors.foregroundDefault,
                     )
                 )
             },
         scrollState = listState,
         navBarBackgroundColor = colors.backgroundPage
     ) { padding ->
-        Column(Modifier.padding(padding)) {
-            WeightChart(viewModel)
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                state = listState
-            ) {
-                items(items) { item: WeightLog ->
-                    ListItem(
-                        headlineContent = { Text("${item.weight_kg} kg") },
-                        supportingContent = { Text(item.date, color = colors.foregroundSupport) },
-                        trailingContent = {
-                            Icon(
-                                imageVector = Icons.Filled.Delete,
-                                contentDescription = "Delete",
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .clickable {
-                                        viewModel.deleteById(item.id)
-                                    }
-                            )
-                        },
-                        modifier = Modifier.clip(getRoundedCornerShape(
-                            index = items.indexOf(item),
-                            size = items.size
-                        ))
-                    )
-                    Spacer(Modifier.height(4.dp))
-                }
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            state = listState,
+            contentPadding = padding.listContentPadding(),
+        ) {
+            item {
+                WeightChart(viewModel)
+            }
+            items(items) { item: WeightLog ->
+                ListItem(
+                    headlineContent = { Text("${item.weight_kg} kg") },
+                    supportingContent = { Text(item.date, color = colors.foregroundSupport) },
+                    trailingContent = {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = "Delete",
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clickable {
+                                    viewModel.deleteById(item.id)
+                                }
+                        )
+                    },
+                    modifier = Modifier.clip(getRoundedCornerShape(
+                        index = items.indexOf(item),
+                        size = items.size
+                    ))
+                )
+                Spacer(Modifier.height(4.dp))
             }
         }
     }
@@ -150,7 +146,7 @@ fun WeightChart(viewModel: WeightListViewModel) {
 
     val graphTextStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.foregroundSupport)
     Box(
-        modifier = Modifier.height(200.dp).fillMaxWidth().padding(16.dp)) {
+        modifier = Modifier.height(200.dp).fillMaxWidth().padding(vertical = 16.dp)) {
         LineChart(
             minValue = weights.minOrNull() ?: 0.0,
             maxValue = weights.maxOrNull() ?: 0.0,
@@ -206,7 +202,7 @@ fun WeightChart(viewModel: WeightListViewModel) {
 
     if (sorted.isNotEmpty()) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            modifier = Modifier.padding(vertical = 8.dp)
         ) {
             if (displayedItems.isNotEmpty()) {
                 Spacer(Modifier.height(4.dp))

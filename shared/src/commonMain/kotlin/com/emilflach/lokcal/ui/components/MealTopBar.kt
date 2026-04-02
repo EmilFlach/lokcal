@@ -1,8 +1,5 @@
 package com.emilflach.lokcal.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -22,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,6 +34,7 @@ fun MealTopBar(
     onSearchOnline: () -> Unit = {},
     onScanBarcode: (() -> Unit)? = null,
     isSearchingOnline: Boolean = false,
+    showOnlineSearch: Boolean = true,
     trailingActions: (@Composable () -> Unit)? = null,
     colors: TopAppBarColors = run {
         val color = LocalRecipesColors.current
@@ -49,7 +48,7 @@ fun MealTopBar(
     },
 ) {
     val focusRequester = remember { FocusRequester() }
-    var searchVisible by remember { mutableStateOf(false) }
+    var searchVisible by remember { mutableStateOf(showSearch) }
 
     LaunchedEffect(showSearch) {
         searchVisible = showSearch
@@ -57,7 +56,7 @@ fun MealTopBar(
 
     LaunchedEffect(autoFocusSearch, searchVisible) {
         if (autoFocusSearch && searchVisible) {
-            delay(10)
+            delay(10.milliseconds)
             focusRequester.requestFocus()
         }
     }
@@ -86,12 +85,9 @@ fun MealTopBar(
             colors = colors
         )
 
-        AnimatedVisibility(
-            visible = searchVisible,
-            enter = fadeIn(animationSpec = tween(250))
-        ) {
+        if (searchVisible) {
             val color = LocalRecipesColors.current
-            Row (
+            Row(
                 Modifier.background(color.backgroundPage)
             ) {
                 TextField(
@@ -120,32 +116,34 @@ fun MealTopBar(
                     },
                     modifier = Modifier
                         .weight(1f)
-                        .padding(start = 16.dp, end = 8.dp, bottom = 16.dp)
+                        .padding(start = 16.dp, end = if (showOnlineSearch || onScanBarcode != null) 8.dp else 16.dp, bottom = 16.dp)
                         .focusRequester(focusRequester)
                 )
-                Surface(
-                    onClick = { onSearchOnline() },
-                    color = color.backgroundSurface2,
-                    modifier = Modifier
-                        .padding(end = if (onScanBarcode != null) 8.dp else 16.dp)
-                        .clip(MaterialTheme.shapes.small)
-                        .height(57.dp)
-                        .width(57.dp)
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                if (showOnlineSearch) {
+                    Surface(
+                        onClick = { onSearchOnline() },
+                        color = color.backgroundSurface2,
+                        modifier = Modifier
+                            .padding(end = if (onScanBarcode != null) 8.dp else 16.dp)
+                            .clip(MaterialTheme.shapes.small)
+                            .height(57.dp)
+                            .width(57.dp)
                     ) {
-                        if (isSearchingOnline) {
-                            Icon(
-                                Icons.Default.Cancel,
-                                contentDescription = "Stop searching",
-                            )
-                        } else {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ManageSearch,
-                                contentDescription = "Search the internet",
-                            )
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isSearchingOnline) {
+                                Icon(
+                                    Icons.Default.Cancel,
+                                    contentDescription = "Stop searching",
+                                )
+                            } else {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ManageSearch,
+                                    contentDescription = "Search the internet",
+                                )
+                            }
                         }
                     }
                 }
@@ -174,3 +172,4 @@ fun MealTopBar(
         }
     }
 }
+

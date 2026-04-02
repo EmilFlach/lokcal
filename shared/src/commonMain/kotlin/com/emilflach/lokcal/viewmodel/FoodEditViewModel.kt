@@ -3,7 +3,6 @@ package com.emilflach.lokcal.viewmodel
 import com.emilflach.lokcal.AllItemFrequencies
 import com.emilflach.lokcal.Food
 import com.emilflach.lokcal.FoodAlias
-import com.emilflach.lokcal.ItemsMissingImage
 import com.emilflach.lokcal.data.FoodRepository
 import com.emilflach.lokcal.data.IntakeRepository
 import com.emilflach.lokcal.data.MealRepository
@@ -19,13 +18,6 @@ class FoodEditViewModel(
     private val intakeRepo: IntakeRepository,
     private val mealRepo: MealRepository
 ) {
-    enum class Tab {
-        ALL, MISSING_IMAGES
-    }
-
-    private val _selectedTab = MutableStateFlow(Tab.ALL)
-    val selectedTab: StateFlow<Tab> = _selectedTab.asStateFlow()
-
     // Manage/list state
     private val _search = MutableStateFlow("")
     val search: StateFlow<String> = _search.asStateFlow()
@@ -36,8 +28,8 @@ class FoodEditViewModel(
     private val _itemFrequencies = MutableStateFlow<Map<Pair<String, Long>, Long>>(emptyMap())
     val itemFrequencies: StateFlow<Map<Pair<String, Long>, Long>> = _itemFrequencies.asStateFlow()
 
-    private val _missingImages = MutableStateFlow<List<ItemsMissingImage>>(emptyList())
-    val missingImages: StateFlow<List<ItemsMissingImage>> = _missingImages.asStateFlow()
+    private val _filterMissingImages = MutableStateFlow(false)
+    val filterMissingImages: StateFlow<Boolean> = _filterMissingImages.asStateFlow()
 
     // Edit state
     data class EditState(
@@ -65,18 +57,11 @@ class FoodEditViewModel(
     private val _edit = MutableStateFlow(EditState())
     val edit: StateFlow<EditState> = _edit.asStateFlow()
 
-    private val _allListState = MutableStateFlow<Map<Int, Int>>(emptyMap())
-    val allListState = _allListState.asStateFlow()
+    private val _listState = MutableStateFlow<Map<Int, Int>>(emptyMap())
+    val listState = _listState.asStateFlow()
 
-    private val _missingListState = MutableStateFlow<Map<Int, Int>>(emptyMap())
-    val missingListState = _missingListState.asStateFlow()
-
-    fun saveListState(tab: Tab, index: Int, offset: Int) {
-        if (tab == Tab.ALL) {
-            _allListState.value = mapOf(index to offset)
-        } else {
-            _missingListState.value = mapOf(index to offset)
-        }
+    fun saveListState(index: Int, offset: Int) {
+        _listState.value = mapOf(index to offset)
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -85,13 +70,11 @@ class FoodEditViewModel(
     init {
         // initial load
         reloadFoods()
-        loadMissingImages()
         loadFrequencies()
     }
 
     fun refresh() {
         reloadFoods()
-        loadMissingImages()
         loadFrequencies()
     }
 
@@ -109,23 +92,13 @@ class FoodEditViewModel(
         }
     }
 
-    fun setSelectedTab(tab: Tab) {
-        _selectedTab.value = tab
-    }
-
-    fun setShowMissingImages(show: Boolean) {
-        _selectedTab.value = if (show) Tab.MISSING_IMAGES else Tab.ALL
+    fun toggleMissingImagesFilter() {
+        _filterMissingImages.value = !_filterMissingImages.value
     }
 
     fun setSearch(value: String) {
         _search.value = value
         reloadFoods()
-    }
-
-    fun loadMissingImages() {
-        scope.launch {
-            _missingImages.value = intakeRepo.getItemsMissingImage().filter { it.source_type == "FOOD" }
-        }
     }
 
     fun reloadFoods() {
@@ -168,13 +141,45 @@ class FoodEditViewModel(
         }
     }
 
-    fun updateName(v: String) { _edit.value = _edit.value.copy(name = v) }
-    fun updateEnergyText(v: String) { _edit.value = _edit.value.copy(energyText = v.filter { it.isDigit() || it == '.' || it == ',' }) }
-    fun updateServingSize(v: String) { _edit.value = _edit.value.copy(servingSize = v) }
-    fun updateProductUrl(v: String) { _edit.value = _edit.value.copy(productUrl = v) }
-    fun updateImageUrl(v: String) { _edit.value = _edit.value.copy(imageUrl = v) }
-    fun updateGtin13(v: String) { _edit.value = _edit.value.copy(gtin13 = v.filter { it.isDigit() }) }
-    fun updateSource(v: String) { _edit.value = _edit.value.copy(source = v) }
+    fun updateName(v: String) { _edit.value = _edit.value.copy(name = v); persist() }
+    fun updateEnergyText(v: String) { _edit.value = _edit.value.copy(energyText = v.filter { it.isDigit() || it == '.' || it == ',' }); persist() }
+    fun updateServingSize(v: String) { _edit.value = _edit.value.copy(servingSize = v); persist() }
+    fun updateProductUrl(v: String) { _edit.value = _edit.value.copy(productUrl = v); persist() }
+    fun updateImageUrl(v: String) { _edit.value = _edit.value.copy(imageUrl = v); persist() }
+    fun updateGtin13(v: String) { _edit.value = _edit.value.copy(gtin13 = v.filter { it.isDigit() }); persist() }
+    fun updateSource(v: String) { _edit.value = _edit.value.copy(source = v); persist() }
+
+    private fun persist() {
+        val s = _edit.value
+        val name = s.name.trim()
+        val energy = s.energyText.trim().replace(',', '.').toDoubleOrNull() ?: 0.0
+        scope.launch {
+            if (s.isEdit && s.id != null) {
+                repo.updateDetails(
+                    id = s.id,
+                    name = name.ifBlank { "Unnamed" },
+                    energyKcalPer100g = energy,
+                    productUrl = s.productUrl.trim().ifBlank { null },
+                    imageUrl = s.imageUrl.trim().ifBlank { null },
+                    gtin13 = s.gtin13.trim().ifBlank { null },
+                    servingSize = s.servingSize.trim().ifBlank { null },
+                    source = s.source.trim().ifBlank { null },
+                )
+            } else if (!s.isEdit && name.isNotBlank()) {
+                val id = repo.insertManual(
+                    name = name,
+                    energyKcalPer100g = energy,
+                    servingSize = s.servingSize.trim().ifBlank { null },
+                    gtin13 = s.gtin13.trim().ifBlank { null },
+                    imageUrl = s.imageUrl.trim().ifBlank { null },
+                    productUrl = s.productUrl.trim().ifBlank { null },
+                    source = s.source.trim().ifBlank { "manual" }
+                )
+                _edit.value = _edit.value.copy(id = id, isEdit = true)
+                reloadFoods()
+            }
+        }
+    }
 
     fun addAlias(alias: String, type: String) {
         val current = _edit.value
@@ -222,40 +227,7 @@ class FoodEditViewModel(
     }
     fun stealImage(item: StealImageItem) {
         _edit.value = _edit.value.copy(imageUrl = item.imageUrl ?: "", showStealDialog = false)
-    }
-
-    fun save(onSaved: () -> Unit) {
-        val s = _edit.value
-        val name = s.name.trim()
-        if (name.isBlank()) return
-        val energy = s.energyText.trim().replace(',', '.').toDoubleOrNull() ?: 0.0
-        scope.launch {
-            if (s.isEdit && s.id != null) {
-                repo.updateDetails(
-                    id = s.id,
-                    name = name,
-                    energyKcalPer100g = energy,
-                    productUrl = s.productUrl.trim().ifBlank { null },
-                    imageUrl = s.imageUrl.trim().ifBlank { null },
-                    gtin13 = s.gtin13.trim().ifBlank { null },
-                    servingSize = s.servingSize.trim().ifBlank { null },
-                    source = s.source.trim().ifBlank { null },
-                )
-            } else {
-                repo.insertManual(
-                    name = name,
-                    energyKcalPer100g = energy,
-                    servingSize = s.servingSize.trim().ifBlank { null },
-                    gtin13 = s.gtin13.trim().ifBlank { null },
-                    imageUrl = s.imageUrl.trim().ifBlank { null },
-                    productUrl = s.productUrl.trim().ifBlank { null },
-                    source = s.source.trim().ifBlank { "manual" }
-                )
-            }
-            // refresh list after save
-            reloadFoods()
-            onSaved()
-        }
+        persist()
     }
 
     fun delete(onDeleted: () -> Unit) {

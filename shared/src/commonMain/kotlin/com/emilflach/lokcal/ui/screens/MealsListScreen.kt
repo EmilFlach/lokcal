@@ -2,30 +2,29 @@ package com.emilflach.lokcal.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.components.MealTopBar
 import com.emilflach.lokcal.ui.components.PlatformScaffold
 import com.emilflach.lokcal.ui.components.getRoundedCornerShape
 import com.emilflach.lokcal.ui.util.rememberKtorImageLoader
-import com.emilflach.lokcal.util.usesNativeNavigation
 import com.emilflach.lokcal.viewmodel.MealsListViewModel
 import kotlinx.coroutines.launch
 
@@ -43,32 +42,18 @@ fun MealsListScreen(
     val search by viewModel.search.collectAsState()
     val meals by viewModel.meals.collectAsState()
     val frequencies by viewModel.itemFrequencies.collectAsState()
-    val missingImages by viewModel.missingImages.collectAsState()
-    val selectedTab by viewModel.selectedTab.collectAsState()
+    val filterMissingImages by viewModel.filterMissingImages.collectAsState()
 
-    val allListStateData by viewModel.allListState.collectAsState()
-    val allListState = rememberLazyListState(
-        initialFirstVisibleItemIndex = allListStateData.keys.firstOrNull() ?: 0,
-        initialFirstVisibleItemScrollOffset = allListStateData.values.firstOrNull() ?: 0
+    val listStateData by viewModel.listState.collectAsState()
+    val listState = rememberLazyListState(
+        initialFirstVisibleItemIndex = listStateData.keys.firstOrNull() ?: 0,
+        initialFirstVisibleItemScrollOffset = listStateData.values.firstOrNull() ?: 0
     )
 
-    LaunchedEffect(allListState) {
-        snapshotFlow { allListState.firstVisibleItemIndex to allListState.firstVisibleItemScrollOffset }
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
             .collect { (index, offset) ->
-                viewModel.saveListState(MealsListViewModel.Tab.ALL, index, offset)
-            }
-    }
-
-    val missingListStateData by viewModel.missingListState.collectAsState()
-    val missingListState = rememberLazyListState(
-        initialFirstVisibleItemIndex = missingListStateData.keys.firstOrNull() ?: 0,
-        initialFirstVisibleItemScrollOffset = missingListStateData.values.firstOrNull() ?: 0
-    )
-
-    LaunchedEffect(missingListState) {
-        snapshotFlow { missingListState.firstVisibleItemIndex to missingListState.firstVisibleItemScrollOffset }
-            .collect { (index, offset) ->
-                viewModel.saveListState(MealsListViewModel.Tab.MISSING_IMAGES, index, offset)
+                viewModel.saveListState(index, offset)
             }
     }
 
@@ -76,186 +61,73 @@ fun MealsListScreen(
         onBack()
     }
 
-    val activeListState = when (selectedTab) {
-        MealsListViewModel.Tab.ALL -> allListState
-        MealsListViewModel.Tab.MISSING_IMAGES -> missingListState
-    }
+    val displayedMeals = if (filterMissingImages) meals.filter { it.image_url.isNullOrBlank() } else meals
 
     PlatformScaffold(
         topBar = {
-                TopAppBar(
-                    title = { Text("Meals") },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                        }
-                    },
-                    actions = {
-                        if (!usesNativeNavigation) {
-                            IconButton(onClick = {
-                                viewModel.setSelectedTab(
-                                    if (selectedTab == MealsListViewModel.Tab.MISSING_IMAGES) MealsListViewModel.Tab.ALL
-                                    else MealsListViewModel.Tab.MISSING_IMAGES
-                                )
-                            }) {
-                                Icon(
-                                    Icons.Filled.FilterList,
-                                    contentDescription = "Filter",
-                                    tint = if (selectedTab == MealsListViewModel.Tab.MISSING_IMAGES) colors.foregroundBrand else colors.foregroundDefault
-                                )
-                            }
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = colors.backgroundPage,
-                        titleContentColor = colors.foregroundDefault,
-                        navigationIconContentColor = colors.foregroundDefault,
-                        actionIconContentColor = colors.foregroundDefault,
-                    )
-                )
-            },
-        scrollState = activeListState,
-        navBarBackgroundColor = colors.backgroundPage
-    ) { inner ->
-        Column(
-            modifier = if (usesNativeNavigation) Modifier.fillMaxSize()
-                       else Modifier.fillMaxSize().padding(inner)
-        ) {
-            when (selectedTab) {
-                MealsListViewModel.Tab.ALL -> {
-                    if (!usesNativeNavigation) {
-                        TextField(
-                            value = search,
-                            onValueChange = { viewModel.setSearch(it) },
-                            singleLine = true,
-                            shape = MaterialTheme.shapes.extraLarge,
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = colors.backgroundSurface1,
-                                unfocusedContainerColor = colors.backgroundSurface1,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                            ),
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = "Search",
-                                    modifier = Modifier.padding(start = 16.dp)
-                                )
-                            },
-                            trailingIcon = {
-                                IconButton(onClick = {
-                                    viewModel.setSearch("")
-                                    coroutineScope.launch {
-                                        allListState.scrollToItem(0)
-                                    }
-                                }, modifier = Modifier.padding(end = 8.dp)) {
-                                    Icon(
-                                        imageVector = Icons.Default.Close,
-                                        contentDescription = "Clear search",
-                                    )
-                                }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
-                                .padding(bottom = 16.dp)
+            MealTopBar(
+                title = "Meals",
+                onBack = onBack,
+                showSearch = true,
+                showOnlineSearch = false,
+                query = search,
+                onQueryChange = { viewModel.setSearch(it) },
+                onClearQuery = { coroutineScope.launch { listState.scrollToItem(0) } },
+                trailingActions = {
+                    IconButton(onClick = { viewModel.toggleMissingImagesFilter() }) {
+                        Icon(
+                            Icons.Filled.FilterList,
+                            contentDescription = "Filter",
+                            tint = if (filterMissingImages) colors.foregroundBrand else colors.foregroundDefault
                         )
                     }
-
-                    LazyColumn(
-                        state = allListState,
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = if (usesNativeNavigation)
-                            PaddingValues(top = inner.calculateTopPadding(), bottom = inner.calculateBottomPadding(), start = 16.dp, end = 16.dp)
-                        else PaddingValues(16.dp)
-                    ) {
-                        items(meals, key = { it.id }) { meal ->
-                            ListItem(
-                                leadingContent = {
-                                    if (!meal.image_url.isNullOrBlank()) {
-                                        AsyncImage(
-                                            model = meal.image_url,
-                                            contentDescription = null,
-                                            imageLoader = imageLoader,
-                                            contentScale = ContentScale.Crop,
-                                            modifier = Modifier
-                                                .height(40.dp)
-                                                .width(35.dp)
-                                                .clip(MaterialTheme.shapes.small)
-                                                .background(colors.backgroundSurface2)
-                                        )
-                                    }
-                                },
-                                headlineContent = { Text(meal.name) },
-                                supportingContent = {
-                                    val portions = meal.total_portions
-                                    var totals by remember(meal.id) { mutableStateOf(0.0 to 0.0) }
-                                    LaunchedEffect(meal.id) {
-                                        totals = viewModel.computeMealTotals(meal.id)
-                                    }
-                                    val (grams, kcal) = totals
-                                    val freq = frequencies["MEAL" to meal.id] ?: 0
-                                    Text("${portions.toInt()} portions, $kcal kcal, ${grams.toInt()}g • $freq times")
-                                },
-                                modifier = Modifier.clip(
-                                    getRoundedCornerShape(
-                                        index = meals.indexOf(meal),
-                                        size = meals.size
-                                    )
-                                ).clickable { onOpenMeal(meal.id) }
-                            )
-                            Spacer(Modifier.height(4.dp))
-                        }
-                    }
                 }
-
-                MealsListViewModel.Tab.MISSING_IMAGES -> {
-                    LazyColumn(
-                        state = missingListState,
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = if (usesNativeNavigation)
-                            PaddingValues(top = inner.calculateTopPadding(), bottom = inner.calculateBottomPadding(), start = 16.dp, end = 16.dp)
-                        else PaddingValues(16.dp)
-                    ) {
-                        if (missingImages.isEmpty()) {
-                            item {
-                                Text(
-                                    "No meals missing images!",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = colors.foregroundSupport
-                                )
-                            }
-                        }
-                        items(missingImages) { item ->
-                            ListItem(
-                                headlineContent = {
-                                    Text(
-                                        item.item_name,
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                },
-                                supportingContent = {
-                                    Text(
-                                        "Tracked ${item.frequency} times",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = colors.foregroundSupport
-                                    )
-                                },
-                                modifier = Modifier.clip(
-                                    getRoundedCornerShape(
-                                        index = missingImages.indexOf(item),
-                                        size = missingImages.size
-                                    )
-                                ).clickable {
-                                    if (item.source_meal_id != null) {
-                                        onOpenMeal(item.source_meal_id)
-                                    }
-                                }
+            )
+        },
+        scrollState = listState,
+        navBarBackgroundColor = colors.backgroundPage
+    ) { inner ->
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = inner.listContentPadding(),
+        ) {
+            items(displayedMeals, key = { it.id }) { meal ->
+                ListItem(
+                    leadingContent = {
+                        if (!meal.image_url.isNullOrBlank()) {
+                            AsyncImage(
+                                model = meal.image_url,
+                                contentDescription = null,
+                                imageLoader = imageLoader,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .height(40.dp)
+                                    .width(35.dp)
+                                    .clip(MaterialTheme.shapes.small)
+                                    .background(colors.backgroundSurface2)
                             )
-                            Spacer(Modifier.height(4.dp))
                         }
-                    }
-                }
+                    },
+                    headlineContent = { Text(meal.name) },
+                    supportingContent = {
+                        val portions = meal.total_portions
+                        var totals by remember(meal.id) { mutableStateOf(0.0 to 0.0) }
+                        LaunchedEffect(meal.id) {
+                            totals = viewModel.computeMealTotals(meal.id)
+                        }
+                        val (grams, kcal) = totals
+                        val freq = frequencies["MEAL" to meal.id] ?: 0
+                        Text("${portions.toInt()} portions, $kcal kcal, ${grams.toInt()}g • $freq times")
+                    },
+                    modifier = Modifier.clip(
+                        getRoundedCornerShape(
+                            index = displayedMeals.indexOf(meal),
+                            size = displayedMeals.size
+                        )
+                    ).clickable { onOpenMeal(meal.id) }
+                )
+                Spacer(Modifier.height(4.dp))
             }
         }
     }

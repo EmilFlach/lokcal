@@ -5,9 +5,6 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,7 +12,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
@@ -28,6 +24,7 @@ import com.emilflach.lokcal.util.showBarcodeScanner
 import com.emilflach.lokcal.viewmodel.IntakeViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -42,7 +39,7 @@ fun IntakeScreen(
     val listState = rememberLazyListState()
     val state by viewModel.state.collectAsState()
 
-    androidx.compose.ui.backhandler.BackHandler {
+    BackHandler {
         onDone(false)
     }
 
@@ -50,7 +47,7 @@ fun IntakeScreen(
     var showItems by remember { mutableStateOf(false) }
     LaunchedEffect(state.meals, state.foods) {
         if ((state.meals.isNotEmpty() || state.foods.isNotEmpty()) && !showItems) {
-            delay(10)
+            delay(10.milliseconds)
             showItems = true
         }
     }
@@ -86,76 +83,67 @@ fun IntakeScreen(
         scrollState = listState,
         navBarBackgroundColor = color.backgroundPage
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(color.backgroundPage)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.Start
+        val requesters = remember { FocusRequesters() }
+        LazyColumn(
+            contentPadding = paddingValues.listContentPadding(),
+            modifier = Modifier.fillMaxSize(),
+            state = listState
         ) {
-            val requesters = remember { FocusRequesters() }
-            LazyColumn(
-                contentPadding = paddingValues,
-                modifier = Modifier.fillMaxSize(),
-                state = listState
-            ) {
-                val totalSize = state.meals.size + state.foods.size
+            val totalSize = state.meals.size + state.foods.size
 
-                if (state.showOnlineSearchSections) {
-                    onlineSearchSections(
-                        state = state,
-                        viewModel = viewModel,
-                        requesters = requesters,
-                        onDone = onDone
+            if (state.showOnlineSearchSections) {
+                onlineSearchSections(
+                    state = state,
+                    viewModel = viewModel,
+                    requesters = requesters,
+                    onDone = onDone
+                )
+            } else if (state.query.isNotBlank() && state.meals.isEmpty() && state.foods.isEmpty()) {
+                item {
+                    LocalSearchEmptyState(
+                        onSearchOnline = { viewModel.searchOnline() }
                     )
-                } else if (state.query.isNotBlank() && state.meals.isEmpty() && state.foods.isEmpty()) {
-                    item {
-                        LocalSearchEmptyState(
-                            onSearchOnline = { viewModel.searchOnline() }
+                }
+            } else {
+                item {
+                    AnimatedVisibility(state.query.isNotBlank()) {
+                        SearchOnlineLink(
+                            query = state.query,
+                            onSearchOnline = { viewModel.searchOnline() },
+                            modifier = Modifier.padding(bottom = 16.dp)
                         )
                     }
-                } else {
-                    item {
-                        AnimatedVisibility(state.query.isNotBlank()) {
-                            SearchOnlineLink(
-                                query = state.query,
-                                onSearchOnline = { viewModel.searchOnline() },
-                                modifier = Modifier.padding(bottom = 16.dp)
-                            )
-                        }
+                }
+                itemsIndexed(items = state.meals) { index, item ->
+                    AnimatedVisibility(
+                        visible = showItems,
+                        enter = intakeItemEnterTransition(index)
+                    ) {
+                        MealIntakeListItem(
+                            meal = item,
+                            viewModel = viewModel,
+                            index = index,
+                            size = totalSize,
+                            requesters = requesters,
+                            onDone = onDone
+                        )
                     }
-                    itemsIndexed(items = state.meals) { index, item ->
-                        AnimatedVisibility(
-                            visible = showItems,
-                            enter = intakeItemEnterTransition(index)
-                        ) {
-                            MealIntakeListItem(
-                                meal = item,
-                                viewModel = viewModel,
-                                index = index,
-                                size = totalSize,
-                                requesters = requesters,
-                                onDone = onDone
-                            )
-                        }
-                    }
+                }
 
-                    itemsIndexed(items = state.foods) { index, item ->
-                        val globalIndex = state.meals.size + index
-                        AnimatedVisibility(
-                            visible = showItems,
-                            enter = intakeItemEnterTransition(globalIndex)
-                        ) {
-                            FoodIntakeListItem(
-                                food = item,
-                                viewModel = viewModel,
-                                index = globalIndex,
-                                size = totalSize,
-                                requesters = requesters,
-                                onDone = onDone
-                            )
-                        }
+                itemsIndexed(items = state.foods) { index, item ->
+                    val globalIndex = state.meals.size + index
+                    AnimatedVisibility(
+                        visible = showItems,
+                        enter = intakeItemEnterTransition(globalIndex)
+                    ) {
+                        FoodIntakeListItem(
+                            food = item,
+                            viewModel = viewModel,
+                            index = globalIndex,
+                            size = totalSize,
+                            requesters = requesters,
+                            onDone = onDone
+                        )
                     }
                 }
             }

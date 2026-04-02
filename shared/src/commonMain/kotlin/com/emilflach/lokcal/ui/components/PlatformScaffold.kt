@@ -7,18 +7,68 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.contentColorFor
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.util.getTopSafeAreaInset
 import com.emilflach.lokcal.util.usesNativeNavigation
 import dev.chrisbanes.haze.*
+
+/**
+ * True when the app is running with iOS native navigation.
+ * Use this only where [PlatformScaffold] padding is unavailable (e.g. screens
+ * that manage their own layout outside of PlatformScaffold).
+ */
+val isNativeNavigation: Boolean get() = usesNativeNavigation
+
+/**
+ * Padding values passed to [PlatformScaffold] content.
+ *
+ * Implements [PaddingValues] so it can be passed directly to `Modifier.padding()` or
+ * `LazyColumn.contentPadding`. On screens with a native-nav blur overlay the effective
+ * outer padding is zeroed out (content should flow edge-to-edge), otherwise it equals
+ * the normal scaffold insets.
+ *
+ * Use [listContentPadding] to get the correct content padding for a LazyColumn on
+ * screens that use the blur scroll overlay.
+ */
+@Stable
+class PlatformPadding internal constructor(
+    private val raw: PaddingValues,
+    hasScrollOverlay: Boolean,
+) : PaddingValues {
+
+    private val effective: PaddingValues =
+        if (hasScrollOverlay) PaddingValues(0.dp) else raw
+
+    override fun calculateLeftPadding(layoutDirection: LayoutDirection) =
+        effective.calculateLeftPadding(layoutDirection)
+
+    override fun calculateTopPadding() = effective.calculateTopPadding()
+
+    override fun calculateRightPadding(layoutDirection: LayoutDirection) =
+        effective.calculateRightPadding(layoutDirection)
+
+    override fun calculateBottomPadding() = effective.calculateBottomPadding()
+
+    /**
+     * Content padding for a LazyColumn on screens that use the blur scroll overlay.
+     *
+     * On overlay screens: top/bottom insets from the raw scaffold padding + [horizontal] on
+     * each side. On other screens: [horizontal] on all four sides.
+     */
+    fun listContentPadding(horizontal: Dp = 16.dp): PaddingValues =
+        PaddingValues(
+            top = raw.calculateTopPadding(),
+            bottom = raw.calculateBottomPadding(),
+            start = horizontal,
+            end = horizontal,
+        )
+}
 
 /**
  * Platform-aware Scaffold wrapper that handles native navigation behavior automatically.
@@ -49,7 +99,7 @@ fun PlatformScaffold(
     hasFab: Boolean = false,
     scrollState: LazyListState? = null,
     navBarBackgroundColor: Color = Color.White,
-    content: @Composable (PaddingValues) -> Unit
+    content: @Composable (PlatformPadding) -> Unit
 ) {
     // Create HazeState for blur effect
     val hazeState = remember { HazeState() }
@@ -100,6 +150,11 @@ fun PlatformScaffold(
             )
         }
 
+        val platformPadding = PlatformPadding(
+            raw = adjustedPadding,
+            hasScrollOverlay = usesNativeNavigation && scrollState != null,
+        )
+
         Box(modifier = Modifier.fillMaxSize()) {
             // Apply hazeSource modifier to content if using native navigation with scroll state
             val contentModifier = if (usesNativeNavigation && scrollState != null) {
@@ -109,7 +164,7 @@ fun PlatformScaffold(
             }
 
             Box(modifier = contentModifier.fillMaxSize()) {
-                content(adjustedPadding)
+                content(platformPadding)
             }
 
             // Show nav bar background overlay with blur when scrolled (iOS native nav only)

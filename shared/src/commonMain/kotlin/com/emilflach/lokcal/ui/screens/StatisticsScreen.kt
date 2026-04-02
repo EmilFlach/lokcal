@@ -60,7 +60,7 @@ fun StatisticsScreen(
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
+                        containerColor = colors.backgroundPage
                     )
                 )
             },
@@ -68,14 +68,9 @@ fun StatisticsScreen(
         scrollState = listState,
         navBarBackgroundColor = colors.backgroundPage
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp)
-        ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = paddingValues,
+                contentPadding = paddingValues.listContentPadding(),
                 state = listState
             ) {
                 item {
@@ -345,7 +340,6 @@ fun StatisticsScreen(
                     Spacer(Modifier.height(4.dp))
                 }
             }
-        }
     }
 }
 

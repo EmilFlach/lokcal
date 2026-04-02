@@ -1,12 +1,15 @@
 package com.emilflach.lokcal.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ImageSearch
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -27,7 +30,6 @@ fun FoodEditScreen(
     viewModel: com.emilflach.lokcal.viewmodel.FoodEditViewModel,
     foodId: Long?,
     onBack: () -> Unit,
-    onSaved: () -> Unit,
     onDeleted: () -> Unit,
 ) {
     val colors = LocalRecipesColors.current
@@ -42,12 +44,8 @@ fun FoodEditScreen(
         viewModel.startEditing(foodId)
     }
     val state by viewModel.edit.collectAsState()
-
     val isEdit = state.isEdit
-
-    fun save() {
-        viewModel.save(onSaved)
-    }
+    val listState = rememberLazyListState()
 
     PlatformScaffold(
         topBar = {
@@ -75,109 +73,103 @@ fun FoodEditScreen(
                 )
             )
         },
-        floatingActionButtonPosition = FabPosition.Center,
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { save() },
-                containerColor = colors.backgroundBrand,
-                contentColor = colors.onBackgroundBrand
-            ) {
-                Icon(imageVector = Icons.Filled.Save, contentDescription = "Save food")
-            }
-        },
-        hasFab = true
+        scrollState = listState,
+        navBarBackgroundColor = colors.backgroundPage
     ) { inner ->
-        val scroll = rememberScrollState()
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(inner)
-                .verticalScroll(scroll)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            state = listState,
+            contentPadding = inner.listContentPadding(),
         ) {
-            OutlinedTextField(
-                value = state.name,
-                onValueChange = { viewModel.updateName(it) },
-                label = { Text("Name") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = state.energyText,
-                onValueChange = { viewModel.updateEnergyText(it) },
-                label = { Text("Energy kcal per 100g") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = state.servingSize,
-                onValueChange = { viewModel.updateServingSize(it) },
-                label = { Text("Serving size") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
+            item {
+                OutlinedTextField(
+                    value = state.name,
+                    onValueChange = { viewModel.updateName(it) },
+                    label = { Text("Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = state.energyText,
+                    onValueChange = { viewModel.updateEnergyText(it) },
+                    label = { Text("Energy kcal per 100g") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = state.servingSize,
+                    onValueChange = { viewModel.updateServingSize(it) },
+                    label = { Text("Serving size") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-            Spacer(Modifier.height(16.dp))
-            Text("Optional fields")
-            OutlinedTextField(
-                value = state.productUrl,
-                onValueChange = { viewModel.updateProductUrl(it) },
-                label = { Text("Product URL") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = state.imageUrl,
-                onValueChange = { viewModel.updateImageUrl(it) },
-                label = { Text("Image URL") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                trailingIcon = {
-                    Row {
-                        IconButton(onClick = {
-                            val url = "https://www.google.com/search?q=${state.name.encodeURLParameter()}&udm=2&tbs=isz:i"
-                            uriHandler.openUri(url)
-                        }) {
-                            Icon(Icons.Default.ImageSearch, contentDescription = "Google Image Search")
-                        }
-                        IconButton(onClick = { viewModel.openStealDialog() }) {
-                            Icon(Icons.Default.ContentCopy, contentDescription = "Steal image URL")
-                        }
-                    }
-                }
-            )
-            OutlinedTextField(
-                value = state.gtin13,
-                onValueChange = { viewModel.updateGtin13(it) },
-                label = { Text("GTIN-13") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = state.source,
-                onValueChange = { viewModel.updateSource(it) },
-                label = { Text("Source") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            // Alias management section (only show when editing existing food)
-            if (isEdit && state.id != null) {
                 Spacer(Modifier.height(16.dp))
-                AliasManagementSection(
-                    aliases = state.aliases,
-                    onAddAlias = { alias, type ->
-                        viewModel.addAlias(alias, type)
-                    },
-                    onDeleteAlias = { aliasId ->
-                        viewModel.deleteAlias(aliasId)
+                Text("Optional fields")
+                OutlinedTextField(
+                    value = state.productUrl,
+                    onValueChange = { viewModel.updateProductUrl(it) },
+                    label = { Text("Product URL") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = state.imageUrl,
+                    onValueChange = { viewModel.updateImageUrl(it) },
+                    label = { Text("Image URL") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = {
+                        Row {
+                            IconButton(onClick = {
+                                val url =
+                                    "https://www.google.com/search?q=${state.name.encodeURLParameter()}&udm=2&tbs=isz:i"
+                                uriHandler.openUri(url)
+                            }) {
+                                Icon(Icons.Default.ImageSearch, contentDescription = "Google Image Search")
+                            }
+                            IconButton(onClick = { viewModel.openStealDialog() }) {
+                                Icon(Icons.Default.ContentCopy, contentDescription = "Steal image URL")
+                            }
+                        }
                     }
                 )
-            }
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = state.gtin13,
+                    onValueChange = { viewModel.updateGtin13(it) },
+                    label = { Text("GTIN-13") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = state.source,
+                    onValueChange = { viewModel.updateSource(it) },
+                    label = { Text("Source") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(12.dp))
 
-            Spacer(Modifier.height(64.dp))
+                // Alias management section (only show when editing existing food)
+                if (isEdit && state.id != null) {
+                    Spacer(Modifier.height(16.dp))
+                    AliasManagementSection(
+                        aliases = state.aliases,
+                        onAddAlias = { alias, type ->
+                            viewModel.addAlias(alias, type)
+                        },
+                        onDeleteAlias = { aliasId ->
+                            viewModel.deleteAlias(aliasId)
+                        }
+                    )
+                }
+            }
         }
 
         if (state.showStealDialog) {

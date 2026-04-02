@@ -12,6 +12,9 @@ struct MealsListScreen: View {
             .ignoresSafeArea(.all)
             .navigationTitle("Meals")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                ScreenFactoriesKt.getGlobalMealsListViewModel().refresh()
+            }
     }
 }
 
@@ -60,6 +63,9 @@ struct FoodManageScreen: View {
             .ignoresSafeArea(.all)
             .navigationTitle("Foods")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                ScreenFactoriesKt.getGlobalFoodEditViewModel().refresh()
+            }
     }
 }
 
@@ -111,10 +117,12 @@ struct FoodEditScreen: View {
 
     var body: some View {
         let onSaved = {
+            ScreenFactoriesKt.getGlobalFoodEditViewModel().refresh()
             navigationPath.removeLast()
             refreshKey += 1
         }
         let onDeleted = {
+            ScreenFactoriesKt.getGlobalFoodEditViewModel().refresh()
             navigationPath.removeLast()
             refreshKey += 1
         }
@@ -137,15 +145,6 @@ struct FoodEditScreen: View {
                     } label: {
                         Image(systemName: "trash")
                     }
-                }
-            }
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    ScreenFactoriesKt.getGlobalFoodEditViewModel().save {
-                        onSaved()
-                    }
-                } label: {
-                    Image(systemName: "checkmark")
                 }
             }
         }
@@ -179,7 +178,9 @@ struct MealsListView: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
         let vm = ScreenFactoriesKt.getGlobalMealsListViewModel()
         vm.setSearch(value: searchQuery)
-        vm.setShowMissingImages(show: showMissingImages)
+        if let current = vm.filterMissingImages.value as? Bool, current != showMissingImages {
+            vm.toggleMissingImagesFilter()
+        }
     }
 }
 
@@ -210,7 +211,9 @@ struct FoodManageView: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
         let vm = ScreenFactoriesKt.getGlobalFoodEditViewModel()
         vm.setSearch(value: searchQuery)
-        vm.setShowMissingImages(show: showMissingImages)
+        if let current = vm.filterMissingImages.value as? Bool, current != showMissingImages {
+            vm.toggleMissingImagesFilter()
+        }
     }
 }
 
@@ -227,6 +230,7 @@ struct FoodEditView: UIViewControllerRepresentable {
         return ScreenFactoriesKt.FoodEditViewController(
             foodId: kotlinFoodId,
             onBack: {
+                ScreenFactoriesKt.getGlobalFoodEditViewModel().refresh()
                 navigationPath.removeLast()
             },
             onSaved: onSaved,

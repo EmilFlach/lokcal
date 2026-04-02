@@ -1,9 +1,6 @@
 package com.emilflach.lokcal.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -15,7 +12,6 @@ import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.*
 import com.emilflach.lokcal.util.NumberUtils.sanitizeDecimalInput
@@ -89,42 +85,36 @@ fun MealTimeScreen(
         scrollState = listState,
         navBarBackgroundColor = color.backgroundPage
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(color.backgroundPage)
-                .padding(horizontal = 16.dp)
-        ) {
-                LazyColumn(
-                    Modifier.fillMaxSize(),
-                    contentPadding = paddingValues,
-                    state = listState
-                ) {
-                    item {
-                        MealTimeTotalKcal(state.totalKcal.roundToInt())
-                    }
-
-                    mealTimeItemsList(
-                        items = state.items,
-                        viewModel = viewModel
-                    )
-
-                    mealTimeSuggestionsSection(
-                        title = "Same as yesterday",
-                        items = state.yesterdayItems,
-                        viewModel = viewModel,
-                        requesters = requesters,
-                    )
-
-                    mealTimeSuggestionsSection(
-                        title = "Leftovers",
-                        items = state.leftoversItems,
-                        viewModel = viewModel,
-                        requesters = requesters,
-                        isLeftoverSection = true,
-                        keyPrefix = 10_000,
-                    )
+            LazyColumn(
+                Modifier.fillMaxSize(),
+                contentPadding = paddingValues.listContentPadding(),
+                state = listState
+            ) {
+                item {
+                    MealTimeTotalKcal(state.totalKcal.roundToInt())
                 }
+
+                mealTimeItemsList(
+                    items = state.items,
+                    viewModel = viewModel
+                )
+
+                mealTimeSuggestionsSection(
+                    title = "Same as yesterday",
+                    items = state.yesterdayItems,
+                    viewModel = viewModel,
+                    requesters = requesters,
+                )
+
+                mealTimeSuggestionsSection(
+                    title = "Leftovers",
+                    items = state.leftoversItems,
+                    viewModel = viewModel,
+                    requesters = requesters,
+                    isLeftoverSection = true,
+                    keyPrefix = 10_000,
+                )
             }
         }
+
     }

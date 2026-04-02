@@ -148,8 +148,7 @@ internal fun AppNavigation(
                     FoodEditScreen(
                         viewModel = foodEditViewModel,
                         foodId = s.foodId,
-                        onBack = { backStack.removeLastOrNull() },
-                        onSaved = { foodEditViewModel.refresh(); backStack.removeLastOrNull(); refreshToggle = !refreshToggle },
+                        onBack = { foodEditViewModel.refresh(); backStack.removeLastOrNull(); refreshToggle = !refreshToggle },
                         onDeleted = { foodEditViewModel.refresh(); backStack.removeLastOrNull(); refreshToggle = !refreshToggle }
                     )
                 }

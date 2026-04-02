@@ -12,11 +12,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.GradientBackground
+import com.emilflach.lokcal.ui.components.isNativeNavigation
 import com.emilflach.lokcal.ui.components.main.MainMealList
 import com.emilflach.lokcal.ui.components.main.MainSummary
 import com.emilflach.lokcal.ui.components.main.MainSummaryGraph
 import com.emilflach.lokcal.ui.components.main.MainSummaryKcal
-import com.emilflach.lokcal.util.usesNativeNavigation
 import com.emilflach.lokcal.viewmodel.DayState
 import com.emilflach.lokcal.viewmodel.MainViewModel
 
@@ -57,7 +57,7 @@ fun MainScreen(
                     .windowInsetsPadding(WindowInsets.safeDrawing)
             ) {
 
-                if (!usesNativeNavigation) {
+                if (!isNativeNavigation) {
                     MainSummary(
                         state = uiState.dayState,
                         formattedDate = viewModel.formattedDate(),
@@ -82,6 +82,7 @@ fun MainScreen(
                             .background(LocalRecipesColors.current.backgroundPage, MaterialTheme.shapes.medium)
                             .padding(if (isCompact) 12.dp else 16.dp)
                     ) {
+                        val boxWidth = maxWidth
                         Column {
                             MainSummaryKcal(
                                 state = uiState.dayState,
@@ -93,7 +94,7 @@ fun MainScreen(
 
                             if (!hideGraphs) {
                                 Spacer(Modifier.height(16.dp))
-                                MainSummaryGraph(uiState.last7Deltas, this@BoxWithConstraints.maxWidth)
+                                MainSummaryGraph(uiState.last7Deltas, boxWidth)
                             }
                         }
                     }

@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.backup.BackupManager
 import com.emilflach.lokcal.data.SettingsRepository
@@ -67,18 +66,11 @@ fun SettingsScreen(
         navBarBackgroundColor = colors.backgroundPage
     ) { padding ->
         val itemColors = ListItemDefaults.colors(containerColor = colors.backgroundSurface1)
-
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                start = padding.calculateStartPadding(LayoutDirection.Ltr) + 16.dp,
-                end = padding.calculateEndPadding(LayoutDirection.Ltr) + 16.dp,
-                top = padding.calculateTopPadding() + 8.dp,
-                bottom = padding.calculateBottomPadding() + 8.dp
-            ),
+            contentPadding = padding.listContentPadding(),
             state = listState
         ) {
-
             // Section: Manage
             item { SettingsSectionHeader("Manage") }
             item { Spacer(Modifier.height(4.dp)) }

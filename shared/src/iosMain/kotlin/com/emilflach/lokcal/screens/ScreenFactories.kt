@@ -221,7 +221,9 @@ fun MealsListViewController(
             globalMealsListViewModel.setSearch(searchQuery)
         }
         LaunchedEffect(showMissingImages) {
-            globalMealsListViewModel.setShowMissingImages(showMissingImages)
+            if (showMissingImages != globalMealsListViewModel.filterMissingImages.value) {
+                globalMealsListViewModel.toggleMissingImagesFilter()
+            }
         }
         MealsListScreen(
             viewModel = globalMealsListViewModel,
@@ -261,7 +263,9 @@ fun FoodManageViewController(
             globalFoodEditViewModel.setSearch(searchQuery)
         }
         LaunchedEffect(showMissingImages) {
-            globalFoodEditViewModel.setShowMissingImages(showMissingImages)
+            if (showMissingImages != globalFoodEditViewModel.filterMissingImages.value) {
+                globalFoodEditViewModel.toggleMissingImagesFilter()
+            }
         }
         FoodManageScreen(
             viewModel = globalFoodEditViewModel,
@@ -283,7 +287,6 @@ fun FoodEditViewController(
             viewModel = globalFoodEditViewModel,
             foodId = foodId,
             onBack = onBack,
-            onSaved = onSaved,
             onDeleted = onDeleted
         )
     }

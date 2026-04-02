@@ -63,103 +63,96 @@ fun ExerciseListScreen(
         scrollState = listState,
         navBarBackgroundColor = colors.backgroundPage
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(colors.backgroundPage)
-                .padding(horizontal = 16.dp)
+        LazyColumn(
+            Modifier.fillMaxSize(),
+            contentPadding = paddingValues.listContentPadding(),
+            state = listState
         ) {
-            LazyColumn(
-                Modifier.fillMaxSize(),
-                contentPadding = paddingValues,
-                state = listState
-            ) {
+            item {
+                MealTimeTotalKcal(state.totalKcal.roundToInt())
+            }
+
+            if (showHealthBanner) {
                 item {
-                    MealTimeTotalKcal(state.totalKcal.roundToInt())
-                }
-
-                if (showHealthBanner) {
-                    item {
-                        Row(
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 2.dp)
+                            .clip(getRoundedCornerShape(0, 1))
+                            .background(colors.backgroundSurface1)
+                            .clickable { onEnableHealth() }
+                            .height(IntrinsicSize.Min)
+                            .padding(top = 12.dp, bottom = 12.dp, start = 12.dp, end = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AutoGraph,
+                            contentDescription = null,
+                            tint = colors.foregroundSupport,
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 2.dp)
-                                .clip(getRoundedCornerShape(0, 1))
-                                .background(colors.backgroundSurface1)
-                                .clickable { onEnableHealth() }
-                                .height(IntrinsicSize.Min)
-                                .padding(top = 12.dp, bottom = 12.dp, start = 12.dp, end = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.AutoGraph,
-                                contentDescription = null,
-                                tint = colors.foregroundSupport,
-                                modifier = Modifier
-                                    .fillMaxHeight()
-                                    .width(72.dp)
-                                    .clip(MaterialTheme.shapes.medium)
-                                    .background(colors.backgroundSurface2)
-                                    .padding(horizontal = 10.dp)
+                                .fillMaxHeight()
+                                .width(72.dp)
+                                .clip(MaterialTheme.shapes.medium)
+                                .background(colors.backgroundSurface2)
+                                .padding(horizontal = 10.dp)
+                        )
+                        Spacer(Modifier.width(12.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "Step tracking",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = colors.foregroundDefault,
+                                modifier = Modifier.padding(end = 8.dp),
                             )
-                            Spacer(Modifier.width(12.dp))
-
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    "Step tracking",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = colors.foregroundDefault,
-                                    modifier = Modifier.padding(end = 8.dp),
-                                )
-                                Spacer(Modifier.height(4.dp))
-                                Text(
-                                    text = "Connect Health Connect to track steps automatically",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = colors.foregroundSupport,
-                                    modifier = Modifier.padding(end = 8.dp),
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(onClick = onEnableHealth) {
-                                Text(text = "Enable")
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-                }
-
-                itemsIndexed(displayedItems) { index, e ->
-                    val actualIndex = if (showHealthBanner) index + 1 else index
-                    val totalSize = if (showHealthBanner) displayedItems.size + 1 else displayedItems.size
-                    val label = when (e.exercise_type) {
-                        ExerciseRepository.Type.AUTOMATIC_STEPS.dbName -> "Automatic step counter"
-                        ExerciseRepository.Type.WALKING.dbName -> "Low intensity"
-                        ExerciseRepository.Type.RUNNING.dbName -> "High intensity"
-                        else -> e.exercise_type
-                    }
-                    val image = when (e.exercise_type) {
-                        ExerciseRepository.Type.AUTOMATIC_STEPS.dbName -> Icons.Default.AutoGraph
-                        ExerciseRepository.Type.WALKING.dbName -> Icons.AutoMirrored.Filled.DirectionsWalk
-                        ExerciseRepository.Type.RUNNING.dbName -> Icons.AutoMirrored.Filled.DirectionsRun
-                        else -> null
-                    }
-
-                    MealTimeItem(
-                        title = label,
-                        subtitle = "${e.energy_kcal_total.toInt()} kcal",
-                        index = actualIndex,
-                        size = totalSize,
-                        iconName = image,
-                        quantityControls = { requester ->
-                            MinuteQuantityControls(
-                                requester = requester,
-                                stateKey = e.exercise_type,
-                                initialMinutes = e.duration_min,
-                                onCommitMinutes = { viewModel.updateDuration(e.exercise_type, it) }
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = "Connect Health Connect to track steps automatically",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = colors.foregroundSupport,
+                                modifier = Modifier.padding(end = 8.dp),
                             )
                         }
-                    )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(onClick = onEnableHealth) {
+                            Text(text = "Enable")
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
+            }
+
+            itemsIndexed(displayedItems) { index, e ->
+                val actualIndex = if (showHealthBanner) index + 1 else index
+                val totalSize = if (showHealthBanner) displayedItems.size + 1 else displayedItems.size
+                val label = when (e.exercise_type) {
+                    ExerciseRepository.Type.AUTOMATIC_STEPS.dbName -> "Automatic step counter"
+                    ExerciseRepository.Type.WALKING.dbName -> "Low intensity"
+                    ExerciseRepository.Type.RUNNING.dbName -> "High intensity"
+                    else -> e.exercise_type
+                }
+                val image = when (e.exercise_type) {
+                    ExerciseRepository.Type.AUTOMATIC_STEPS.dbName -> Icons.Default.AutoGraph
+                    ExerciseRepository.Type.WALKING.dbName -> Icons.AutoMirrored.Filled.DirectionsWalk
+                    ExerciseRepository.Type.RUNNING.dbName -> Icons.AutoMirrored.Filled.DirectionsRun
+                    else -> null
+                }
+
+                MealTimeItem(
+                    title = label,
+                    subtitle = "${e.energy_kcal_total.toInt()} kcal",
+                    index = actualIndex,
+                    size = totalSize,
+                    iconName = image,
+                    quantityControls = { requester ->
+                        MinuteQuantityControls(
+                            requester = requester,
+                            stateKey = e.exercise_type,
+                            initialMinutes = e.duration_min,
+                            onCommitMinutes = { viewModel.updateDuration(e.exercise_type, it) }
+                        )
+                    }
+                )
             }
         }
     }

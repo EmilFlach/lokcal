@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
@@ -36,6 +37,7 @@ fun EditMealScreen(
     val state by viewModel.state.collectAsState()
     val colors = LocalRecipesColors.current
     val uriHandler = LocalUriHandler.current
+    val listState = rememberLazyListState()
 
     BackHandler {
         onBack()
@@ -64,86 +66,81 @@ fun EditMealScreen(
                         actionIconContentColor = colors.foregroundDefault,
                     )
                 )
-            }
+            },
+        scrollState = listState,
+        navBarBackgroundColor = colors.backgroundPage
     ) { inner ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(colors.backgroundPage)
-                .padding(inner)
-                .padding(horizontal = 16.dp)
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().background(colors.backgroundPage),
+            state = listState,
+            contentPadding = inner.listContentPadding(),
         ) {
-            Spacer(Modifier.height(12.dp))
-            OutlinedTextField(
-                value = state.name,
-                onValueChange = viewModel::setName,
-                singleLine = true,
-                label = { Text("Name") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(8.dp))
-            OutlinedTextField(
-                value = state.imageUrl,
-                onValueChange = viewModel::setImageUrl,
-                singleLine = true,
-                label = { Text("Image URL") },
-                modifier = Modifier.fillMaxWidth(),
-                trailingIcon = {
-                    Row {
-                        IconButton(onClick = {
-                            val url = "https://www.google.com/search?q=${state.name.encodeURLParameter()}&udm=2&tbs=isz:i"
-                            uriHandler.openUri(url)
-                        }) {
-                            Icon(Icons.Default.ImageSearch, contentDescription = "Google Image Search")
-                        }
-                        IconButton(onClick = { viewModel.openStealDialog() }) {
-                            Icon(Icons.Default.ContentCopy, contentDescription = "Steal image URL")
+            item {
+                OutlinedTextField(
+                    value = state.name,
+                    onValueChange = viewModel::setName,
+                    singleLine = true,
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = state.imageUrl,
+                    onValueChange = viewModel::setImageUrl,
+                    singleLine = true,
+                    label = { Text("Image URL") },
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = {
+                        Row {
+                            IconButton(onClick = {
+                                val url = "https://www.google.com/search?q=${state.name.encodeURLParameter()}&udm=2&tbs=isz:i"
+                                uriHandler.openUri(url)
+                            }) {
+                                Icon(Icons.Default.ImageSearch, contentDescription = "Google Image Search")
+                            }
+                            IconButton(onClick = { viewModel.openStealDialog() }) {
+                                Icon(Icons.Default.ContentCopy, contentDescription = "Steal image URL")
+                            }
                         }
                     }
-                }
-            )
-            Spacer(Modifier.height(8.dp))
-            OutlinedTextField(
-                value = state.totalPortions,
-                onValueChange = viewModel::setTotalPortionsText,
-                singleLine = true,
-                label = { Text("Total portions") },
-                modifier = Modifier.fillMaxWidth()
-            )
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = state.totalPortions,
+                    onValueChange = viewModel::setTotalPortionsText,
+                    singleLine = true,
+                    label = { Text("Total portions") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(16.dp))
+                Text("Items", style = MaterialTheme.typography.titleMedium, color = colors.foregroundDefault)
+                Spacer(Modifier.height(8.dp))
+            }
+            items(state.items, key = { it.mealItemId }) { item ->
+                val subtitle = viewModel.subtitleForFood(item.food, item.quantityG)
 
-            Spacer(Modifier.height(16.dp))
-            Text("Items", style = MaterialTheme.typography.titleMedium, color = colors.foregroundDefault)
-            Spacer(Modifier.height(8.dp))
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 100.dp)
-            ) {
-                items(state.items, key = { it.mealItemId }) { item ->
-                    val subtitle = viewModel.subtitleForFood(item.food, item.quantityG)
-
-                    MealTimeItem(
-                        title = item.food.name,
-                        subtitle = subtitle,
-                        index = state.items.indexOf(item),
-                        size = state.items.size,
-                        imageUrl = item.food.image_url,
-                        quantityControls = { requester ->
-                            GramQuantityControls(
-                                requester = requester,
-                                stateKey = item.mealItemId,
-                                initialGrams = item.quantityG,
-                                portionGrams = viewModel.defaultPortionGrams(item.food),
-                                onCommitGrams = { g ->
-                                    viewModel.updateItemQuantity(item.mealItemId, g)
-                                },
-                                onDelete = {
-                                    viewModel.deleteItem(item.mealItemId)
-                                }
-                            )
-                        }
-                    )
-                    Spacer(Modifier.height(2.dp))
-                }
+                MealTimeItem(
+                    title = item.food.name,
+                    subtitle = subtitle,
+                    index = state.items.indexOf(item),
+                    size = state.items.size,
+                    imageUrl = item.food.image_url,
+                    quantityControls = { requester ->
+                        GramQuantityControls(
+                            requester = requester,
+                            stateKey = item.mealItemId,
+                            initialGrams = item.quantityG,
+                            portionGrams = viewModel.defaultPortionGrams(item.food),
+                            onCommitGrams = { g ->
+                                viewModel.updateItemQuantity(item.mealItemId, g)
+                            },
+                            onDelete = {
+                                viewModel.deleteItem(item.mealItemId)
+                            }
+                        )
+                    }
+                )
+                Spacer(Modifier.height(2.dp))
             }
         }
 

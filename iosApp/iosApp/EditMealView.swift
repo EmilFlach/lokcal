@@ -54,10 +54,12 @@ struct EditMealFromListScreen: View {
             mealId: mealId,
             navigationPath: $navigationPath,
             onBack: {
+                ScreenFactoriesKt.getGlobalMealsListViewModel().refresh()
                 navigationPath.removeLast()
                 refreshKey += 1
             },
             onDeleted: {
+                ScreenFactoriesKt.getGlobalMealsListViewModel().refresh()
                 navigationPath.removeLast()
                 refreshKey += 1
             }
