@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lokcal — Try the Demo</title>
+  <style>
+    :root {
+      --brand: #D9910D;
+      --n900:  #030614;
+      --n800:  #09123C;
+      --n700:  #101D64;
+      --n400:  #4B63E3;
+      --n200:  #AAB6F2;
+      --n300:  #8898EC;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--n900);
+      color: var(--n200);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── DESKTOP: centered phone frame ── */
+    .page {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px;
+      gap: 24px;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    a.back {
+      color: var(--n300); text-decoration: none;
+      font-size: .875rem; font-weight: 500;
+      display: flex; align-items: center; gap: 6px;
+      transition: color .15s;
+    }
+    a.back:hover { color: var(--n200); }
+    a.back::before { content: '←'; }
+
+    .demo-label {
+      font-size: .72rem; font-weight: 800; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--brand);
+    }
+
+    /* phone */
+    .phone {
+      width: 320px;
+      background: #080818;
+      border-radius: 54px;
+      border: 7px solid #1c1c3a;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.07),
+        0 56px 100px rgba(0,0,0,.75),
+        inset 0 1px 0 rgba(255,255,255,.07);
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    /* dynamic island */
+    .phone-notch {
+      position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+      width: 90px; height: 26px;
+      background: #080818;
+      border-radius: 14px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    /* power button */
+    .phone::before {
+      content: '';
+      position: absolute; right: -10px; top: 88px;
+      width: 4px; height: 58px;
+      background: #1c1c3a; border-radius: 0 3px 3px 0;
+      box-shadow: 0 76px 0 #1c1c3a;
+    }
+
+    /* home bar */
+    .phone-home {
+      position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+      width: 110px; height: 4px;
+      background: rgba(255,255,255,.25);
+      border-radius: 2px; z-index: 10;
+      pointer-events: none;
+    }
+
+    .phone-screen {
+      border-radius: 48px;
+      overflow: hidden;
+      line-height: 0;
+    }
+
+    iframe {
+      display: block;
+      width: 100%;
+      height: 660px;
+      border: none;
+      background: var(--n900);
+    }
+
+    .hint {
+      font-size: .8rem; color: var(--n300);
+      text-align: center; max-width: 300px; line-height: 1.6;
+    }
+
+    /* ── MOBILE: full screen iframe ── */
+    @media (max-width: 700px) {
+      .page { padding: 0; gap: 0; justify-content: flex-start; }
+      .top-bar { display: none; }
+      .hint { display: none; }
+
+      .phone {
+        width: 100%; height: 100dvh;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+      }
+      .phone-notch { display: none; }
+      .phone::before { display: none; }
+      .phone-home { display: none; }
+      .phone-screen { border-radius: 0; }
+
+      iframe { height: 100dvh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="top-bar">
+      <a href="landing.html" class="back">Back to Lokcal</a>
+      <span class="demo-label">Live Demo</span>
+    </div>
+
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <iframe
+          src="index.html"
+          title="Lokcal App"
+        ></iframe>
+      </div>
+      <div class="phone-home"></div>
+    </div>
+
+    <p class="hint">This is the real Lokcal app running in your browser. Your data stays local to this tab.</p>
+  </div>
+</body>
+</html>
