@@ -1,8 +1,6 @@
 package com.emilflach.lokcal.screens
 
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.window.ComposeUIViewController
 import com.emilflach.lokcal.data.*
 import com.emilflach.lokcal.health.HealthManager
@@ -10,7 +8,13 @@ import com.emilflach.lokcal.theme.AppTheme
 import com.emilflach.lokcal.ui.screens.*
 import com.emilflach.lokcal.ui.util.LocalImageCache
 import com.emilflach.lokcal.viewmodel.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.LocalDate
+import org.ncgroup.kscan.BarcodeFormats
+import org.ncgroup.kscan.BarcodeResult
+import org.ncgroup.kscan.ScannerController
+import org.ncgroup.kscan.ScannerView
 
 // Global repositories (will be initialized from App)
 private lateinit var globalFoodRepo: FoodRepository
@@ -163,6 +167,48 @@ fun getIntakeViewModel(mealType: String, dateIso: String): IntakeViewModel {
     val key = "$mealType-$dateIso"
     return intakeViewModels.getOrPut(key) {
         IntakeViewModel(globalFoodRepo, globalIntakeRepo, globalMealRepo, globalSettingsRepo, mealType, dateIso)
+    }
+}
+
+// Bridge class so SwiftUI can control the Compose ScannerController (torch toggle)
+class IosScannerController {
+    private val _torchEnabled = MutableStateFlow(false)
+    val torchEnabled: StateFlow<Boolean> = _torchEnabled
+
+    fun toggleTorch() {
+        _torchEnabled.value = !_torchEnabled.value
+    }
+}
+
+// Scanner Screen (presented natively from SwiftUI on iOS)
+fun ScannerViewController(
+    controller: IosScannerController,
+    onScan: (String) -> Unit,
+    onClose: () -> Unit
+) = ComposeUIViewController {
+    AppTheme {
+        val torchOn by controller.torchEnabled.collectAsState()
+        val scannerController = remember { ScannerController() }
+
+        LaunchedEffect(torchOn) {
+            scannerController.setTorch(torchOn)
+        }
+
+        ScannerView(
+            codeTypes = listOf(BarcodeFormats.FORMAT_EAN_13),
+            scannerUiOptions = null,
+            scannerController = scannerController,
+        ) { result ->
+            when (result) {
+                is BarcodeResult.OnSuccess -> {
+                    val raw = result.barcode.data
+                    val digits = raw.filter { it.isDigit() }
+                    onScan(if (digits.length == 13) digits else raw)
+                    onClose()
+                }
+                else -> onClose()
+            }
+        }
     }
 }
 
