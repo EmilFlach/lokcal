@@ -25,33 +25,39 @@ fun initializeApp(onReady: () -> Unit) = ComposeUIViewController {
             return@AppTheme
         }
 
-        LaunchedEffect(database) {
-            database?.let { db ->
-                val foodRepo = FoodRepository(db)
-                val intakeRepo = IntakeRepository(db)
-                val mealRepo = MealRepository(db)
-                val exerciseRepo = ExerciseRepository(db)
-                val weightRepo = WeightRepository(db)
-                val settingsRepo = SettingsRepository(db)
+        val db = database!!
+        val foodRepo = remember(db) { FoodRepository(db) }
+        val intakeRepo = remember(db) { IntakeRepository(db) }
+        val mealRepo = remember(db) { MealRepository(db) }
+        val exerciseRepo = remember(db) { ExerciseRepository(db) }
+        val weightRepo = remember(db) { WeightRepository(db) }
+        val settingsRepo = remember(db) { SettingsRepository(db) }
+        val imageCacheRepo = remember(db) { ImageCacheRepository(db) }
 
-                val mainViewModel = MainViewModel(intakeRepo, exerciseRepo, weightRepo, settingsRepo, currentDateIso())
-                val mealsListViewModel = MealsListViewModel(intakeRepo, mealRepo)
-                val foodEditViewModel = FoodEditViewModel(foodRepo, intakeRepo, mealRepo)
+        val mainViewModel = remember(intakeRepo, exerciseRepo, weightRepo, settingsRepo) {
+            MainViewModel(intakeRepo, exerciseRepo, weightRepo, settingsRepo, currentDateIso())
+        }
+        val mealsListViewModel = remember(intakeRepo, mealRepo, imageCacheRepo) {
+            MealsListViewModel(intakeRepo, mealRepo, imageCacheRepo)
+        }
+        val foodEditViewModel = remember(foodRepo, intakeRepo, mealRepo, imageCacheRepo) {
+            FoodEditViewModel(foodRepo, intakeRepo, mealRepo, imageCacheRepo)
+        }
 
-                initializeRepositories(
-                    foodRepo = foodRepo,
-                    intakeRepo = intakeRepo,
-                    mealRepo = mealRepo,
-                    exerciseRepo = exerciseRepo,
-                    weightRepo = weightRepo,
-                    settingsRepo = settingsRepo,
-                    mainViewModel = mainViewModel,
-                    mealsListViewModel = mealsListViewModel,
-                    foodEditViewModel = foodEditViewModel
-                )
-
-                onReady()
-            }
+        LaunchedEffect(db) {
+            initializeRepositories(
+                foodRepo = foodRepo,
+                intakeRepo = intakeRepo,
+                mealRepo = mealRepo,
+                exerciseRepo = exerciseRepo,
+                weightRepo = weightRepo,
+                settingsRepo = settingsRepo,
+                imageCacheRepo = imageCacheRepo,
+                mainViewModel = mainViewModel,
+                mealsListViewModel = mealsListViewModel,
+                foodEditViewModel = foodEditViewModel
+            )
+            onReady()
         }
     }
 }

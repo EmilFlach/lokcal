@@ -1,5 +1,6 @@
 package com.emilflach.lokcal.screens
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.window.ComposeUIViewController
@@ -7,6 +8,7 @@ import com.emilflach.lokcal.data.*
 import com.emilflach.lokcal.health.HealthManager
 import com.emilflach.lokcal.theme.AppTheme
 import com.emilflach.lokcal.ui.screens.*
+import com.emilflach.lokcal.ui.util.LocalImageCache
 import com.emilflach.lokcal.viewmodel.*
 import kotlinx.datetime.LocalDate
 
@@ -17,6 +19,7 @@ private lateinit var globalMealRepo: MealRepository
 private lateinit var globalExerciseRepo: ExerciseRepository
 private lateinit var globalWeightRepo: WeightRepository
 private lateinit var globalSettingsRepo: SettingsRepository
+private lateinit var globalImageCacheRepo: ImageCacheRepository
 
 // Global ViewModels
 private lateinit var globalMainViewModel: MainViewModel
@@ -33,6 +36,7 @@ fun initializeRepositories(
     exerciseRepo: ExerciseRepository,
     weightRepo: WeightRepository,
     settingsRepo: SettingsRepository,
+    imageCacheRepo: ImageCacheRepository,
     mainViewModel: MainViewModel,
     mealsListViewModel: MealsListViewModel,
     foodEditViewModel: FoodEditViewModel
@@ -43,6 +47,7 @@ fun initializeRepositories(
     globalExerciseRepo = exerciseRepo
     globalWeightRepo = weightRepo
     globalSettingsRepo = settingsRepo
+    globalImageCacheRepo = imageCacheRepo
     globalMainViewModel = mainViewModel
     globalMealsListViewModel = mealsListViewModel
     globalFoodEditViewModel = foodEditViewModel
@@ -69,21 +74,23 @@ fun MainViewController(
     refreshKey: Int = 0
 ) = ComposeUIViewController {
     AppTheme {
-        LaunchedEffect(dateIso) {
-            globalMainViewModel.loadFor(LocalDate.parse(dateIso))
+        CompositionLocalProvider(LocalImageCache provides globalImageCacheRepo) {
+            LaunchedEffect(dateIso) {
+                globalMainViewModel.loadFor(LocalDate.parse(dateIso))
+            }
+            LaunchedEffect(refreshKey) {
+                globalMainViewModel.refresh()
+            }
+            MainScreen(
+                viewModel = globalMainViewModel,
+                onOpenMeal = onOpenMeal,
+                onOpenExercise = onOpenExercise,
+                onOpenSettings = onOpenSettings,
+                onOpenWeightToday = onOpenWeightToday,
+                onOpenWeightList = onOpenWeightList,
+                onOpenStatistics = onOpenStatistics
+            )
         }
-        LaunchedEffect(refreshKey) {
-            globalMainViewModel.refresh()
-        }
-        MainScreen(
-            viewModel = globalMainViewModel,
-            onOpenMeal = onOpenMeal,
-            onOpenExercise = onOpenExercise,
-            onOpenSettings = onOpenSettings,
-            onOpenWeightToday = onOpenWeightToday,
-            onOpenWeightList = onOpenWeightList,
-            onOpenStatistics = onOpenStatistics
-        )
     }
 }
 
@@ -99,16 +106,18 @@ fun MealTimeViewController(
     refreshKey: Int = 0
 ) = ComposeUIViewController {
     AppTheme {
-        val key = "$mealType-$dateIso-$refreshKey"
-        val vm = mealTimeViewModels.getOrPut(key) {
-            MealTimeViewModel(globalIntakeRepo, mealType, dateIso)
+        CompositionLocalProvider(LocalImageCache provides globalImageCacheRepo) {
+            val key = "$mealType-$dateIso-$refreshKey"
+            val vm = mealTimeViewModels.getOrPut(key) {
+                MealTimeViewModel(globalIntakeRepo, mealType, dateIso)
+            }
+            MealTimeScreen(
+                viewModel = vm,
+                onBack = onBack,
+                onAdd = onAdd,
+                shouldHighlightLatest = shouldHighlightLatest
+            )
         }
-        MealTimeScreen(
-            viewModel = vm,
-            onBack = onBack,
-            onAdd = onAdd,
-            shouldHighlightLatest = shouldHighlightLatest
-        )
     }
 }
 
@@ -130,21 +139,23 @@ fun IntakeViewController(
     searchQuery: String = ""
 ) = ComposeUIViewController {
     AppTheme {
-        val key = "$mealType-$dateIso"
-        val intakeVm = intakeViewModels.getOrPut(key) {
-            IntakeViewModel(globalFoodRepo, globalIntakeRepo, globalMealRepo, globalSettingsRepo, mealType, dateIso)
-        }
+        CompositionLocalProvider(LocalImageCache provides globalImageCacheRepo) {
+            val key = "$mealType-$dateIso"
+            val intakeVm = intakeViewModels.getOrPut(key) {
+                IntakeViewModel(globalFoodRepo, globalIntakeRepo, globalMealRepo, globalSettingsRepo, mealType, dateIso)
+            }
 
-        // Sync search query from SwiftUI to ViewModel
-        LaunchedEffect(searchQuery) {
-            intakeVm.setQuery(searchQuery)
-        }
+            // Sync search query from SwiftUI to ViewModel
+            LaunchedEffect(searchQuery) {
+                intakeVm.setQuery(searchQuery)
+            }
 
-        IntakeScreen(
-            viewModel = intakeVm,
-            onDone = onDone,
-            autoFocusSearch = autoFocusSearch
-        )
+            IntakeScreen(
+                viewModel = intakeVm,
+                onDone = onDone,
+                autoFocusSearch = autoFocusSearch
+            )
+        }
     }
 }
 
@@ -162,14 +173,16 @@ fun EditMealViewController(
     onDeleted: () -> Unit
 ) = ComposeUIViewController {
     AppTheme {
-        val editVm = remember(globalMealRepo, globalFoodRepo, mealId) {
-            EditMealViewModel(globalMealRepo, globalFoodRepo, mealId)
+        CompositionLocalProvider(LocalImageCache provides globalImageCacheRepo) {
+            val editVm = remember(globalMealRepo, globalFoodRepo, mealId) {
+                EditMealViewModel(globalMealRepo, globalFoodRepo, mealId)
+            }
+            EditMealScreen(
+                viewModel = editVm,
+                onBack = onBack,
+                onDeleted = onDeleted
+            )
         }
-        EditMealScreen(
-            viewModel = editVm,
-            onBack = onBack,
-            onDeleted = onDeleted
-        )
     }
 }
 
@@ -182,15 +195,17 @@ fun SettingsViewController(
     onOpenSourcePreferences: () -> Unit
 ) = ComposeUIViewController {
     AppTheme {
-        SettingsScreen(
-            onBack = onBack,
-            onOpenMealsList = onOpenMealsList,
-            onOpenWeightList = onOpenWeightList,
-            onOpenFoodManage = onOpenFoodManage,
-            onOpenSourcePreferences = onOpenSourcePreferences,
-            onRequestHealthPermissions = { HealthManager.requestPermissions() },
-            settingsRepo = globalSettingsRepo
-        )
+        CompositionLocalProvider(LocalImageCache provides globalImageCacheRepo) {
+            SettingsScreen(
+                onBack = onBack,
+                onOpenMealsList = onOpenMealsList,
+                onOpenWeightList = onOpenWeightList,
+                onOpenFoodManage = onOpenFoodManage,
+                onOpenSourcePreferences = onOpenSourcePreferences,
+                onRequestHealthPermissions = { HealthManager.requestPermissions() },
+                settingsRepo = globalSettingsRepo
+            )
+        }
     }
 }
 
@@ -199,13 +214,15 @@ fun SourcePreferenceViewController(
     onBack: () -> Unit
 ) = ComposeUIViewController {
     AppTheme {
-        val viewModel = remember(globalSettingsRepo) {
-            SourcePreferenceViewModel(globalSettingsRepo)
+        CompositionLocalProvider(LocalImageCache provides globalImageCacheRepo) {
+            val viewModel = remember(globalSettingsRepo) {
+                SourcePreferenceViewModel(globalSettingsRepo)
+            }
+            SourcePreferenceScreen(
+                onBack = onBack,
+                viewModel = viewModel
+            )
         }
-        SourcePreferenceScreen(
-            onBack = onBack,
-            viewModel = viewModel
-        )
     }
 }
 
@@ -217,19 +234,21 @@ fun MealsListViewController(
     showMissingImages: Boolean = false
 ) = ComposeUIViewController {
     AppTheme {
-        LaunchedEffect(searchQuery) {
-            globalMealsListViewModel.setSearch(searchQuery)
-        }
-        LaunchedEffect(showMissingImages) {
-            if (showMissingImages != globalMealsListViewModel.filterMissingImages.value) {
-                globalMealsListViewModel.toggleMissingImagesFilter()
+        CompositionLocalProvider(LocalImageCache provides globalImageCacheRepo) {
+            LaunchedEffect(searchQuery) {
+                globalMealsListViewModel.setSearch(searchQuery)
             }
+            LaunchedEffect(showMissingImages) {
+                if (showMissingImages != globalMealsListViewModel.filterMissingImages.value) {
+                    globalMealsListViewModel.toggleMissingImagesFilter()
+                }
+            }
+            MealsListScreen(
+                viewModel = globalMealsListViewModel,
+                onBack = onBack,
+                onOpenMeal = onOpenMeal
+            )
         }
-        MealsListScreen(
-            viewModel = globalMealsListViewModel,
-            onBack = onBack,
-            onOpenMeal = onOpenMeal
-        )
     }
 }
 
@@ -240,14 +259,16 @@ fun EditMealFromListViewController(
     onDeleted: () -> Unit
 ) = ComposeUIViewController {
     AppTheme {
-        val editVm = remember(globalMealRepo, globalFoodRepo, mealId) {
-            EditMealViewModel(globalMealRepo, globalFoodRepo, mealId)
+        CompositionLocalProvider(LocalImageCache provides globalImageCacheRepo) {
+            val editVm = remember(globalMealRepo, globalFoodRepo, mealId) {
+                EditMealViewModel(globalMealRepo, globalFoodRepo, mealId)
+            }
+            EditMealScreen(
+                viewModel = editVm,
+                onBack = onBack,
+                onDeleted = onDeleted
+            )
         }
-        EditMealScreen(
-            viewModel = editVm,
-            onBack = onBack,
-            onDeleted = onDeleted
-        )
     }
 }
 
@@ -259,19 +280,21 @@ fun FoodManageViewController(
     showMissingImages: Boolean = false
 ) = ComposeUIViewController {
     AppTheme {
-        LaunchedEffect(searchQuery) {
-            globalFoodEditViewModel.setSearch(searchQuery)
-        }
-        LaunchedEffect(showMissingImages) {
-            if (showMissingImages != globalFoodEditViewModel.filterMissingImages.value) {
-                globalFoodEditViewModel.toggleMissingImagesFilter()
+        CompositionLocalProvider(LocalImageCache provides globalImageCacheRepo) {
+            LaunchedEffect(searchQuery) {
+                globalFoodEditViewModel.setSearch(searchQuery)
             }
+            LaunchedEffect(showMissingImages) {
+                if (showMissingImages != globalFoodEditViewModel.filterMissingImages.value) {
+                    globalFoodEditViewModel.toggleMissingImagesFilter()
+                }
+            }
+            FoodManageScreen(
+                viewModel = globalFoodEditViewModel,
+                onBack = onBack,
+                onOpenEdit = onOpenEdit
+            )
         }
-        FoodManageScreen(
-            viewModel = globalFoodEditViewModel,
-            onBack = onBack,
-            onOpenEdit = onOpenEdit
-        )
     }
 }
 
@@ -283,12 +306,14 @@ fun FoodEditViewController(
     onDeleted: () -> Unit
 ) = ComposeUIViewController {
     AppTheme {
-        FoodEditScreen(
-            viewModel = globalFoodEditViewModel,
-            foodId = foodId,
-            onBack = onBack,
-            onDeleted = onDeleted
-        )
+        CompositionLocalProvider(LocalImageCache provides globalImageCacheRepo) {
+            FoodEditScreen(
+                viewModel = globalFoodEditViewModel,
+                foodId = foodId,
+                onBack = onBack,
+                onDeleted = onDeleted
+            )
+        }
     }
 }
 
@@ -299,14 +324,16 @@ fun ExerciseListViewController(
     refreshKey: Int = 0
 ) = ComposeUIViewController {
     AppTheme {
-        val vm = remember(globalExerciseRepo, dateIso, refreshKey) {
-            ExerciseListViewModel(globalExerciseRepo, dateIso)
+        CompositionLocalProvider(LocalImageCache provides globalImageCacheRepo) {
+            val vm = remember(globalExerciseRepo, dateIso, refreshKey) {
+                ExerciseListViewModel(globalExerciseRepo, dateIso)
+            }
+            ExerciseListScreen(
+                viewModel = vm,
+                onBack = onBack,
+                onEnableHealth = { HealthManager.requestPermissions() }
+            )
         }
-        ExerciseListScreen(
-            viewModel = vm,
-            onBack = onBack,
-            onEnableHealth = { HealthManager.requestPermissions() }
-        )
     }
 }
 
@@ -319,12 +346,14 @@ fun WeightListViewController(
     refreshKey: Int = 0
 ) = ComposeUIViewController {
     AppTheme {
-        val vm = weightListViewModel ?: WeightListViewModel(globalWeightRepo).also { weightListViewModel = it }
-        WeightListScreen(
-            viewModel = vm,
-            onBack = onBack,
-            openAdd = openAdd
-        )
+        CompositionLocalProvider(LocalImageCache provides globalImageCacheRepo) {
+            val vm = weightListViewModel ?: WeightListViewModel(globalWeightRepo).also { weightListViewModel = it }
+            WeightListScreen(
+                viewModel = vm,
+                onBack = onBack,
+                openAdd = openAdd
+            )
+        }
     }
 }
 
@@ -337,12 +366,14 @@ fun StatisticsViewController(
     onBack: () -> Unit
 ) = ComposeUIViewController {
     AppTheme {
-        val vm = remember(globalIntakeRepo, globalExerciseRepo, globalSettingsRepo) {
-            StatisticsViewModel(globalIntakeRepo, globalExerciseRepo, globalSettingsRepo)
+        CompositionLocalProvider(LocalImageCache provides globalImageCacheRepo) {
+            val vm = remember(globalIntakeRepo, globalExerciseRepo, globalSettingsRepo) {
+                StatisticsViewModel(globalIntakeRepo, globalExerciseRepo, globalSettingsRepo)
+            }
+            StatisticsScreen(
+                viewModel = vm,
+                onBack = onBack
+            )
         }
-        StatisticsScreen(
-            viewModel = vm,
-            onBack = onBack
-        )
     }
 }

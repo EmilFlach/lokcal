@@ -2,8 +2,10 @@ package com.emilflach.lokcal.viewmodel
 
 import com.emilflach.lokcal.AllItemFrequencies
 import com.emilflach.lokcal.Meal
+import com.emilflach.lokcal.data.ImageCacheRepository
 import com.emilflach.lokcal.data.IntakeRepository
 import com.emilflach.lokcal.data.MealRepository
+import com.emilflach.lokcal.ui.util.EntityImageData
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,7 +13,8 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class MealsListViewModel(
     private val intakeRepo: IntakeRepository,
-    private val mealRepo: MealRepository
+    private val mealRepo: MealRepository,
+    private val imageCacheRepo: ImageCacheRepository? = null,
 ) {
     private val _search = MutableStateFlow("")
     val search: StateFlow<String> = _search.asStateFlow()
@@ -24,6 +27,9 @@ class MealsListViewModel(
 
     private val _filterMissingImages = MutableStateFlow(false)
     val filterMissingImages: StateFlow<Boolean> = _filterMissingImages.asStateFlow()
+
+    private val _cachedImageMealIds = MutableStateFlow<Set<Long>>(emptySet())
+    val cachedImageMealIds: StateFlow<Set<Long>> = _cachedImageMealIds.asStateFlow()
 
     private val _listState = MutableStateFlow<Map<Int, Int>>(emptyMap())
     val listState = _listState.asStateFlow()
@@ -38,11 +44,20 @@ class MealsListViewModel(
     init {
         reloadMeals()
         loadFrequencies()
+        loadCachedImageIds()
     }
 
     fun refresh() {
         reloadMeals()
         loadFrequencies()
+        loadCachedImageIds()
+    }
+
+    private fun loadCachedImageIds() {
+        if (imageCacheRepo == null) return
+        scope.launch {
+            _cachedImageMealIds.value = imageCacheRepo.getCachedIdsByType(EntityImageData.MEAL)
+        }
     }
 
     fun loadFrequencies() {

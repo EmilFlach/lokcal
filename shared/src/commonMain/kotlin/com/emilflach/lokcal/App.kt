@@ -6,6 +6,7 @@ import com.emilflach.lokcal.data.*
 import com.emilflach.lokcal.navigation.AppNavigation
 import com.emilflach.lokcal.theme.AppTheme
 import com.emilflach.lokcal.ui.screens.AppLoadingScreen
+import com.emilflach.lokcal.ui.util.LocalImageCache
 import com.emilflach.lokcal.util.currentDateIso
 import com.emilflach.lokcal.viewmodel.FoodEditViewModel
 import com.emilflach.lokcal.viewmodel.MainViewModel
@@ -30,22 +31,25 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
     val exerciseRepo = remember(database) { ExerciseRepository(database!!) }
     val weightRepo = remember(database) { WeightRepository(database!!) }
     val settingsRepo = remember(database) { SettingsRepository(database!!) }
+    val imageCacheRepo = remember(database) { ImageCacheRepository(database!!) }
 
     val mainViewModel = remember(intakeRepo, exerciseRepo, weightRepo, settingsRepo) {
         MainViewModel(intakeRepo, exerciseRepo, weightRepo, settingsRepo, currentDateIso())
     }
-    val mealsListViewModel = remember(intakeRepo, mealRepo) { MealsListViewModel(intakeRepo, mealRepo) }
-    val foodEditViewModel = remember(foodRepo, intakeRepo, mealRepo) { FoodEditViewModel(foodRepo, intakeRepo, mealRepo) }
+    val mealsListViewModel = remember(intakeRepo, mealRepo, imageCacheRepo) { MealsListViewModel(intakeRepo, mealRepo, imageCacheRepo) }
+    val foodEditViewModel = remember(foodRepo, intakeRepo, mealRepo, imageCacheRepo) { FoodEditViewModel(foodRepo, intakeRepo, mealRepo, imageCacheRepo) }
 
-    AppNavigation(
-        foodRepo = foodRepo,
-        intakeRepo = intakeRepo,
-        mealRepo = mealRepo,
-        exerciseRepo = exerciseRepo,
-        weightRepo = weightRepo,
-        settingsRepo = settingsRepo,
-        mainViewModel = mainViewModel,
-        mealsListViewModel = mealsListViewModel,
-        foodEditViewModel = foodEditViewModel,
-    )
+    CompositionLocalProvider(LocalImageCache provides imageCacheRepo) {
+        AppNavigation(
+            foodRepo = foodRepo,
+            intakeRepo = intakeRepo,
+            mealRepo = mealRepo,
+            exerciseRepo = exerciseRepo,
+            weightRepo = weightRepo,
+            settingsRepo = settingsRepo,
+            mainViewModel = mainViewModel,
+            mealsListViewModel = mealsListViewModel,
+            foodEditViewModel = foodEditViewModel,
+        )
+    }
 }

@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.util.EntityImageData
 import com.emilflach.lokcal.util.NumberUtils
 import com.emilflach.lokcal.viewmodel.MealTimeViewModel
 
@@ -102,6 +103,11 @@ fun LazyListScope.mealTimeItemsList(
             size = items.size,
             isMeal = isMeal,
             imageUrl = ui.imageUrl,
+            imageEntity = if (!isMeal && entry.source_food_id != null)
+                EntityImageData(EntityImageData.FOOD, entry.source_food_id, ui.imageUrl ?: "")
+            else if (isMeal)
+                EntityImageData(EntityImageData.MEAL, entry.source_meal_id, ui.imageUrl ?: "")
+            else null,
             highlight = state.highlightedIntakeId == entry.id,
             onHighlighted = { viewModel.clearHighlight() },
             onLongPress = {
@@ -191,6 +197,7 @@ fun LazyListScope.mealTimeSuggestionsSection(
                 subtitle = subtitle,
                 keyId = keyId,
                 imageUrl = ui.imageUrl,
+                imageEntity = EntityImageData(EntityImageData.MEAL, mealId, ui.imageUrl ?: ""),
                 initialValue = initialPortions,
                 isMeal = true,
                 addButtonDescription = "Add",
@@ -228,6 +235,7 @@ fun LazyListScope.mealTimeSuggestionsSection(
                 subtitle = subtitle,
                 keyId = keyId,
                 imageUrl = ui.imageUrl,
+                imageEntity = EntityImageData(EntityImageData.FOOD, foodId, ui.imageUrl ?: ""),
                 initialValue = initialGrams,
                 addButtonDescription = "Add",
                 index = index,

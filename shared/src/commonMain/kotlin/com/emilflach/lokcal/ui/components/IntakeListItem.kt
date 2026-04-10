@@ -2,15 +2,7 @@ package com.emilflach.lokcal.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -18,13 +10,7 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,6 +27,8 @@ import coil3.compose.AsyncImage
 import com.emilflach.lokcal.Food
 import com.emilflach.lokcal.Meal
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.util.EntityImageData
+import com.emilflach.lokcal.ui.util.LocalImageCache
 import com.emilflach.lokcal.ui.util.rememberKtorImageLoader
 import com.emilflach.lokcal.viewmodel.IntakeViewModel
 
@@ -63,6 +51,7 @@ fun FoodIntakeListItem(
         subtitle = viewModel.subtitleForFood(food, initialGrams),
         keyId = food.id,
         imageUrl = food.image_url,
+        imageEntity = EntityImageData(EntityImageData.FOOD, food.id, food.image_url ?: ""),
         initialValue = initialGrams,
         index = index,
         size = size,
@@ -107,6 +96,7 @@ fun MealIntakeListItem(
         name = meal.name,
         subtitle = subtitle,
         imageUrl = meal.image_url,
+        imageEntity = EntityImageData(EntityImageData.MEAL, meal.id, meal.image_url ?: ""),
         keyId = keyId,
         initialValue = initialPortions,
         isMeal = true,
@@ -132,6 +122,7 @@ fun IntakeListItem(
     name: String,
     subtitle: String,
     imageUrl: String? = null,
+    imageEntity: EntityImageData? = null,
     keyId: Long,
     initialValue: String,
     isMeal: Boolean = false,
@@ -152,7 +143,7 @@ fun IntakeListItem(
 ) {
     val keyboard = LocalSoftwareKeyboardController.current
     val colors = LocalRecipesColors.current
-    val imageLoader = rememberKtorImageLoader()
+    val imageLoader = rememberKtorImageLoader(LocalImageCache.current)
 
     var tf by remember(keyId) {
         mutableStateOf(TextFieldValue(text = initialValue))
@@ -185,8 +176,9 @@ fun IntakeListItem(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (!imageUrl.isNullOrBlank()) {
+                val imageModel = imageEntity ?: imageUrl
                 AsyncImage(
-                    model = imageUrl,
+                    model = imageModel,
                     contentDescription = null,
                     imageLoader = imageLoader,
                     contentScale = ContentScale.Crop,

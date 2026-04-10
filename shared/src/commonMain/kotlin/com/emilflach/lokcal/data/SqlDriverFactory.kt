@@ -373,6 +373,39 @@ suspend fun createDatabase(sqlDriverFactory: SqlDriverFactory, onProgress: ((Flo
         println("[Migration] V6 migration completed successfully")
     }
 
+    if (currentVersion < 7) {
+        println("[Migration] Starting V7 migration: Add ImageCache table")
+
+        tryExec(driver, """
+            CREATE TABLE IF NOT EXISTS ImageCache (
+                entity_type TEXT NOT NULL,
+                entity_id   INTEGER NOT NULL,
+                image_data  BLOB NOT NULL,
+                mime_type   TEXT NOT NULL DEFAULT 'image/jpeg',
+                cached_at   TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                byte_size   INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY (entity_type, entity_id)
+            )
+        """)
+
+        tryExec(driver, """
+            CREATE TRIGGER IF NOT EXISTS delete_food_image_on_food_delete
+            AFTER DELETE ON Food BEGIN
+                DELETE FROM ImageCache WHERE entity_type = 'FOOD' AND entity_id = OLD.id;
+            END
+        """)
+
+        tryExec(driver, """
+            CREATE TRIGGER IF NOT EXISTS delete_meal_image_on_meal_delete
+            AFTER DELETE ON Meal BEGIN
+                DELETE FROM ImageCache WHERE entity_type = 'MEAL' AND entity_id = OLD.id;
+            END
+        """)
+
+        setSchemaVersion(driver, 7)
+        println("[Migration] V7 migration completed successfully")
+    }
+
     val database = Database(driver)
     // Seed initial data on first launch
     IngredientSeeder.seedIfNeeded(database, onProgress)

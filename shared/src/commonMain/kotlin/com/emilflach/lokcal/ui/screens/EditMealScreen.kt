@@ -24,6 +24,7 @@ import com.emilflach.lokcal.ui.components.GramQuantityControls
 import com.emilflach.lokcal.ui.components.MealTimeItem
 import com.emilflach.lokcal.ui.components.PlatformScaffold
 import com.emilflach.lokcal.ui.dialogs.StealImageDialog
+import com.emilflach.lokcal.ui.util.EntityImageData
 import com.emilflach.lokcal.viewmodel.EditMealViewModel
 import io.ktor.http.*
 
@@ -125,6 +126,7 @@ fun EditMealScreen(
                     index = state.items.indexOf(item),
                     size = state.items.size,
                     imageUrl = item.food.image_url,
+                    imageEntity = EntityImageData(EntityImageData.FOOD, item.food.id, item.food.image_url ?: ""),
                     quantityControls = { requester ->
                         GramQuantityControls(
                             requester = requester,

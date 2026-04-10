@@ -25,6 +25,8 @@ import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.MealTopBar
 import com.emilflach.lokcal.ui.components.PlatformScaffold
 import com.emilflach.lokcal.ui.components.getRoundedCornerShape
+import com.emilflach.lokcal.ui.util.EntityImageData
+import com.emilflach.lokcal.ui.util.LocalImageCache
 import com.emilflach.lokcal.ui.util.rememberKtorImageLoader
 import com.emilflach.lokcal.viewmodel.FoodEditViewModel
 import kotlinx.coroutines.launch
@@ -37,13 +39,14 @@ fun FoodManageScreen(
     onOpenEdit: (Long?) -> Unit,
 ) {
     val colors = LocalRecipesColors.current
-    val imageLoader = rememberKtorImageLoader()
+    val imageLoader = rememberKtorImageLoader(LocalImageCache.current)
     val coroutineScope = rememberCoroutineScope()
 
     val search by viewModel.search.collectAsState()
     val foods by viewModel.foods.collectAsState()
     val frequencies by viewModel.itemFrequencies.collectAsState()
     val filterMissingImages by viewModel.filterMissingImages.collectAsState()
+    val cachedImageFoodIds by viewModel.cachedImageFoodIds.collectAsState()
 
     val listStateData by viewModel.listState.collectAsState()
     val listState = rememberLazyListState(
@@ -62,7 +65,9 @@ fun FoodManageScreen(
         onBack()
     }
 
-    val displayedFoods = if (filterMissingImages) foods.filter { it.image_url.isNullOrBlank() } else foods
+    val displayedFoods = if (filterMissingImages)
+        foods.filter { it.image_url.isNullOrBlank() && it.id !in cachedImageFoodIds }
+    else foods
 
     PlatformScaffold(
         topBar = {
@@ -101,7 +106,7 @@ fun FoodManageScreen(
                     leadingContent = {
                         if (!food.image_url.isNullOrBlank()) {
                             AsyncImage(
-                                model = food.image_url,
+                                model = EntityImageData(EntityImageData.FOOD, food.id, food.image_url),
                                 contentDescription = null,
                                 imageLoader = imageLoader,
                                 contentScale = ContentScale.Crop,

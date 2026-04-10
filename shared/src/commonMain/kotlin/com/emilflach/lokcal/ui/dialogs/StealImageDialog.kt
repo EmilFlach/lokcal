@@ -2,31 +2,13 @@ package com.emilflach.lokcal.ui.dialogs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.BasicAlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -39,8 +21,11 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.getRoundedCornerShape
+import com.emilflach.lokcal.ui.util.EntityImageData
+import com.emilflach.lokcal.ui.util.LocalImageCache
 import com.emilflach.lokcal.ui.util.rememberKtorImageLoader
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 data class StealImageItem(
     val id: Long,
@@ -59,11 +44,11 @@ fun StealImageDialog(
     onItemSelected: (StealImageItem) -> Unit
 ) {
     val colors = LocalRecipesColors.current
-    val imageLoader = rememberKtorImageLoader()
+    val imageLoader = rememberKtorImageLoader(LocalImageCache.current)
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
-        delay(100)
+        delay(100.milliseconds)
         focusRequester.requestFocus()
     }
 
@@ -118,8 +103,13 @@ fun StealImageDialog(
                     ListItem(
                         leadingContent = {
                             if (!item.imageUrl.isNullOrBlank()) {
+                                val imageModel = EntityImageData(
+                                    if (item.type == "FOOD") EntityImageData.FOOD else EntityImageData.MEAL,
+                                    item.id,
+                                    item.imageUrl
+                                )
                                 AsyncImage(
-                                    model = item.imageUrl,
+                                    model = imageModel,
                                     contentDescription = null,
                                     imageLoader = imageLoader,
                                     contentScale = ContentScale.Crop,
