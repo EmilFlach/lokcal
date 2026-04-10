@@ -17,6 +17,8 @@ import com.emilflach.lokcal.ui.components.main.MainMealList
 import com.emilflach.lokcal.ui.components.main.MainSummary
 import com.emilflach.lokcal.ui.components.main.MainSummaryGraph
 import com.emilflach.lokcal.ui.components.main.MainSummaryKcal
+import com.emilflach.lokcal.ui.components.platformBottomInset
+import com.emilflach.lokcal.ui.components.platformTopInset
 import com.emilflach.lokcal.viewmodel.DayState
 import com.emilflach.lokcal.viewmodel.MainViewModel
 
@@ -55,6 +57,7 @@ fun MainScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.safeDrawing)
+                    .padding(top = platformTopInset, bottom = platformBottomInset)
             ) {
 
                 if (!isNativeNavigation) {

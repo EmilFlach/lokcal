@@ -2,4 +2,4 @@ package com.emilflach.lokcal.util
 
 actual val showBarcodeScanner: Boolean = true
 
-actual val usesNativeNavigation: Boolean = false
+actual val currentPlatform: AppPlatform = AppPlatform.Android

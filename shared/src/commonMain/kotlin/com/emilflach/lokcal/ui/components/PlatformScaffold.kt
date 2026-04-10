@@ -14,8 +14,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.emilflach.lokcal.util.AppPlatform
+import com.emilflach.lokcal.util.currentPlatform
 import com.emilflach.lokcal.util.getTopSafeAreaInset
-import com.emilflach.lokcal.util.usesNativeNavigation
 import dev.chrisbanes.haze.*
 
 /**
@@ -23,7 +24,7 @@ import dev.chrisbanes.haze.*
  * Use this only where [PlatformScaffold] padding is unavailable (e.g. screens
  * that manage their own layout outside of PlatformScaffold).
  */
-val isNativeNavigation: Boolean get() = usesNativeNavigation
+val isNativeNavigation: Boolean get() = currentPlatform == AppPlatform.Ios
 
 /**
  * Padding values passed to [PlatformScaffold] content.
@@ -73,18 +74,14 @@ class PlatformPadding internal constructor(
 /**
  * Platform-aware Scaffold wrapper that handles native navigation behavior automatically.
  *
- * On iOS with native navigation:
- * - Hides the topBar (uses SwiftUI navigation bar instead)
- * - Provides top padding for native navigation bar (safe area + 80dp)
- * - Bottom padding: 100dp with FAB, 0dp without
- * - When scrollState provided: shows progressive blur effect on nav bar background
+ * - iOS: hides topBar/FAB (SwiftUI handles them), adds safe-area + nav bar padding,
+ *   shows a progressive blur overlay when scrolled.
+ * - WASM: adds top/bottom insets on the Scaffold itself so the topBar and content both
+ *   clear the phone frame's rounded corners.
+ * - Android / JVM: standard Scaffold, adds 80dp bottom padding when a FAB is present.
  *
- * On other platforms:
- * - Standard Scaffold behavior
- * - Bottom padding: 80dp with FAB, 0dp without
- *
- * @param scrollState Optional LazyListState to enable nav bar blur effect on scroll
- * @param navBarBackgroundColor Background color for nav bar blur tint (default: White)
+ * @param scrollState Optional LazyListState to enable nav bar blur effect on scroll (iOS only)
+ * @param navBarBackgroundColor Background color for nav bar blur tint (iOS only, default: White)
  */
 @Composable
 fun PlatformScaffold(
@@ -101,74 +98,104 @@ fun PlatformScaffold(
     navBarBackgroundColor: Color = Color.White,
     content: @Composable (PlatformPadding) -> Unit
 ) {
-    // Create HazeState for blur effect
+    when (currentPlatform) {
+        AppPlatform.Ios -> IosScaffold(
+            modifier = modifier,
+            bottomBar = bottomBar,
+            snackbarHost = snackbarHost,
+            containerColor = containerColor,
+            contentColor = contentColor,
+            hasFab = hasFab,
+            scrollState = scrollState,
+            navBarBackgroundColor = navBarBackgroundColor,
+            content = content,
+        )
+
+        AppPlatform.WasmJs -> WasmScaffold(
+            modifier = modifier,
+            topBar = topBar,
+            bottomBar = bottomBar,
+            snackbarHost = snackbarHost,
+            floatingActionButton = floatingActionButton,
+            floatingActionButtonPosition = floatingActionButtonPosition,
+            containerColor = containerColor,
+            contentColor = contentColor,
+            hasFab = hasFab,
+            content = content,
+        )
+
+        AppPlatform.Android, AppPlatform.Jvm -> DefaultScaffold(
+            modifier = modifier,
+            topBar = topBar,
+            bottomBar = bottomBar,
+            snackbarHost = snackbarHost,
+            floatingActionButton = floatingActionButton,
+            floatingActionButtonPosition = floatingActionButtonPosition,
+            containerColor = containerColor,
+            contentColor = contentColor,
+            hasFab = hasFab,
+            content = content,
+        )
+    }
+}
+
+// ── iOS ──────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun IosScaffold(
+    modifier: Modifier,
+    bottomBar: @Composable () -> Unit,
+    snackbarHost: @Composable () -> Unit,
+    containerColor: Color,
+    contentColor: Color,
+    hasFab: Boolean,
+    scrollState: LazyListState?,
+    navBarBackgroundColor: Color,
+    content: @Composable (PlatformPadding) -> Unit,
+) {
     val hazeState = remember { HazeState() }
 
-    // Determine if we should show the nav bar background (scrolled state)
     val showNavBarBackground = remember(scrollState) {
         derivedStateOf {
-            scrollState?.let {
-                it.firstVisibleItemIndex > 0 || it.firstVisibleItemScrollOffset > 0
-            } ?: false
+            scrollState?.let { it.firstVisibleItemIndex > 0 || it.firstVisibleItemScrollOffset > 0 } ?: false
         }
     }
-
-    // Animate the nav bar background overlay
     val navBarBackgroundAlpha by animateFloatAsState(
         targetValue = if (showNavBarBackground.value) 1f else 0f,
-        animationSpec = tween(durationMillis = 300)
+        animationSpec = tween(durationMillis = 300),
     )
 
     Scaffold(
         modifier = modifier,
-        topBar = if (usesNativeNavigation) { {} } else topBar,
+        topBar = {},
         bottomBar = bottomBar,
         snackbarHost = snackbarHost,
-        floatingActionButton = if (usesNativeNavigation) { {} } else floatingActionButton,
-        floatingActionButtonPosition = floatingActionButtonPosition,
+        floatingActionButton = {},
         containerColor = containerColor,
-        contentColor = contentColor
+        contentColor = contentColor,
     ) { paddingValues ->
-        val adjustedPadding = if (usesNativeNavigation) {
-            // On iOS with native nav, provide top padding = safe area + nav bar height (80dp)
-            val topPadding = getTopSafeAreaInset() + 80.dp
-            val bottomPadding = paddingValues.calculateBottomPadding() + if (hasFab) 100.dp else 0.dp
-            PaddingValues(
-                start = paddingValues.calculateStartPadding(LayoutDirection.Ltr),
-                end = paddingValues.calculateEndPadding(LayoutDirection.Ltr),
-                top = topPadding,
-                bottom = bottomPadding
-            )
-        } else {
-            // On other platforms, add 80dp bottom padding when there's a FAB
-            val bottomPadding = paddingValues.calculateBottomPadding() + if (hasFab) 80.dp else 0.dp
-            PaddingValues(
-                start = paddingValues.calculateStartPadding(LayoutDirection.Ltr),
-                end = paddingValues.calculateEndPadding(LayoutDirection.Ltr),
-                top = paddingValues.calculateTopPadding(),
-                bottom = bottomPadding
-            )
-        }
-
+        val topPadding = getTopSafeAreaInset() + 80.dp
+        val bottomPadding = paddingValues.calculateBottomPadding() + if (hasFab) 100.dp else 0.dp
+        val adjustedPadding = PaddingValues(
+            start = paddingValues.calculateStartPadding(LayoutDirection.Ltr),
+            end = paddingValues.calculateEndPadding(LayoutDirection.Ltr),
+            top = topPadding,
+            bottom = bottomPadding,
+        )
         val platformPadding = PlatformPadding(
             raw = adjustedPadding,
-            hasScrollOverlay = usesNativeNavigation && scrollState != null,
+            hasScrollOverlay = scrollState != null,
         )
 
         Box(modifier = Modifier.fillMaxSize()) {
-            // Apply hazeSource modifier to content if using native navigation with scroll state
-            val contentModifier = if (usesNativeNavigation && scrollState != null) {
-                Modifier.hazeSource(state = hazeState)
-            } else {
-                Modifier
-            }
-
-            Box(modifier = contentModifier.fillMaxSize()) {
+            Box(
+                modifier = if (scrollState != null) Modifier.hazeSource(hazeState).fillMaxSize()
+                           else Modifier.fillMaxSize()
+            ) {
                 content(platformPadding)
             }
 
-            // Show nav bar background overlay with blur when scrolled (iOS native nav only)
-            if (usesNativeNavigation && scrollState != null) {
+            if (scrollState != null) {
                 val topHeight = getTopSafeAreaInset() + 80.dp
                 Box(
                     modifier = Modifier
@@ -177,16 +204,92 @@ fun PlatformScaffold(
                         .align(Alignment.TopCenter)
                         .hazeEffect(state = hazeState) {
                             backgroundColor = navBarBackgroundColor
-                            tints = listOf(
-                                HazeTint(
-                                    color = navBarBackgroundColor,
-                                )
-                            )
+                            tints = listOf(HazeTint(color = navBarBackgroundColor))
                             progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
                             alpha = navBarBackgroundAlpha
                         }
                 )
             }
         }
+    }
+}
+
+// ── WASM ─────────────────────────────────────────────────────────────────────
+
+/** Platform-specific top inset to add on top of system safe-area insets. Non-zero on WASM only. */
+val platformTopInset: Dp get() = if (currentPlatform == AppPlatform.WasmJs) 24.dp else 0.dp
+
+/** Platform-specific bottom inset to add on top of system safe-area insets. Non-zero on WASM only. */
+val platformBottomInset: Dp get() = if (currentPlatform == AppPlatform.WasmJs) 36.dp else 0.dp
+
+@Composable
+private fun WasmScaffold(
+    modifier: Modifier,
+    topBar: @Composable () -> Unit,
+    bottomBar: @Composable () -> Unit,
+    snackbarHost: @Composable () -> Unit,
+    floatingActionButton: @Composable () -> Unit,
+    floatingActionButtonPosition: FabPosition,
+    containerColor: Color,
+    contentColor: Color,
+    hasFab: Boolean,
+    content: @Composable (PlatformPadding) -> Unit,
+) {
+    Scaffold(
+        // Inset the whole scaffold so the topBar and content both clear the
+        // phone frame's rounded corners.
+        modifier = modifier.padding(top = platformTopInset, bottom = platformBottomInset),
+        topBar = topBar,
+        bottomBar = bottomBar,
+        snackbarHost = snackbarHost,
+        floatingActionButton = floatingActionButton,
+        floatingActionButtonPosition = floatingActionButtonPosition,
+        containerColor = containerColor,
+        contentColor = contentColor,
+    ) { paddingValues ->
+        val bottomPadding = paddingValues.calculateBottomPadding() + if (hasFab) 80.dp else 0.dp
+        val adjustedPadding = PaddingValues(
+            start = paddingValues.calculateStartPadding(LayoutDirection.Ltr),
+            end = paddingValues.calculateEndPadding(LayoutDirection.Ltr),
+            top = paddingValues.calculateTopPadding(),
+            bottom = bottomPadding,
+        )
+        content(PlatformPadding(raw = adjustedPadding, hasScrollOverlay = false))
+    }
+}
+
+// ── Android / JVM ─────────────────────────────────────────────────────────────
+
+@Composable
+private fun DefaultScaffold(
+    modifier: Modifier,
+    topBar: @Composable () -> Unit,
+    bottomBar: @Composable () -> Unit,
+    snackbarHost: @Composable () -> Unit,
+    floatingActionButton: @Composable () -> Unit,
+    floatingActionButtonPosition: FabPosition,
+    containerColor: Color,
+    contentColor: Color,
+    hasFab: Boolean,
+    content: @Composable (PlatformPadding) -> Unit,
+) {
+    Scaffold(
+        modifier = modifier,
+        topBar = topBar,
+        bottomBar = bottomBar,
+        snackbarHost = snackbarHost,
+        floatingActionButton = floatingActionButton,
+        floatingActionButtonPosition = floatingActionButtonPosition,
+        containerColor = containerColor,
+        contentColor = contentColor,
+    ) { paddingValues ->
+        val bottomPadding = paddingValues.calculateBottomPadding() + if (hasFab) 80.dp else 0.dp
+        val adjustedPadding = PaddingValues(
+            start = paddingValues.calculateStartPadding(LayoutDirection.Ltr),
+            end = paddingValues.calculateEndPadding(LayoutDirection.Ltr),
+            top = paddingValues.calculateTopPadding(),
+            bottom = bottomPadding,
+        )
+        content(PlatformPadding(raw = adjustedPadding, hasScrollOverlay = false))
     }
 }
