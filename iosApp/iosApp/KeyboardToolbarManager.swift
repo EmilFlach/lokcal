@@ -79,10 +79,11 @@ class KeyboardToolbarManager {
             window.addSubview(toolbar)
         }
 
+        let toolbarWidth: CGFloat = 80
         toolbar.frame = CGRect(
             x: 0,
             y: finalY,
-            width: window.bounds.width,
+            width: toolbarWidth,
             height: toolbarHeight
         )
 
