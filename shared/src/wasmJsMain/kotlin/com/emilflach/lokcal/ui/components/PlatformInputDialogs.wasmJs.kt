@@ -11,6 +11,11 @@ actual fun SingleInputAlertDialog(
 ) = SingleInputAlertDialogCompose(title, fieldLabel, initialValue, confirmText, dismissText, keyboardType, error, onConfirm, onDismiss)
 
 @Composable
+actual fun InfoAlertDialog(
+    title: String, body: String, confirmText: String, onDismiss: () -> Unit
+) = InfoAlertDialogCompose(title, body, confirmText, onDismiss)
+
+@Composable
 actual fun DualInputAlertDialog(
     title: String, field1Label: String, field1Initial: String, field1KeyboardType: KeyboardType,
     field2Label: String, field2Initial: String, field2KeyboardType: KeyboardType,

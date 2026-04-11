@@ -97,7 +97,7 @@ fun MainScreen(
 
                             if (!hideGraphs) {
                                 Spacer(Modifier.height(16.dp))
-                                MainSummaryGraph(uiState.last7Deltas, boxWidth)
+                                MainSummaryGraph(uiState.last7Deltas, boxWidth, onOpenStatistics)
                             }
                         }
                     }

@@ -12,8 +12,9 @@ import com.emilflach.lokcal.viewmodel.MainViewModel
 import com.emilflach.lokcal.viewmodel.MealsListViewModel
 
 // Called from Swift: AppKt.initializeApp(onReady:) `iosApp/iosApp/MainView.swift`
+// onReady receives true if onboarding should be shown, false otherwise
 @Suppress("unused")
-fun initializeApp(onReady: () -> Unit) = ComposeUIViewController {
+fun initializeApp(onReady: (Boolean) -> Unit) = ComposeUIViewController {
     AppTheme {
         var seedingProgress by remember { mutableStateOf<Float?>(null) }
         val database by produceState<Database?>(null) {
@@ -57,7 +58,8 @@ fun initializeApp(onReady: () -> Unit) = ComposeUIViewController {
                 mealsListViewModel = mealsListViewModel,
                 foodEditViewModel = foodEditViewModel
             )
-            onReady()
+            val needsOnboarding = !settingsRepo.isOnboardingComplete()
+            onReady(needsOnboarding)
         }
     }
 }

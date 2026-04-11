@@ -16,3 +16,6 @@ DELETE FROM WeightLog WHERE id = ?;
 
 selectByDate:
 SELECT * FROM WeightLog WHERE date = ?;
+
+selectInDateRange:
+SELECT * FROM WeightLog WHERE date BETWEEN ? AND ? ORDER BY date ASC;

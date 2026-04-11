@@ -73,10 +73,24 @@ struct MainScreen: View {
 // MARK: - Loading View
 
 struct LoadingView: UIViewControllerRepresentable {
-    let onReady: () -> Void
+    let onReady: (Bool) -> Void
 
     func makeUIViewController(context: Context) -> UIViewController {
-        AppKt.initializeApp(onReady: onReady)
+        AppKt.initializeApp(onReady: { needsOnboarding in
+            onReady(needsOnboarding.boolValue)
+        })
+    }
+
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
+}
+
+// MARK: - Onboarding View
+
+struct OnboardingView: UIViewControllerRepresentable {
+    let onGetStarted: () -> Void
+
+    func makeUIViewController(context: Context) -> UIViewController {
+        ScreenFactoriesKt.OnboardingViewController(onGetStarted: onGetStarted)
     }
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}

@@ -13,6 +13,7 @@ import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.screens.*
 import com.emilflach.lokcal.util.currentDateIso
 import com.emilflach.lokcal.viewmodel.*
+import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
 @Composable
@@ -26,10 +27,13 @@ internal fun AppNavigation(
     mainViewModel: MainViewModel,
     mealsListViewModel: MealsListViewModel,
     foodEditViewModel: FoodEditViewModel,
+    startOnboarding: Boolean = false,
 ) {
     val colors = LocalRecipesColors.current
     var refreshToggle by remember { mutableStateOf(false) }
-    val backStack = rememberNavBackStack(navigationConfig, Screen.Main(currentDateIso()))
+    val scope = rememberCoroutineScope()
+    val initialScreen: Screen = if (startOnboarding) Screen.Onboarding else Screen.Main(currentDateIso())
+    val backStack = rememberNavBackStack(navigationConfig, initialScreen)
     val mainUiStateHolder = mainViewModel.uiState.collectAsState()
     val effectiveCurrentDestination = remember {
         derivedStateOf {
@@ -229,10 +233,29 @@ internal fun AppNavigation(
                     )
                 }
                 entry<Screen.Statistics> {
-                    val vm = remember(intakeRepo, exerciseRepo, settingsRepo) { StatisticsViewModel(intakeRepo, exerciseRepo, settingsRepo) }
+                    val vm = remember(intakeRepo, exerciseRepo, settingsRepo, weightRepo) { StatisticsViewModel(intakeRepo, exerciseRepo, settingsRepo, weightRepo) }
                     StatisticsScreen(
                         viewModel = vm,
+                        onBack = { backStack.removeLastOrNull() },
+                        onOpenDemo = { backStack.add(Screen.StatisticsDemo) }
+                    )
+                }
+                entry<Screen.StatisticsDemo> {
+                    StatisticsDemoScreen(
                         onBack = { backStack.removeLastOrNull() }
+                    )
+                }
+                entry<Screen.Onboarding> {
+                    OnboardingScreen(
+                        onGetStarted = {
+                            scope.launch {
+                                settingsRepo.setOnboardingComplete()
+                                backStack.apply {
+                                    clear()
+                                    add(Screen.Main(currentDateIso()))
+                                }
+                            }
+                        }
                     )
                 }
             }

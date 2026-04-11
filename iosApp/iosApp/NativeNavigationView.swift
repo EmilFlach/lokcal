@@ -16,26 +16,35 @@ enum NavigationDestination: Hashable {
     case exerciseList(dateIso: String, refreshId: Int = 0)
     case weightList(openAdd: Bool, returnToSettings: Bool, dateIso: String?, refreshId: Int = 0)
     case statistics
+    case statisticsDemo
 }
 
 // MARK: - Native Navigation Container
 
 struct NativeNavigationView: View {
     @State private var isAppReady = false
+    @State private var showOnboarding = false
     @State private var navigationPath = NavigationPath()
     @State private var refreshKey = 0
 
     var body: some View {
         Group {
             if isAppReady {
-                NavigationStack(path: $navigationPath) {
-                    MainScreen(navigationPath: $navigationPath, refreshKey: $refreshKey)
-                        .navigationDestination(for: NavigationDestination.self) { destination in
-                            destinationView(for: destination)
-                        }
+                if showOnboarding {
+                    OnboardingView(onGetStarted: {
+                        showOnboarding = false
+                    })
+                } else {
+                    NavigationStack(path: $navigationPath) {
+                        MainScreen(navigationPath: $navigationPath, refreshKey: $refreshKey)
+                            .navigationDestination(for: NavigationDestination.self) { destination in
+                                destinationView(for: destination)
+                            }
+                    }
                 }
             } else {
-                LoadingView(onReady: {
+                LoadingView(onReady: { needsOnboarding in
+                    showOnboarding = needsOnboarding
                     isAppReady = true
                 })
             }
@@ -69,6 +78,8 @@ struct NativeNavigationView: View {
             WeightListScreen(openAdd: openAdd, returnToSettings: returnToSettings, navigationPath: $navigationPath, refreshKey: $refreshKey)
         case .statistics:
             StatisticsScreen(navigationPath: $navigationPath)
+        case .statisticsDemo:
+            StatisticsDemoScreen(navigationPath: $navigationPath)
         }
     }
 }

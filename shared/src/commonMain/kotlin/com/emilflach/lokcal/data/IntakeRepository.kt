@@ -214,8 +214,8 @@ class IntakeRepository(database: Database) {
         intakeQ.updateLeftoverById(if (enabled) 1 else 0, id)
     }
 
-    suspend fun getMostEatenByWeight(startIso: String, endIso: String) =
-        intakeQ.statsMostEatenByWeight(startIso, endIso, startIso, endIso).awaitAsList()
+    suspend fun getMostEatenByKcal(startIso: String, endIso: String) =
+        intakeQ.statsMostEatenByKcal(startIso, endIso, startIso, endIso).awaitAsList()
 
     suspend fun getDailyKcal(startIso: String, endIso: String) =
         intakeQ.statsDailyKcal(startIso, endIso).awaitAsList()
@@ -225,15 +225,6 @@ class IntakeRepository(database: Database) {
 
     suspend fun getDaysWithInformation() =
         intakeQ.getDaysWithInformation().awaitAsList()
-
-    suspend fun getTotalKcalEaten(startIso: String, endIso: String) =
-        intakeQ.getTotalKcalEaten(startIso, endIso).awaitAsOne().SUM ?: 0.0
-
-    suspend fun getTotalWeightEatenG(startIso: String, endIso: String) =
-        intakeQ.getTotalWeightEatenG(startIso, endIso).awaitAsOne().SUM ?: 0.0
-
-    suspend fun getCountTrackedIntakes(startIso: String, endIso: String) =
-        intakeQ.getCountTrackedIntakes(startIso, endIso).awaitAsOne()
 
     suspend fun getAllItemFrequencies() = intakeQ.allItemFrequencies().awaitAsList()
 
@@ -245,6 +236,4 @@ class IntakeRepository(database: Database) {
             (type to id) to row.frequency
         }
     }
-
-    suspend fun getItemsMissingImage() = intakeQ.itemsMissingImage().awaitAsList()
 }

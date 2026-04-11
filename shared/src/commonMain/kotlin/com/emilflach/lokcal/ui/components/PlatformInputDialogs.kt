@@ -12,6 +12,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 expect fun SingleInputAlertDialog(
@@ -84,9 +85,34 @@ internal fun SingleInputAlertDialogCompose(
     )
 
     LaunchedEffect(Unit) {
-        delay(100)
+        delay(100.milliseconds)
         focusRequester.requestFocus()
     }
+}
+
+@Composable
+expect fun InfoAlertDialog(
+    title: String,
+    body: String,
+    confirmText: String,
+    onDismiss: () -> Unit
+)
+
+@Composable
+internal fun InfoAlertDialogCompose(
+    title: String,
+    body: String,
+    confirmText: String,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = { Text(body, style = MaterialTheme.typography.bodyMedium) },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(confirmText) }
+        }
+    )
 }
 
 @Composable

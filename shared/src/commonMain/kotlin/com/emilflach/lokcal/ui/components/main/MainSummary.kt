@@ -4,12 +4,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -84,7 +79,7 @@ fun MainSummary(
 
             if (!hideGraphs) {
                 Spacer(Modifier.height(16.dp))
-                MainSummaryGraph(last7, this@BoxWithConstraints.maxWidth)
+                MainSummaryGraph(last7, this@BoxWithConstraints.maxWidth, onOpenStatistics)
             }
         }
     }

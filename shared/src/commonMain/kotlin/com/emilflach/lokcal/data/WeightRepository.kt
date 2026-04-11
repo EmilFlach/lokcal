@@ -21,4 +21,7 @@ class WeightRepository(database: Database) {
     }
 
     suspend fun getForDate(dateIso: String): WeightLog? = q.selectByDate(dateIso).awaitAsOneOrNull()
+
+    suspend fun getInRange(startDate: String, endDate: String): List<WeightLog> =
+        q.selectInDateRange(startDate, endDate).awaitAsList()
 }

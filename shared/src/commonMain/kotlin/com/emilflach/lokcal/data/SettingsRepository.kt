@@ -14,6 +14,7 @@ class SettingsRepository(database: Database) {
     companion object {
         private const val KEY_STARTING_KCAL = "starting_kcal"
         private const val DEFAULT_STARTING_KCAL = 1690.0
+        private const val KEY_ONBOARDING_COMPLETE = "onboarding_complete"
     }
 
     suspend fun getStartingKcal(): Double {
@@ -25,6 +26,19 @@ class SettingsRepository(database: Database) {
         require(value > 0.0) { "Starting kcal must be > 0" }
         try {
             meta.setMeta(KEY_STARTING_KCAL, value.toString())
+        } catch (_: Throwable) {
+            // ignore
+        }
+    }
+
+    suspend fun isOnboardingComplete(): Boolean {
+        val v = try { meta.getMeta(KEY_ONBOARDING_COMPLETE).awaitAsOneOrNull() } catch (_: Throwable) { null }
+        return v == "true"
+    }
+
+    suspend fun setOnboardingComplete() {
+        try {
+            meta.setMeta(KEY_ONBOARDING_COMPLETE, "true")
         } catch (_: Throwable) {
             // ignore
         }

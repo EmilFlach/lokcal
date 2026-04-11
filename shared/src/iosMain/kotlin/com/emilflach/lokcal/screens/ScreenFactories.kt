@@ -10,6 +10,7 @@ import com.emilflach.lokcal.ui.util.LocalImageCache
 import com.emilflach.lokcal.viewmodel.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import org.ncgroup.kscan.BarcodeFormats
 import org.ncgroup.kscan.BarcodeResult
@@ -409,17 +410,45 @@ fun getWeightListViewModel(): WeightListViewModel {
 
 // Statistics Screen
 fun StatisticsViewController(
+    onBack: () -> Unit,
+    onOpenDemo: () -> Unit
+) = ComposeUIViewController {
+    AppTheme {
+        CompositionLocalProvider(LocalImageCache provides globalImageCacheRepo) {
+            val vm = remember(globalIntakeRepo, globalExerciseRepo, globalSettingsRepo, globalWeightRepo) {
+                StatisticsViewModel(globalIntakeRepo, globalExerciseRepo, globalSettingsRepo, globalWeightRepo)
+            }
+            StatisticsScreen(
+                viewModel = vm,
+                onBack = onBack,
+                onOpenDemo = onOpenDemo
+            )
+        }
+    }
+}
+
+// Statistics Demo Screen
+fun StatisticsDemoViewController(
     onBack: () -> Unit
 ) = ComposeUIViewController {
     AppTheme {
         CompositionLocalProvider(LocalImageCache provides globalImageCacheRepo) {
-            val vm = remember(globalIntakeRepo, globalExerciseRepo, globalSettingsRepo) {
-                StatisticsViewModel(globalIntakeRepo, globalExerciseRepo, globalSettingsRepo)
-            }
-            StatisticsScreen(
-                viewModel = vm,
-                onBack = onBack
-            )
+            StatisticsDemoScreen(onBack = onBack)
         }
+    }
+}
+
+// Onboarding Screen
+fun OnboardingViewController(
+    onGetStarted: () -> Unit
+) = ComposeUIViewController {
+    AppTheme {
+        val scope = rememberCoroutineScope()
+        OnboardingScreen(onGetStarted = {
+            scope.launch {
+                globalSettingsRepo.setOnboardingComplete()
+                onGetStarted()
+            }
+        })
     }
 }

@@ -54,6 +54,33 @@ actual fun SingleInputAlertDialog(
 }
 
 @Composable
+actual fun InfoAlertDialog(
+    title: String,
+    body: String,
+    confirmText: String,
+    onDismiss: () -> Unit
+) {
+    DisposableEffect(Unit) {
+        val alert = UIAlertController.alertControllerWithTitle(
+            title = title,
+            message = body,
+            preferredStyle = UIAlertControllerStyleAlert
+        )
+        alert.addAction(UIAlertAction.actionWithTitle(confirmText, UIAlertActionStyleDefault) {
+            onDismiss()
+        })
+        UIApplication.sharedApplication.keyWindow?.rootViewController?.presentViewController(
+            alert, animated = true, completion = null
+        )
+        onDispose {
+            if (alert.presentingViewController != null) {
+                alert.dismissViewControllerAnimated(true, completion = null)
+            }
+        }
+    }
+}
+
+@Composable
 actual fun DualInputAlertDialog(
     title: String,
     field1Label: String,

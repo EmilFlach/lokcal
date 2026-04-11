@@ -145,6 +145,40 @@ FROM (
 GROUP BY food_id, item_name
 ORDER BY total_quantity_g DESC;
 
+-- Stats: Most eaten foods by kcal in a date range (including foods from meals)
+statsMostEatenByKcal:
+SELECT
+    food_id,
+    item_name,
+    SUM(energy_kcal_total) AS total_kcal,
+    SUM(quantity_g) AS total_quantity_g,
+    COUNT(*) AS intake_count
+FROM (
+    -- Direct food intakes
+    SELECT
+        source_food_id AS food_id,
+        item_name,
+        energy_kcal_total,
+        quantity_g
+    FROM Intake
+    WHERE source_type = 'FOOD' AND timestamp BETWEEN ? AND ?
+
+    UNION ALL
+
+    -- Food items from meal intakes (proportional kcal)
+    SELECT
+        mi.food_id,
+        f.name AS item_name,
+        i.energy_kcal_total * (mi.quantity_g / (SELECT COALESCE(SUM(quantity_g), 1.0) FROM MealItem WHERE meal_id = i.source_meal_id)) AS energy_kcal_total,
+        (mi.quantity_g * (i.quantity_g / (SELECT COALESCE(SUM(quantity_g), 1.0) FROM MealItem WHERE meal_id = i.source_meal_id))) AS quantity_g
+    FROM Intake i
+    JOIN MealItem mi ON i.source_meal_id = mi.meal_id
+    JOIN Food f ON f.id = mi.food_id
+    WHERE i.source_type = 'MEAL' AND i.timestamp BETWEEN ? AND ?
+)
+GROUP BY food_id, item_name
+ORDER BY total_kcal DESC;
+
 -- Stats: Daily kcal intake in a date range
 statsDailyKcal:
 SELECT

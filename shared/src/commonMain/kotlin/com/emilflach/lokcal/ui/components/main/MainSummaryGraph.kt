@@ -14,12 +14,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.components.OutlinedButton
 import com.emilflach.lokcal.viewmodel.DayDelta
 import ir.ehsannarmani.compose_charts.ColumnChart
 import ir.ehsannarmani.compose_charts.models.*
 
 @Composable
-fun MainSummaryGraph(last7: List<DayDelta>, maxWidth: Dp) {
+fun MainSummaryGraph(last7: List<DayDelta>, maxWidth: Dp, onOpenStatistics: (() -> Unit)? = null) {
     val colors = LocalRecipesColors.current
     val isDarkTheme = colors.isDark
 
@@ -115,15 +116,22 @@ fun MainSummaryGraph(last7: List<DayDelta>, maxWidth: Dp) {
                 horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Nothing logged so far",
+                    text = "Nothing logged yet",
                     style = MaterialTheme.typography.titleSmall,
                     textAlign = TextAlign.Center
                 )
+                Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Past days will show up once you log",
-                    style = MaterialTheme.typography.bodyMedium.copy(color = colors.foregroundSupport),
+                    text = "Once you log, each bar shows your daily calorie balance.",
+                    style = MaterialTheme.typography.bodySmall.copy(color = colors.foregroundSupport),
                     textAlign = TextAlign.Center
                 )
+                if (onOpenStatistics != null) {
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedButton(onClick = onOpenStatistics) {
+                        Text("View statistics", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
             }
         }
     }

@@ -39,6 +39,14 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
     val mealsListViewModel = remember(intakeRepo, mealRepo, imageCacheRepo) { MealsListViewModel(intakeRepo, mealRepo, imageCacheRepo) }
     val foodEditViewModel = remember(foodRepo, intakeRepo, mealRepo, imageCacheRepo) { FoodEditViewModel(foodRepo, intakeRepo, mealRepo, imageCacheRepo) }
 
+    val onboardingComplete by produceState<Boolean?>(null, settingsRepo) {
+        value = settingsRepo.isOnboardingComplete()
+    }
+    if (onboardingComplete == null) {
+        AppLoadingScreen(null)
+        return@AppTheme
+    }
+
     CompositionLocalProvider(LocalImageCache provides imageCacheRepo) {
         AppNavigation(
             foodRepo = foodRepo,
@@ -50,6 +58,7 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
             mainViewModel = mainViewModel,
             mealsListViewModel = mealsListViewModel,
             foodEditViewModel = foodEditViewModel,
+            startOnboarding = onboardingComplete == false,
         )
     }
 }
