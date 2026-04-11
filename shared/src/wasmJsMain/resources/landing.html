@@ -246,6 +246,28 @@
     .final-cta .browser-link { color: var(--n200); font-size: .82rem; margin-top: 16px; display: block; text-decoration: none; }
     .final-cta .browser-link:hover { color: var(--n100); }
 
+    /* ── OPEN SOURCE CALLOUT */
+    .oss-band {
+      padding: 20px 40px; text-align: center;
+      background: rgba(217,145,13,.05);
+      border-top: 1px solid rgba(217,145,13,.12);
+      border-bottom: 1px solid rgba(217,145,13,.12);
+    }
+    .oss-band-inner {
+      max-width: 1160px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: center; gap: 16px;
+      flex-wrap: wrap;
+    }
+    .oss-band p { color: var(--n100); font-size: .88rem; }
+    .oss-band a { color: var(--brand-lt); font-weight: 600; text-decoration: none; }
+    .oss-band a:hover { text-decoration: underline; }
+    .oss-tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(217,145,13,.12); border: 1px solid rgba(217,145,13,.25);
+      color: var(--brand-lt); padding: 3px 12px; border-radius: 50px;
+      font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    }
+
     /* ── FOOTER */
     footer {
       border-top: 1px solid rgba(75,99,227,.1);
@@ -266,6 +288,8 @@
       .feat-blocks { grid-template-columns: 1fr 1fr; }
       .bullet-list { grid-template-columns: 1fr 1fr; }
       .final-cta { padding: 60px 20px; }
+      .platform-band { padding: 12px 20px; }
+      .oss-band { padding: 16px 20px; }
     }
     @media (max-width: 600px) {
       .feat-blocks { grid-template-columns: 1fr; }
@@ -280,6 +304,7 @@
   <div class="nav-logo">Lokcal</div>
   <div class="nav-links">
     <a href="#features" class="btn-ghost">Features</a>
+    <a href="https://github.com/EmilFlach/lokcal" class="btn-ghost" target="_blank" rel="noopener">GitHub</a>
     <a href="#download" class="btn-primary">Download</a>
   </div>
 </nav>
@@ -289,13 +314,13 @@
   <div class="hero-inner">
 
     <div class="hero-copy">
-      <div class="hero-badge">🔒 Privacy-first · No cloud required</div>
+      <div class="hero-badge">🔒 Privacy-first · No account · No subscription</div>
       <h1>
-        Calorie tracking that<br>
-        <span class="accent">stays yours.</span>
+        I built the calorie tracker<br>
+        <span class="accent">I actually wanted.</span>
       </h1>
       <p class="hero-sub">
-        No account. No cloud. No subscription. Log kcal in seconds, see your week at a glance, and let Lokcal learn your actual maintenance calories — not a generic formula. Everything lives on your device.
+        The alternatives were slow, full of junk data, and wanted a subscription. Lokcal is local-first so it's instant, it pulls from my local grocery store so the data is actually right, and shows the statistics that matter.
       </p>
       <div class="hero-ctas">
         <div class="store-buttons">
@@ -308,7 +333,7 @@
             Google Play
           </a>
         </div>
-        <a href="demo.html" class="try-browser">or try it in your browser →</a>
+        <a href="demo.html" class="try-browser">Try it now — no download needed →</a>
       </div>
     </div>
 
@@ -356,29 +381,28 @@
 <!-- ── FEATURES -->
 <section class="section" id="features">
   <div class="eyebrow">Features</div>
-  <h2>Just kcal.<br>Nothing more to learn.</h2>
-  <p class="lead">No subscription. No account. No 84-nutrient dashboard you'll never use. Just the one number that matters — tracked accurately, privately, and fast.</p>
+  <h2>Just calories.<br>Gets out of your way.</h2>
 
   <div class="feat-blocks">
     <div class="feat-block">
       <span class="feat-icon">🔒</span>
       <div class="feat-title">Your data never leaves your phone</div>
-      <p class="feat-desc">No cloud, no account, nothing to breach. Other apps have sold or leaked the health data of hundreds of millions of users. Lokcal stores everything locally — there is nothing to take.</p>
+      <p class="feat-desc">No cloud means no account, no breach, and nothing to sell.</p>
     </div>
     <div class="feat-block">
       <span class="feat-icon">🛒</span>
-      <div class="feat-title">Accurate data from your actual stores</div>
-      <p class="feat-desc">Crowdsourced databases show 20 versions of "chicken breast" with calorie counts that vary by 30%. Lokcal pulls from Albert Heijn, Esselunga, Kroger, and Open Food Facts — the real products on your shelf.</p>
+      <div class="feat-title">Food data that matches what you actually buy</div>
+      <p class="feat-desc">90% of what you eat is already local — for the rest, search your actual store and get a few relevant results, not hundreds of duplicates.</p>
     </div>
     <div class="feat-block">
       <span class="feat-icon">📈</span>
       <div class="feat-title">Learn your actual maintenance calories</div>
-      <p class="feat-desc">Every other app gives you a generic TDEE formula. Lokcal watches your weight trend against your intake and shows you the real number — personalised to your body over time.</p>
+      <p class="feat-desc">Watches your real weight against your real intake and works out your actual number — no questionnaire.</p>
     </div>
     <div class="feat-block">
       <span class="feat-icon">⚡</span>
-      <div class="feat-title">10 seconds to log a full meal</div>
-      <p class="feat-desc">Yesterday's items, leftovers, frequent foods, barcode scan — multiple shortcuts so logging never becomes the reason you stop. Once something's in your database it's instant, every time.</p>
+      <div class="feat-title">1–2 seconds per item</div>
+      <p class="feat-desc">Everything is on-device, so you're in and out in seconds — on a normal day you'll spend half the time you would in a cloud-based app.</p>
     </div>
   </div>
 
@@ -388,22 +412,28 @@
       <li>Barcode scanner</li>
       <li>"Same as yesterday" shortcut</li>
       <li>Leftover and frequent item shortcuts</li>
-      <li>Weight tracking</li>
-      <li>Exercise logging</li>
-      <li>Local-first — works without internet</li>
-      <li>No account, no subscription</li>
-      <li>Automatic nightly backups</li>
-      <li>Export your data anytime</li>
+      <li>Weekly dashboard — rebalance today to hit your goals</li>
+      <li>Food breakdown — see what's costing you the most</li>
+      <li>Weight &amp; exercise tracking</li>
+      <li>Import and export your data</li>
     </ul>
   </div>
 </section>
 </div>
 
+<!-- ── OPEN SOURCE CALLOUT -->
+<div class="oss-band">
+  <div class="oss-band-inner">
+    <span class="oss-tag">Open Source</span>
+    <p>Built by someone who loves food and wanted a tracker that stays out of the way. Free and open source. <a href="https://github.com/EmilFlach/lokcal" target="_blank" rel="noopener">View source on GitHub →</a></p>
+  </div>
+</div>
+
 <!-- ── DOWNLOAD -->
 <section class="final-cta" id="download">
   <div class="eyebrow">Get started</div>
-  <h2>Free. Private. Yours.</h2>
-  <p class="sub">No account. No subscription. No cloud. Download and start tracking in under a minute.</p>
+  <h2>Log it. Enjoy your food.</h2>
+  <p class="sub">Free. No account. No subscription. Open it, log it, get on with your day.</p>
   <div class="store-buttons">
     <a href="#" class="store-btn lg">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
