@@ -13,14 +13,9 @@ import kotlinx.coroutines.launch
 class SourcePreferenceViewModel(
     private val settingsRepo: SettingsRepository
 ) {
-    data class SourceItem(
-        val source: FoodSource,
-        val isSelected: Boolean,
-        val priority: Int? = null  // 1 or 2, null if not selected
-    )
-
     data class UiState(
-        val sources: List<SourceItem> = emptyList(),
+        val optionalSources: List<FoodSource> = emptyList(),
+        val selectedSourceId: String? = null,
         val isLoading: Boolean = true
     )
 
@@ -31,7 +26,6 @@ class SourcePreferenceViewModel(
 
     private val sourceRegistry = SourceRegistry().apply {
         register(AlbertHeijnFoodSource())
-        register(OpenFoodFactsFoodSource())
         register(EsselungaFoodSource())
         register(KrogerFoodSource())
     }
@@ -43,67 +37,28 @@ class SourcePreferenceViewModel(
     private fun loadSources() {
         scope.launch {
             val preferences = settingsRepo.getSourcePreferences()
-            val allSources = sourceRegistry.getAll()
-
-            val items = allSources.map { source ->
-                val index = preferences.indexOf(source.id)
-                SourceItem(
-                    source = source,
-                    isSelected = index >= 0,
-                    priority = if (index >= 0) index + 1 else null
-                )
-            }
-
+            val selectedId = preferences.firstOrNull()
             _state.value = UiState(
-                sources = items,
+                optionalSources = sourceRegistry.getAll(),
+                selectedSourceId = selectedId,
                 isLoading = false
             )
         }
     }
 
-    fun toggleSource(sourceId: String) {
+    fun selectSource(sourceId: String) {
         scope.launch {
-            val currentPrefs = settingsRepo.getSourcePreferences()
-            val isCurrentlySelected = currentPrefs.contains(sourceId)
-
-            if (isCurrentlySelected) {
-                // Deselect - find and remove this source, then reindex remaining
-                val remainingSources = currentPrefs.filter { it != sourceId }
-
-                // Clear all preferences
-                settingsRepo.clearSourcePreferences()
-
-                // Re-add remaining sources with correct priorities
-                remainingSources.forEachIndexed { index, id ->
-                    settingsRepo.setSourcePreference((index + 1).toLong(), id)
-                }
-            } else {
-                // Select (if less than 2 selected)
-                if (currentPrefs.size >= 2) {
-                    return@launch
-                }
-                val newPriority = currentPrefs.size + 1
-                settingsRepo.setSourcePreference(newPriority.toLong(), sourceId)
-            }
-
-            loadSources()
+            settingsRepo.clearSourcePreferences()
+            settingsRepo.setSourcePreference(1L, sourceId)
+            _state.value = _state.value.copy(selectedSourceId = sourceId)
         }
     }
 
-    fun swapPriority(sourceId1: String, sourceId2: String) {
+    fun selectNone() {
         scope.launch {
-            val items = _state.value.sources
-            val item1 = items.find { it.source.id == sourceId1 && it.isSelected } ?: return@launch
-            val item2 = items.find { it.source.id == sourceId2 && it.isSelected } ?: return@launch
-
-            val priority1 = item1.priority ?: return@launch
-            val priority2 = item2.priority ?: return@launch
-
-            // Swap priorities
-            settingsRepo.setSourcePreference(priority1.toLong(), sourceId2)
-            settingsRepo.setSourcePreference(priority2.toLong(), sourceId1)
-
-            loadSources()
+            settingsRepo.clearSourcePreferences()
+            settingsRepo.setSourcePreference(1L, "none")
+            _state.value = _state.value.copy(selectedSourceId = "none")
         }
     }
 }

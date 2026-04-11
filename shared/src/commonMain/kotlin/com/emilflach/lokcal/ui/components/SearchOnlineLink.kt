@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -20,10 +21,11 @@ import com.emilflach.lokcal.theme.LocalRecipesColors
 fun SearchOnlineLink(
     query: String,
     onSearchOnline: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    sourcesConfigured: Boolean = true,
 ) {
     val color = LocalRecipesColors.current
-    
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -32,15 +34,15 @@ fun SearchOnlineLink(
             .clickable { onSearchOnline() }
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "Search for \"$query\" online",
+            text = if (sourcesConfigured) "Search for \"$query\" online" else "Set up your online search sources",
             style = MaterialTheme.typography.bodyLarge,
             color = color.foregroundDefault,
             modifier = Modifier.weight(1f)
         )
-        
+
         Surface(
             color = color.backgroundSurface2,
             modifier = Modifier
@@ -52,8 +54,8 @@ fun SearchOnlineLink(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search online",
+                    imageVector = if (sourcesConfigured) Icons.Default.Search else Icons.Default.Settings,
+                    contentDescription = if (sourcesConfigured) "Search online" else "Configure search sources",
                     tint = color.foregroundDefault
                 )
             }

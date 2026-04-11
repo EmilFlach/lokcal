@@ -93,6 +93,9 @@ struct IntakeScreen: View {
                     highlightLatest: itemAdded,
                     refreshId: refreshKey
                 ))
+            },
+            onNavigateToSettings: {
+                navigationPath.append(NavigationDestination.sourcePreference)
             }
         )
         .ignoresSafeArea(edges: .all)
@@ -100,6 +103,9 @@ struct IntakeScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbarBackground(.hidden, for: .tabBar)
+        .onAppear {
+            ScreenFactoriesKt.getIntakeViewModel(mealType: mealType, dateIso: dateIso).refreshSourcesConfigured()
+        }
     }
 }
 
@@ -110,6 +116,7 @@ struct IntakeSearchableView: View {
     let dateIso: String
     @Binding var navigationPath: NavigationPath
     let onDone: (Bool) -> Void
+    let onNavigateToSettings: () -> Void
     @State private var searchText = ""
     @State private var isSearchPresented = false
     @State private var showScanner = false
@@ -120,6 +127,7 @@ struct IntakeSearchableView: View {
             dateIso: dateIso,
             navigationPath: $navigationPath,
             onDone: onDone,
+            onNavigateToSettings: onNavigateToSettings,
             searchQuery: searchText
         )
         .searchable(text: $searchText, isPresented: $isSearchPresented, placement: .toolbar, prompt: "Search foods and meals")
@@ -213,6 +221,7 @@ struct IntakeView: UIViewControllerRepresentable {
     let dateIso: String
     @Binding var navigationPath: NavigationPath
     let onDone: (Bool) -> Void
+    let onNavigateToSettings: () -> Void
     let searchQuery: String
 
     func makeUIViewController(context: Context) -> UIViewController {
@@ -225,6 +234,7 @@ struct IntakeView: UIViewControllerRepresentable {
             onDone: { itemAdded in
                 onDone(itemAdded.boolValue)
             },
+            onNavigateToSettings: onNavigateToSettings,
             autoFocusSearch: false,
             searchQuery: searchQuery
         )

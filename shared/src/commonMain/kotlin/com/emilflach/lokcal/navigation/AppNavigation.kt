@@ -123,6 +123,7 @@ internal fun AppNavigation(
                             }
                             refreshToggle = !refreshToggle
                         },
+                        onNavigateToSettings = { backStack.add(Screen.SourcePreference) },
                         autoFocusSearch = true
                     )
                 }

@@ -16,7 +16,8 @@ import com.emilflach.lokcal.theme.LocalRecipesColors
 
 @Composable
 fun LocalSearchEmptyState(
-    onSearchOnline: () -> Unit
+    onSearchOnline: () -> Unit,
+    sourcesConfigured: Boolean = true,
 ) {
     val color = LocalRecipesColors.current
     Column(
@@ -32,7 +33,7 @@ fun LocalSearchEmptyState(
             color = color.foregroundDefault
         )
         Text(
-            text = "Search online instead?",
+            text = if (sourcesConfigured) "Search online instead?" else "Set up your online search sources",
             style = MaterialTheme.typography.bodyMedium,
             color = color.foregroundSupport,
             modifier = Modifier.padding(top = 4.dp)
@@ -45,7 +46,7 @@ fun LocalSearchEmptyState(
                 contentColor = color.foregroundDefault
             )
         ) {
-            Text("Search online")
+            Text(if (sourcesConfigured) "Search online" else "Configure sources")
         }
     }
 }

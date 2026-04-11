@@ -1,17 +1,15 @@
 package com.emilflach.lokcal.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
@@ -36,20 +34,20 @@ fun SourcePreferenceScreen(
 
     PlatformScaffold(
         topBar = {
-                TopAppBar(
-                    title = { Text("Search Sources") },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = colors.backgroundPage,
-                        titleContentColor = colors.foregroundDefault,
-                        navigationIconContentColor = colors.foregroundDefault,
-                    )
+            TopAppBar(
+                title = { Text("Search Sources") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colors.backgroundPage,
+                    titleContentColor = colors.foregroundDefault,
+                    navigationIconContentColor = colors.foregroundDefault,
                 )
-            },
+            )
+        },
         containerColor = colors.backgroundPage
     ) { paddingValues ->
         Column(
@@ -59,158 +57,114 @@ fun SourcePreferenceScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            // Info text
             Text(
-                text = "Select up to 2 sources for online food search. Use the arrows to change priority order in your search results.",
+                text = "Open Food Facts is always included. You can optionally add one regional source — its results will appear first.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = colors.foregroundSupport,
+                modifier = Modifier.padding(bottom = 24.dp)
+            )
+
+            // Optional regional sources
+            Text(
+                text = "Regional source",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = colors.foregroundDefault,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            // Selected sources section
-            val selectedSources = state.sources.filter { it.isSelected }.sortedBy { it.priority }
-            if (selectedSources.isNotEmpty()) {
-                Text(
-                    text = "Selected Sources",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = colors.foregroundDefault,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = colors.backgroundSurface1
-                    )
-                ) {
-                    selectedSources.forEach { item ->
-                        ListItem(
-                            headlineContent = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = item.source.displayName,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = colors.foregroundDefault
-                                    )
-                                }
-                            },
-                            supportingContent = {
-                                Text(
-                                    text = item.source.description,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = colors.foregroundSupport
-                                )
-                            },
-                            trailingContent = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    val canMoveUp = item.priority != null && item.priority > 1
-                                    val canMoveDown = item.priority != null && item.priority < selectedSources.size
-
-                                    IconButton(
-                                        onClick = {
-                                            if (canMoveUp) {
-                                                val otherSource = selectedSources.find { it.priority == item.priority - 1 }
-                                                if (otherSource != null) {
-                                                    viewModel.swapPriority(item.source.id, otherSource.source.id)
-                                                }
-                                            }
-                                        },
-                                        enabled = canMoveUp,
-                                        modifier = Modifier.size(40.dp)
-                                    ) {
-                                        Icon(
-                                            Icons.Default.KeyboardArrowUp,
-                                            contentDescription = "Move up",
-                                            tint = if (canMoveUp) colors.foregroundDefault else colors.foregroundDisabled
-                                        )
-                                    }
-
-                                    IconButton(
-                                        onClick = {
-                                            if (canMoveDown) {
-                                                val otherSource = selectedSources.find { it.priority == item.priority + 1 }
-                                                if (otherSource != null) {
-                                                    viewModel.swapPriority(item.source.id, otherSource.source.id)
-                                                }
-                                            }
-                                        },
-                                        enabled = canMoveDown,
-                                        modifier = Modifier.size(40.dp)
-                                    ) {
-                                        Icon(
-                                            Icons.Default.KeyboardArrowDown,
-                                            contentDescription = "Move down",
-                                            tint = if (canMoveDown) colors.foregroundDefault else colors.foregroundDisabled
-                                        )
-                                    }
-
-                                    Checkbox(
-                                        checked = true,
-                                        onCheckedChange = {
-                                            viewModel.toggleSource(item.source.id)
-                                        }
-                                    )
-                                }
-                            },
-                            colors = ListItemDefaults.colors(
-                                containerColor = colors.backgroundSurface1
-                            )
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = colors.backgroundSurface1)
+            ) {
+                val noneSelected = state.selectedSourceId == "none"
+                ListItem(
+                    modifier = Modifier.clickable { viewModel.selectNone() },
+                    headlineContent = {
+                        Text(
+                            text = "None",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = colors.foregroundDefault
                         )
-                    }
+                    },
+                    supportingContent = {
+                        Text(
+                            text = "Use Open Food Facts only",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.foregroundSupport
+                        )
+                    },
+                    trailingContent = {
+                        RadioButton(selected = noneSelected, onClick = null)
+                    },
+                    colors = ListItemDefaults.colors(containerColor = colors.backgroundSurface1)
+                )
+                HorizontalDivider(color = colors.backgroundPage, thickness = 1.dp)
+                state.optionalSources.forEach { source ->
+                    val isSelected = state.selectedSourceId == source.id
+                    ListItem(
+                        modifier = Modifier.clickable {
+                            viewModel.selectSource(source.id)
+                        },
+                        headlineContent = {
+                            Text(
+                                text = source.displayName,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = colors.foregroundDefault
+                            )
+                        },
+                        supportingContent = {
+                            Text(
+                                text = source.description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = colors.foregroundSupport
+                            )
+                        },
+                        trailingContent = { RadioButton(selected = isSelected, onClick = null) },
+                        colors = ListItemDefaults.colors(containerColor = colors.backgroundSurface1)
+                    )
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
             }
 
-            // Available sources section
-            val availableSources = state.sources.filter { !it.isSelected }
-            if (availableSources.isNotEmpty()) {
-                Text(
-                    text = "Available Sources",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = colors.foregroundDefault,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
+            Spacer(modifier = Modifier.height(24.dp))
 
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = colors.backgroundSurface1
-                    )
-                ) {
-                    availableSources.forEach { item ->
-                        ListItem(
-                            headlineContent = {
-                                Text(
-                                    text = item.source.displayName,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = colors.foregroundDefault
-                                )
-                            },
-                            supportingContent = {
-                                Text(
-                                    text = item.source.description,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = colors.foregroundSupport
-                                )
-                            },
-                            trailingContent = {
-                                Checkbox(
-                                    checked = false,
-                                    onCheckedChange = {
-                                        viewModel.toggleSource(item.source.id)
-                                    },
-                                    enabled = state.sources.count { it.isSelected } < 2
-                                )
-                            },
-                            colors = ListItemDefaults.colors(
-                                containerColor = colors.backgroundSurface1
-                            )
+            // Always-included section
+            Text(
+                text = "Always included",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = colors.foregroundDefault,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = colors.backgroundSurface1)
+            ) {
+                ListItem(
+                    headlineContent = {
+                        Text(
+                            text = "Open Food Facts",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = colors.foregroundDefault
                         )
-                    }
-                }
+                    },
+                    supportingContent = {
+                        Text(
+                            text = "Global open food database",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.foregroundSupport
+                        )
+                    },
+                    trailingContent = {
+                        RadioButton(
+                            selected = true,
+                            onClick = null,
+                            enabled = false
+                        )
+                    },
+                    colors = ListItemDefaults.colors(containerColor = colors.backgroundSurface1)
+                )
             }
         }
     }

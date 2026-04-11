@@ -199,12 +199,13 @@ class OnlineSearchManager(
     }
 
     private suspend fun getPreferredSources(): List<FoodSource> {
-        val prefs = settingsRepo.getSourcePreferences()
-        return if (prefs.isNotEmpty()) {
-            sourceRegistry.getByIds(prefs)
+        val off = sourceRegistry.getById("off") ?: return emptyList()
+        val optional = settingsRepo.getSourcePreferences().filter { it != "none" }
+        return if (optional.isNotEmpty()) {
+            // Optional source first, Open Food Facts always last
+            sourceRegistry.getByIds(optional) + off
         } else {
-            // Default: use only OpenFoodFacts
-            sourceRegistry.getById("off")?.let { listOf(it) } ?: emptyList()
+            listOf(off)
         }
     }
 

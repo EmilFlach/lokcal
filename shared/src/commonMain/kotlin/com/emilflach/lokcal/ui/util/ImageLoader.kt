@@ -64,21 +64,25 @@ private class DatabaseImageFetcher(
 ) : Fetcher {
 
     override suspend fun fetch(): FetchResult? {
-        // L2: check SQLite cache first
-        imageCache.getImage(data.entityType, data.entityId)?.let { (bytes, mime) ->
-            return SourceFetchResult(
-                source = ImageSource(Buffer().apply { write(bytes) }, options.fileSystem),
-                mimeType = mime,
-                dataSource = DataSource.DISK,
-            )
+        val isPersistent = data.entityId > 0
+
+        // L2: check SQLite cache first (only for real, persisted entities)
+        if (isPersistent) {
+            imageCache.getImage(data.entityType, data.entityId)?.let { (bytes, mime) ->
+                return SourceFetchResult(
+                    source = ImageSource(Buffer().apply { write(bytes) }, options.fileSystem),
+                    mimeType = mime,
+                    dataSource = DataSource.DISK,
+                )
+            }
         }
 
         val url = data.fallbackUrl.takeIf { it.isNotBlank() }
 
-        // L2.5: migration bridge — check Coil's existing disk cache
+        // L2.5: migration bridge — check Coil's existing disk cache (only for persistent entities)
         // Coil keys disk cache entries by the URL string for URL-based requests.
         // Images cached before this migration live here; without this tier they would be abandoned.
-        if (url != null && coilDiskCache != null) {
+        if (isPersistent && url != null && coilDiskCache != null) {
             try {
                 coilDiskCache.openSnapshot(url)?.use { snapshot ->
                     val bytes = coilDiskCache.fileSystem.read(snapshot.data) { readByteArray() }
@@ -113,7 +117,10 @@ private class DatabaseImageFetcher(
         }
         val mime = response.contentType()?.toString() ?: "image/jpeg"
 
-        imageCache.saveImage(data.entityType, data.entityId, bytes, mime)
+        // Only persist to SQLite for real entities — transient search results use temp negative IDs
+        if (isPersistent) {
+            imageCache.saveImage(data.entityType, data.entityId, bytes, mime)
+        }
 
         return SourceFetchResult(
             source = ImageSource(Buffer().apply { write(bytes) }, options.fileSystem),

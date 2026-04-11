@@ -140,6 +140,7 @@ fun IntakeViewController(
     mealType: String,
     dateIso: String,
     onDone: (Boolean) -> Unit,
+    onNavigateToSettings: () -> Unit = {},
     autoFocusSearch: Boolean = true,
     searchQuery: String = ""
 ) = ComposeUIViewController {
@@ -158,6 +159,7 @@ fun IntakeViewController(
             IntakeScreen(
                 viewModel = intakeVm,
                 onDone = onDone,
+                onNavigateToSettings = onNavigateToSettings,
                 autoFocusSearch = autoFocusSearch
             )
         }

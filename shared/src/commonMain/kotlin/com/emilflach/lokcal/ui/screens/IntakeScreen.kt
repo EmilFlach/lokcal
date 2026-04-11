@@ -31,6 +31,7 @@ import kotlin.time.Duration.Companion.milliseconds
 fun IntakeScreen(
     viewModel: IntakeViewModel,
     onDone: (itemAdded: Boolean) -> Unit,
+    onNavigateToSettings: () -> Unit = {},
     autoFocusSearch: Boolean = false,
 ) {
     val color = LocalRecipesColors.current
@@ -76,7 +77,7 @@ fun IntakeScreen(
                         }
                     }
                 } else null,
-                onSearchOnline = viewModel::searchOnline,
+                onSearchOnline = if (state.sourcesConfigured) viewModel::searchOnline else onNavigateToSettings,
                 isSearchingOnline = state.isSearchingOnline,
             )
         },
@@ -101,7 +102,8 @@ fun IntakeScreen(
             } else if (state.query.isNotBlank() && state.meals.isEmpty() && state.foods.isEmpty()) {
                 item {
                     LocalSearchEmptyState(
-                        onSearchOnline = { viewModel.searchOnline() }
+                        onSearchOnline = if (state.sourcesConfigured) viewModel::searchOnline else onNavigateToSettings,
+                        sourcesConfigured = state.sourcesConfigured,
                     )
                 }
             } else {
@@ -109,8 +111,9 @@ fun IntakeScreen(
                     AnimatedVisibility(state.query.isNotBlank()) {
                         SearchOnlineLink(
                             query = state.query,
-                            onSearchOnline = { viewModel.searchOnline() },
-                            modifier = Modifier.padding(bottom = 16.dp)
+                            onSearchOnline = if (state.sourcesConfigured) viewModel::searchOnline else onNavigateToSettings,
+                            modifier = Modifier.padding(bottom = 16.dp),
+                            sourcesConfigured = state.sourcesConfigured,
                         )
                     }
                 }

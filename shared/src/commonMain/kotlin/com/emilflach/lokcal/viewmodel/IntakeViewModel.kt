@@ -13,7 +13,7 @@ class IntakeViewModel(
     private val foodRepo: FoodRepository,
     private val intakeRepo: IntakeRepository,
     private val mealRepo: MealRepository,
-    settingsRepo: SettingsRepository,
+    private val settingsRepo: SettingsRepository,
     initialMealType: String,
     private val dateIso: String,
 ) {
@@ -28,6 +28,7 @@ class IntakeViewModel(
         val showScanner: Boolean = false,
         val onlineSearchAttempted: Boolean = false,
         val showGlobalNoResults: Boolean = false,
+        val sourcesConfigured: Boolean = true,
     ) {
         val showOnlineSearchSections: Boolean
             get() = sourceSections.any { it.foods.isNotEmpty() || it.isSearching || it.error != null } || (onlineSearchAttempted && sourceSections.all { it.noResults })
@@ -48,6 +49,9 @@ class IntakeViewModel(
 
     init {
         performSearch(state.value.selectedMealType)
+        scope.launch {
+            _state.value = _state.value.copy(sourcesConfigured = settingsRepo.getSourcePreferences().isNotEmpty())
+        }
     }
 
     fun setQuery(value: String) {
@@ -68,6 +72,12 @@ class IntakeViewModel(
         val newMap = _state.value.gramsById.toMutableMap()
         newMap[id] = grams
         _state.value = _state.value.copy(gramsById = newMap)
+    }
+
+    fun refreshSourcesConfigured() {
+        scope.launch {
+            _state.value = _state.value.copy(sourcesConfigured = settingsRepo.getSourcePreferences().isNotEmpty())
+        }
     }
 
     fun setShowScanner(show: Boolean) {
