@@ -1,1 +1,0 @@
-Only build the Android app for testing, not the entire project.

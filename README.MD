@@ -15,7 +15,7 @@ Lokcal runs natively on Android, iOS, Desktop, and Web — all from one codebase
 ## Features
 
 **Your data never leaves your device.**
-No cloud, no account, no breach surface. MyFitnessPal exposed 150 million user accounts in 2018. Lokcal stores everything locally — there is nothing to take.
+No cloud, no account, no breach surface. Lokcal stores everything locally — there is nothing to take.
 
 **Food data that matches what you actually buy.**
 Hundreds of common foods included out of the box. Add more by searching stores in the Netherlands, the US, Italy, and beyond. Open Food Facts covers everything else.
