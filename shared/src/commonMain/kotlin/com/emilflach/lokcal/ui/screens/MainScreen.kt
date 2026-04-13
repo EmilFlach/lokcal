@@ -54,8 +54,9 @@ fun MainScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val isCompact = maxHeight < 700.dp
-            val hideGraphs = maxHeight < 800.dp
+            val compactMealDescriptions = maxHeight < 900.dp
+            val compactHeader = maxHeight < 800.dp
+            val hideGraphs = maxHeight < 700.dp
             
             GradientBackground(uiState.dayState.percentageLeft.toFloat())
             Column(
@@ -78,7 +79,7 @@ fun MainScreen(
                         onOpenWeightList = onOpenWeightList,
                         onOpenStatistics = onOpenStatistics,
                         onOpenSettings = onOpenSettings,
-                        isCompact = isCompact,
+                        isCompact = compactHeader,
                         hideGraphs = hideGraphs
                     )
                 } else {
@@ -88,7 +89,7 @@ fun MainScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp)
                             .background(LocalRecipesColors.current.backgroundPage, MaterialTheme.shapes.medium)
-                            .padding(if (isCompact) 12.dp else 16.dp)
+                            .padding(if (compactHeader) 12.dp else 16.dp)
                     ) {
                         val boxWidth = maxWidth
                         Column {
@@ -97,7 +98,7 @@ fun MainScreen(
                                 colors = LocalRecipesColors.current,
                                 fadeAlpha = 1f,
                                 onOpenExercise = { onOpenExercise(uiState.selectedDate.toString()) },
-                                isCompact = isCompact
+                                isCompact = compactHeader
                             )
 
                             if (!hideGraphs) {
@@ -134,7 +135,7 @@ fun MainScreen(
                     state = dayState,
                     selectedDate = date,
                     onOpenMeal = onOpenMeal,
-                    isCompact = isCompact
+                    isCompact = compactMealDescriptions
                 )
             }
         }
