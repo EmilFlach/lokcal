@@ -3,6 +3,8 @@ package com.emilflach.lokcal.ui.components.main
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -46,7 +48,8 @@ fun MainMealList(
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 24.dp),
+                        .heightIn(min = 90.dp)
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(
@@ -76,17 +79,25 @@ fun MainMealList(
                             )
                         }
                     }
-                    Column(modifier = Modifier.width(80.dp), horizontalAlignment = Alignment.End) {
-                        Text(
-                            "kcal",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = colors.foregroundSupport,
-                        )
-                        Spacer(Modifier.height(6.dp))
-                        Text(
-                            "${s.totalKcal.roundToInt()}",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
+                    if (s.totalKcal > 0) {
+                        Column(modifier = Modifier.width(80.dp), horizontalAlignment = Alignment.End) {
+                            Text(
+                                "kcal",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = colors.foregroundSupport,
+                            )
+                            Spacer(Modifier.height(6.dp))
+                            Text(
+                                "${s.totalKcal.roundToInt()}",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    } else {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = "Add food",
+                            tint = colors.foregroundSupport,
                         )
                     }
                 }
