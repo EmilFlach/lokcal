@@ -40,8 +40,8 @@ fun GradientBackground(percentageLeft: Float) {
             drawRect(
                 brush = Brush.verticalGradient(
                     colorStops = arrayOf(
-                        0.0f to colors.backgroundPage,
-                        percentageLeft.coerceIn(0f, 0.85f) * 1.5f to colors.backgroundPage,
+                        0.0f to colors.backgroundSurface1.copy(0.5f),
+                        percentageLeft.coerceIn(0f, 0.85f) * 1.5f to colors.backgroundSurface1.copy(0.5f),
                         1.0f to colors.backgroundSurface2
                     )
                 ),
