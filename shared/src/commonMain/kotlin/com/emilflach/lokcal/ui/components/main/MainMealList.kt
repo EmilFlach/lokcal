@@ -49,7 +49,7 @@ fun MainMealList(
                     Modifier
                         .fillMaxWidth()
                         .heightIn(min = 90.dp)
-                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                        .padding(horizontal = 16.dp, vertical = 24.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(
