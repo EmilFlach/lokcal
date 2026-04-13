@@ -20,8 +20,8 @@ import kotlinx.datetime.LocalDate
 fun MainSummary(
     state: DayState,
     formattedDate: String,
-    onDateClick: () -> Unit,
     selectedDate: LocalDate,
+    onDateSelect: (LocalDate) -> Unit,
     last7: List<DayDelta>,
     animationTrigger: Int,
     onOpenExercise: (String) -> Unit,
@@ -45,7 +45,8 @@ fun MainSummary(
         Column {
             MainSummaryHeader(
                 formattedDate = formattedDate,
-                onDateClick = onDateClick,
+                selectedDate = selectedDate,
+                onDateSelect = onDateSelect,
                 onOpenWeightList = onOpenWeightList,
                 onOpenWeightToday = onOpenWeightToday,
                 onOpenStatistics = onOpenStatistics,

@@ -35,16 +35,21 @@ fun MainScreen(
     val uiState by viewModel.uiState.collectAsState()
     val animationTrigger by viewModel.animationTrigger.collectAsState()
     val pagerState = rememberPagerState(initialPage = viewModel.initialPage) { viewModel.pageCount }
+    val isProgrammaticScroll = remember { arrayOf(false) }
 
     LaunchedEffect(uiState.selectedDate) {
         val targetPage = viewModel.getPageForDate(uiState.selectedDate)
         if (pagerState.currentPage != targetPage) {
-            pagerState.scrollToPage(targetPage)
+            isProgrammaticScroll[0] = true
+            pagerState.animateScrollToPage(targetPage)
+            isProgrammaticScroll[0] = false
         }
     }
 
     LaunchedEffect(pagerState.currentPage) {
-        viewModel.onPageSelected(pagerState.currentPage)
+        if (!isProgrammaticScroll[0]) {
+            viewModel.onPageSelected(pagerState.currentPage)
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -64,8 +69,8 @@ fun MainScreen(
                     MainSummary(
                         state = uiState.dayState,
                         formattedDate = viewModel.formattedDate(),
-                        onDateClick = { viewModel.setToCurrentDate() },
                         selectedDate = uiState.selectedDate,
+                        onDateSelect = { viewModel.loadFor(it) },
                         last7 = uiState.last7Deltas,
                         animationTrigger = animationTrigger,
                         onOpenExercise = onOpenExercise,

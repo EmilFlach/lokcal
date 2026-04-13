@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Simple multiplatform ViewModel-like class to manage state for the Main screen.
@@ -55,7 +56,7 @@ class MainViewModel(
         viewModelScope.launch {
             while (isActive) {
                 fetchAndLogHealthData()
-                delay(10000)
+                delay(10000.milliseconds)
                 _animationTrigger.value++
             }
         }
@@ -73,10 +74,13 @@ class MainViewModel(
         }
     }
 
-    fun setToCurrentDate() {
-        val today = LocalDate.parse(currentDateIso())
-        loadFor(today)
+    @Suppress("unused") // Used in MainView.swift
+    fun navigateToDate(dateIso: String) {
+        loadFor(LocalDate.parse(dateIso))
     }
+
+    @Suppress("unused") // Used in MainView.swift
+    fun getSelectedDateIso(): String = _uiState.value.selectedDate.toString()
 
     fun onPageSelected(page: Int) {
         val today = LocalDate.parse(currentDateIso())

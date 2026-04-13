@@ -27,3 +27,14 @@ func getFormattedDate() -> String {
 func getShowWeightPrompt() -> Bool {
     (ScreenFactoriesKt.getGlobalMainViewModel().uiState.value as? MainUiState)?.dayState.showWeightPrompt == true
 }
+
+func getSelectedDateIso() -> String {
+    ScreenFactoriesKt.getGlobalMainViewModel().getSelectedDateIso()
+}
+
+func dateFromIso(_ iso: String) -> Date {
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withFullDate]
+    return formatter.date(from: iso) ?? Date()
+}
+

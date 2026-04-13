@@ -9,12 +9,13 @@ struct MainScreen: View {
     @State private var mainScreenTitle = ""
     @State private var showWeightBadge = false
     @State private var badgePulse = false
+    @State private var showDatePicker = false
+    @State private var pickedDate = Date()
 
     var body: some View {
         MainView(navigationPath: $navigationPath, refreshKey: refreshKey)
             .ignoresSafeArea(.all)
             .toolbarBackground(.hidden, for: .navigationBar)
-            .navigationTitle(mainScreenTitle)
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 ScreenFactoriesKt.getGlobalMainViewModel().refresh()
@@ -22,14 +23,11 @@ struct MainScreen: View {
                 showWeightBadge = getShowWeightPrompt()
             }
             .onReceive(Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()) { _ in
+                guard navigationPath.isEmpty else { return }
                 let newTitle = getFormattedDate()
-                if newTitle != mainScreenTitle {
-                    mainScreenTitle = newTitle
-                }
+                if newTitle != mainScreenTitle { mainScreenTitle = newTitle }
                 let newBadge = getShowWeightPrompt()
-                if newBadge != showWeightBadge {
-                    showWeightBadge = newBadge
-                }
+                if newBadge != showWeightBadge { showWeightBadge = newBadge }
             }
             .onReceive(Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()) { _ in
                 if showWeightBadge {
@@ -38,32 +36,84 @@ struct MainScreen: View {
                     }
                 }
             }
-            .toolbar {
-                ToolbarItemGroup(placement: .primaryAction) {
-                    Button(action: {
-                        navigationPath.append(NavigationDestination.statistics)
-                    }) {
-                        Image(systemName: "chart.bar")
+            .sheet(isPresented: $showDatePicker) {
+                NavigationView {
+                    DatePicker(
+                        "",
+                        selection: $pickedDate,
+                        displayedComponents: .date
+                    )
+                    .datePickerStyle(.graphical)
+                    .padding(.horizontal)
+                    .navigationTitle("Select Date")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel") { showDatePicker = false }
+                        }
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") {
+                                let formatter = ISO8601DateFormatter()
+                                formatter.formatOptions = [.withFullDate]
+                                let dateIso = formatter.string(from: pickedDate)
+                                ScreenFactoriesKt.getGlobalMainViewModel().navigateToDate(dateIso: dateIso)
+                                showDatePicker = false
+                            }
+                        }
                     }
+                }
+                .presentationDetents([.medium])
+            }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: {
-                        let currentDate = getCurrentDateIso()
-                        navigationPath.append(NavigationDestination.weightList(openAdd: showWeightBadge, returnToSettings: false, dateIso: showWeightBadge ? currentDate : nil, refreshId: refreshKey))
+                        pickedDate = dateFromIso(getSelectedDateIso())
+                        showDatePicker = true
                     }) {
-                        Image(systemName: "scalemass")
-                            .overlay(alignment: .topTrailing) {
-                                if showWeightBadge {
+                        Text(mainScreenTitle)
+                            .font(.headline)
+                    }
+                }
+                ToolbarItemGroup(placement: .primaryAction) {
+                    if showWeightBadge {
+                        Button(action: {
+                            let currentDate = getCurrentDateIso()
+                            navigationPath.append(NavigationDestination.weightList(openAdd: true, returnToSettings: false, dateIso: currentDate, refreshId: refreshKey))
+                        }) {
+                            Image(systemName: "scalemass")
+                                .overlay(alignment: .topTrailing) {
                                     Circle()
                                         .fill(Color(red: 0xD9/255, green: 0x91/255, blue: 0x0D/255))
                                         .frame(width: 7, height: 7)
                                         .opacity(badgePulse ? 0.3 : 1.0)
-                                        .offset(x: 4, y: -4)
+                                        .offset(x: 0, y: -2)
                                 }
-                            }
+                        }
+                    } else {
+                        Button(action: {
+                            navigationPath.append(NavigationDestination.statistics)
+                        }) {
+                            Image(systemName: "chart.bar")
+                        }
                     }
-                    Button(action: {
-                        navigationPath.append(NavigationDestination.settings)
-                    }) {
-                        Image(systemName: "gearshape")
+                    Menu {
+                        Button(action: {
+                            navigationPath.append(NavigationDestination.weightList(openAdd: false, returnToSettings: false, dateIso: nil, refreshId: refreshKey))
+                        }) {
+                            Label("Weight", systemImage: "scalemass")
+                        }
+                        Button(action: {
+                            navigationPath.append(NavigationDestination.statistics)
+                        }) {
+                            Label("Statistics", systemImage: "chart.bar")
+                        }
+                        Button(action: {
+                            navigationPath.append(NavigationDestination.settings)
+                        }) {
+                            Label("Settings", systemImage: "gearshape")
+                        }
+                    } label: {
+                        Image(systemName: "slider.horizontal.3")
                     }
                 }
             }
