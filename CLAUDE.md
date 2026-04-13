@@ -43,3 +43,10 @@ Run specific: `./gradlew :shared:jvmTest --tests "com.emilflach.lokcal.data.Food
 
 ## Architecture
 Repository pattern • ViewModels (StateFlow) • `expect`/`actual` for platform code (BackupManager, HealthManager, CameraManager, DriverFactory)
+
+## iOS — What Needs Implementing Twice
+
+When adding a **new screen**, also update:
+1. `shared/src/iosMain/.../screens/ScreenFactories.kt` — add a `*ViewController()` factory function
+2. `iosApp/iosApp/NativeNavigationView.swift` — add a case to `NavigationDestination` and route it
+3. `iosApp/iosApp/*View.swift` — create a SwiftUI `UIViewControllerRepresentable` wrapper
