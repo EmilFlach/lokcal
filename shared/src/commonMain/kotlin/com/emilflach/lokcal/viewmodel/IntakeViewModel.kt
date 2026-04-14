@@ -9,6 +9,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 sealed class SearchResult {
     data class FoodResult(val food: Food) : SearchResult()
@@ -55,39 +56,39 @@ class IntakeViewModel(
     init {
         performSearch(state.value.selectedMealType)
         scope.launch {
-            _state.value = _state.value.copy(sourcesConfigured = settingsRepo.getSourcePreferences().isNotEmpty())
+            _state.update { it.copy(sourcesConfigured = settingsRepo.getSourcePreferences().isNotEmpty()) }
         }
     }
 
     fun setQuery(value: String) {
         // Cancel any ongoing online searches when the query changes
         onlineSearchManager.clear()
-        _state.value = _state.value.copy(
-            query = value,
-            gramsById = emptyMap(),
-            sourceSections = emptyList(),
-            isSearchingOnline = false,
-            onlineSearchAttempted = false,
-            showGlobalNoResults = false,
-        )
+        _state.update {
+            it.copy(
+                query = value,
+                gramsById = emptyMap(),
+                sourceSections = emptyList(),
+                isSearchingOnline = false,
+                onlineSearchAttempted = false,
+                showGlobalNoResults = false,
+            )
+        }
         performSearch(state.value.selectedMealType)
     }
 
     fun setGrams(id: Long, grams: String) {
-        val newMap = _state.value.gramsById.toMutableMap()
-        newMap[id] = grams
-        _state.value = _state.value.copy(gramsById = newMap)
+        _state.update { it.copy(gramsById = it.gramsById + (id to grams)) }
     }
 
     @Suppress("UNUSED") // Used by Swift
     fun refreshSourcesConfigured() {
         scope.launch {
-            _state.value = _state.value.copy(sourcesConfigured = settingsRepo.getSourcePreferences().isNotEmpty())
+            _state.update { it.copy(sourcesConfigured = settingsRepo.getSourcePreferences().isNotEmpty()) }
         }
     }
 
     fun setShowScanner(show: Boolean) {
-        _state.value = _state.value.copy(showScanner = show)
+        _state.update { it.copy(showScanner = show) }
     }
 
     private fun performSearch(mealType: String) {
@@ -115,7 +116,7 @@ class IntakeViewModel(
                 }
                 (mealResults + foodResults).sortedByDescending { it.second }.map { it.first }
             }
-            _state.value = _state.value.copy(results = results)
+            _state.update { it.copy(results = results) }
         }
     }
 
@@ -220,17 +221,19 @@ class IntakeViewModel(
             return
         }
 
-        _state.value = _state.value.copy(onlineSearchAttempted = true)
+        _state.update { it.copy(onlineSearchAttempted = true) }
         onlineSearchManager.search(state.value.query) {
             updateOnlineState()
         }
     }
 
     private fun updateOnlineState() {
-        _state.value = _state.value.copy(
-            isSearchingOnline = onlineSearchManager.isSearching,
-            sourceSections = onlineSearchManager.sections,
-            showGlobalNoResults = onlineSearchManager.showGlobalNoResults
-        )
+        _state.update {
+            it.copy(
+                isSearchingOnline = onlineSearchManager.isSearching,
+                sourceSections = onlineSearchManager.sections,
+                showGlobalNoResults = onlineSearchManager.showGlobalNoResults
+            )
+        }
     }
 }
