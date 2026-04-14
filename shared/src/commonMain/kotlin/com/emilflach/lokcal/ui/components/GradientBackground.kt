@@ -38,6 +38,10 @@ fun GradientBackground(percentageLeft: Float) {
             val circleX = size.width / 2
 
             drawRect(
+                color = colors.backgroundPage,
+                size = size
+            )
+            drawRect(
                 brush = Brush.verticalGradient(
                     colorStops = arrayOf(
                         0.0f to colors.backgroundSurface1.copy(0.5f),

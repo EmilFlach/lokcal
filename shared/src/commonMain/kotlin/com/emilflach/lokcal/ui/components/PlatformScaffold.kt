@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.util.AppPlatform
 import com.emilflach.lokcal.util.currentPlatform
 import com.emilflach.lokcal.util.getTopSafeAreaInset
@@ -91,7 +92,7 @@ fun PlatformScaffold(
     snackbarHost: @Composable () -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
     floatingActionButtonPosition: FabPosition = FabPosition.End,
-    containerColor: Color = Color.Unspecified,
+    containerColor: Color = LocalRecipesColors.current.backgroundPage,
     contentColor: Color = contentColorFor(containerColor),
     hasFab: Boolean = false,
     scrollState: LazyListState? = null,
