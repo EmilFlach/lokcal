@@ -54,22 +54,27 @@ UPDATE Food
 SET name = ?, energy_kcal_per_100g = ?, serving_size = ?, gtin13 = ?, image_url = ?, product_url = ?, source = ?
 WHERE id = ?;
 
--- Search query - now includes aliases
-searchByAny:
-SELECT DISTINCT f.* FROM Food f
-LEFT JOIN FoodAlias fa ON fa.food_id = f.id
-WHERE LOWER(f.name) LIKE ?
-   OR LOWER(fa.alias) LIKE ?
-   OR f.gtin13 = ?
+-- Ranked search query: returns results sorted by combined relevance + tracking score.
+-- Uses EXISTS for alias match to avoid duplicate rows (no GROUP BY / DISTINCT needed).
+searchRanked:
+SELECT f.*, COALESCE(tc.track_count, 0) AS track_count FROM Food f
+LEFT JOIN (
+    SELECT source_food_id, COUNT(*) AS track_count
+    FROM Intake
+    WHERE source_type = 'FOOD' AND source_food_id IS NOT NULL
+    GROUP BY source_food_id
+) tc ON tc.source_food_id = f.id
+WHERE LOWER(f.name) LIKE :like
+   OR EXISTS (SELECT 1 FROM FoodAlias fa WHERE fa.food_id = f.id AND LOWER(fa.alias) LIKE :like)
 ORDER BY
-    CASE f.source
-        WHEN 'manual' THEN 1
-        WHEN 'nevo' THEN 2
-        WHEN 'mealie' THEN 3
-        WHEN 'ah' THEN 4
-        ELSE 5
-    END,
-    f.name;
+    CASE
+        WHEN LOWER(f.name) = :qLower THEN 20
+        WHEN INSTR(LOWER(f.name), :qLower) = 1 THEN 10
+        WHEN INSTR(LOWER(f.name), :qLower) > 0 THEN 0
+        ELSE 0
+    END + COALESCE(tc.track_count, 0) DESC,
+    f.name
+LIMIT 100;
 
 -- Alias management queries
 insertAlias:
@@ -79,11 +84,5 @@ VALUES (?, ?, ?);
 selectAliasesByFoodId:
 SELECT * FROM FoodAlias WHERE food_id = ?;
 
-selectAliasesByType:
-SELECT * FROM FoodAlias WHERE food_id = ? AND alias_type = ?;
-
 deleteAlias:
 DELETE FROM FoodAlias WHERE id = ?;
-
-updateAlias:
-UPDATE FoodAlias SET alias = ?, alias_type = ? WHERE id = ?;

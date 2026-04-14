@@ -22,6 +22,7 @@ import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.*
 import com.emilflach.lokcal.util.showBarcodeScanner
 import com.emilflach.lokcal.viewmodel.IntakeViewModel
+import com.emilflach.lokcal.viewmodel.SearchResult
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
@@ -46,8 +47,8 @@ fun IntakeScreen(
 
     var waitingForCameraPermission by remember { mutableStateOf(false) }
     var showItems by remember { mutableStateOf(false) }
-    LaunchedEffect(state.meals, state.foods) {
-        if ((state.meals.isNotEmpty() || state.foods.isNotEmpty()) && !showItems) {
+    LaunchedEffect(state.results) {
+        if (state.results.isNotEmpty() && !showItems) {
             delay(10.milliseconds)
             showItems = true
         }
@@ -90,7 +91,7 @@ fun IntakeScreen(
             modifier = Modifier.fillMaxSize(),
             state = listState
         ) {
-            val totalSize = state.meals.size + state.foods.size
+            val totalSize = state.results.size
 
             if (state.showOnlineSearchSections) {
                 onlineSearchSections(
@@ -99,7 +100,7 @@ fun IntakeScreen(
                     requesters = requesters,
                     onDone = onDone
                 )
-            } else if (state.query.isNotBlank() && state.meals.isEmpty() && state.foods.isEmpty()) {
+            } else if (state.query.isNotBlank() && state.results.isEmpty()) {
                 item {
                     LocalSearchEmptyState(
                         onSearchOnline = if (state.sourcesConfigured) viewModel::searchOnline else onNavigateToSettings,
@@ -117,36 +118,29 @@ fun IntakeScreen(
                         )
                     }
                 }
-                itemsIndexed(items = state.meals) { index, item ->
+                itemsIndexed(items = state.results) { index, item ->
                     AnimatedVisibility(
                         visible = showItems,
                         enter = intakeItemEnterTransition(index)
                     ) {
-                        MealIntakeListItem(
-                            meal = item,
-                            viewModel = viewModel,
-                            index = index,
-                            size = totalSize,
-                            requesters = requesters,
-                            onDone = onDone
-                        )
-                    }
-                }
-
-                itemsIndexed(items = state.foods) { index, item ->
-                    val globalIndex = state.meals.size + index
-                    AnimatedVisibility(
-                        visible = showItems,
-                        enter = intakeItemEnterTransition(globalIndex)
-                    ) {
-                        FoodIntakeListItem(
-                            food = item,
-                            viewModel = viewModel,
-                            index = globalIndex,
-                            size = totalSize,
-                            requesters = requesters,
-                            onDone = onDone
-                        )
+                        when (item) {
+                            is SearchResult.MealResult -> MealIntakeListItem(
+                                meal = item.meal,
+                                viewModel = viewModel,
+                                index = index,
+                                size = totalSize,
+                                requesters = requesters,
+                                onDone = onDone
+                            )
+                            is SearchResult.FoodResult -> FoodIntakeListItem(
+                                food = item.food,
+                                viewModel = viewModel,
+                                index = index,
+                                size = totalSize,
+                                requesters = requesters,
+                                onDone = onDone
+                            )
+                        }
                     }
                 }
             }

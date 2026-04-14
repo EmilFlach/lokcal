@@ -52,6 +52,26 @@ SELECT * FROM Meal
 WHERE lower(name) LIKE ?
 ORDER BY name;
 
+-- Ranked meal search: returns results sorted by combined relevance + tracking score
+mealSearchRanked:
+SELECT m.*, COALESCE(tc.track_count, 0) AS track_count FROM Meal m
+LEFT JOIN (
+    SELECT source_meal_id, COUNT(*) AS track_count
+    FROM Intake
+    WHERE source_type = 'MEAL' AND source_meal_id IS NOT NULL
+    GROUP BY source_meal_id
+) tc ON tc.source_meal_id = m.id
+WHERE LOWER(m.name) LIKE :like
+ORDER BY
+    CASE
+        WHEN LOWER(m.name) = :qLower THEN 20
+        WHEN INSTR(LOWER(m.name), :qLower) = 1 THEN 10
+        WHEN INSTR(LOWER(m.name), :qLower) > 0 THEN 0
+        ELSE 0
+    END + COALESCE(tc.track_count, 0) DESC,
+    m.name
+LIMIT 100;
+
 -- Update meal meta fields
 updateMealMeta:
 UPDATE Meal SET name = ?, image_url = ?, total_portions = ? WHERE id = ?;

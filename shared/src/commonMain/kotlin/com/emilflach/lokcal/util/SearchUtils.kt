@@ -1,62 +1,29 @@
 package com.emilflach.lokcal.util
 
-/**
- * Shared helpers for order-agnostic tokenized search across entities (e.g., foods, meals).
- *
- * Centralized here to keep repository code lean and the behavior consistent.
- *
- * Concepts implemented:
- * - Tokenization: split a query into lowercase tokens by whitespace.
- * - exactMatch/prefixMatch: case-insensitive checks across a list of fields.
- * - containsPos: best (lowest) position where the full query appears in any field; 9999 if absent.
- * - tokensPresent: each token must be present in at least one field (order agnostic, cross-field).
- * - tokensPosSum: sum of the best positions for each token across fields; lower is better.
- */
-object SearchUtils {
-    /** Split already-lowercased query into tokens. */
-    fun tokenize(qLower: String): List<String> = qLower.split(Regex("\\s+")).filter { it.isNotBlank() }
+private val charNormMap: Map<Char, String> = mapOf(
+    // Diacritics
+    'à' to "a", 'á' to "a", 'â' to "a", 'ã' to "a", 'ä' to "a", 'å' to "a",
+    'æ' to "ae",
+    'ç' to "c",
+    'è' to "e", 'é' to "e", 'ê' to "e", 'ë' to "e",
+    'ì' to "i", 'í' to "i", 'î' to "i", 'ï' to "i",
+    'ð' to "d",
+    'ñ' to "n",
+    'ò' to "o", 'ó' to "o", 'ô' to "o", 'õ' to "o", 'ö' to "o", 'ø' to "o",
+    'ù' to "u", 'ú' to "u", 'û' to "u", 'ü' to "u",
+    'ý' to "y", 'ÿ' to "y",
+    'þ' to "th",
+    'ß' to "ss",
+    'œ' to "oe",
+    // Punctuation equivalences
+    '&' to "and",  // "Ben & Jerry's" ↔ "ben and jerry"
+    '\'' to "",    // strip ASCII apostrophe: "Jerry's" → "Jerrys"
+    '\u2019' to "", // strip right single quote ('): "Jerry's" → "Jerrys"
+)
 
-    /** Any field equals query (case-insensitive). */
-    fun exactMatch(fields: List<String>, q: String): Boolean = fields.any { it.equals(q, ignoreCase = true) }
-
-    /** Any field starts with query (case-insensitive). */
-    fun prefixMatch(fields: List<String>, q: String): Boolean = fields.any { it.startsWith(q, ignoreCase = true) }
-
-    /** Best position (lowest index) of the lowercase query within lowercase fields. Returns 9999 if not found. */
-    fun containsPos(fields: List<String>, qLower: String): Int {
-        var best = Int.MAX_VALUE
-        for (s in fields) {
-            val idx = s.lowercase().indexOf(qLower)
-            if (idx >= 0 && idx < best) best = idx
-        }
-        return if (best == Int.MAX_VALUE) 9999 else best
-    }
-
-    /** True if every token is contained in at least one field (case-insensitive, order-agnostic, cross-field). */
-    fun tokensPresent(fields: List<String>, tokens: List<String>): Boolean {
-        if (tokens.isEmpty()) return true
-        val lowers = fields.map { it.lowercase() }
-        return tokens.all { t -> lowers.any { s -> s.contains(t) } }
-    }
-
-    /** Sum of best positions over tokens; uses lowercase fields; 9999 per token if missing. */
-    fun tokensPosSum(fields: List<String>, tokens: List<String>): Int {
-        if (tokens.isEmpty()) return 0
-        val lowers = fields.map { it.lowercase() }
-        var sum = 0
-        for (t in tokens) {
-            var best = Int.MAX_VALUE
-            for (s in lowers) {
-                val idx = s.indexOf(t)
-                if (idx >= 0 && idx < best) best = idx
-            }
-            sum += if (best == Int.MAX_VALUE) 9999 else best
-        }
-        return sum
-    }
-
-    /** Longest token convenience. Returns null when tokens is empty. */
-    fun longestToken(tokens: List<String>): String? = tokens.maxByOrNull { it.length }
+/** Normalizes characters for search: strips diacritics, maps "&" → "and", strips apostrophes. Input should be lowercased first. */
+fun normalize(s: String): String = buildString(s.length) {
+    for (c in s) append(charNormMap[c] ?: c)
 }
 
 fun levenshtein(a: String, b: String): Int {
@@ -76,9 +43,9 @@ fun levenshtein(a: String, b: String): Int {
             prev = dp[j]
             val cost = if (a[i - 1] == b[j - 1]) 0 else 1
             dp[j] = minOf(
-                dp[j] + 1,        // deletion
-                dp[j - 1] + 1,    // insertion
-                prevDiag + cost   // substitution
+                dp[j] + 1,
+                dp[j - 1] + 1,
+                prevDiag + cost
             )
         }
     }

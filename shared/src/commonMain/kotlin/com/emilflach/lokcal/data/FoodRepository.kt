@@ -6,8 +6,8 @@ import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import com.emilflach.lokcal.Database
 import com.emilflach.lokcal.Food
 import com.emilflach.lokcal.FoodAlias
-import com.emilflach.lokcal.util.SearchUtils
 import com.emilflach.lokcal.util.levenshtein
+import com.emilflach.lokcal.util.normalize
 
 class FoodRepository(database: Database) {
     private val queries = database.foodQueries
@@ -79,88 +79,55 @@ class FoodRepository(database: Database) {
     }
 
     /**
-     * Search foods with order-agnostic, multi-field logic.
-     * Now searches across food names and aliases stored in FoodAlias table.
-     * The SQL query with LEFT JOIN handles the alias matching, so we just use the name field for sorting.
+     * Returns foods ranked by relevance for the given query. SQL handles scoring and ordering;
+     * Kotlin only filters for multi-word token presence and handles the Levenshtein fallback.
      */
-    suspend fun search(query: String, trackingCounts: Map<Long, Long> = emptyMap()): List<Food> {
+    suspend fun search(query: String): List<Food> = searchWithCounts(query).map { it.first }
+
+    /** Like [search] but also returns the track count for each result, avoiding a separate Intake scan. */
+    suspend fun searchWithCounts(query: String): List<Pair<Food, Int>> {
         val q = query.trim()
         if (q.isEmpty()) return emptyList()
         val qLower = q.lowercase()
+        val qNorm = normalize(qLower)
 
-        // If the query looks like a GTIN-13 (EAN-13) barcode, try exact match on gtin13 first
+        // GTIN-13 barcode: try exact match first
         val digitsOnly = q.filter { it.isDigit() }
-        if (digitsOnly.length == 13) {
+        if (digitsOnly.length > 5) {
             val byBarcode = queries.selectByGtin13(digitsOnly).awaitAsList()
-            if (byBarcode.isNotEmpty()) return byBarcode
+            if (byBarcode.isNotEmpty()) return byBarcode.map { Pair(it, 0) }
         }
 
-        fun fields(f: Food): List<String> = listOf(f.name)
-        fun exactMatch(f: Food): Boolean = SearchUtils.exactMatch(fields(f), q)
-        fun prefixMatch(f: Food): Boolean = SearchUtils.prefixMatch(fields(f), q)
-        fun containsPos(f: Food): Int = SearchUtils.containsPos(fields(f), qLower)
-        fun trackingCount(f: Food): Long = trackingCounts[f.id] ?: 0L
-        fun levScore(f: Food): Int {
-            var best = Int.MAX_VALUE
-            for (s in fields(f)) {
-                val d = levenshtein(s.lowercase(), qLower)
-                if (d < best) best = d
-            }
-            return best
-        }
+        // Normalize query for matching; drop punctuation-only tokens (e.g. lone "&")
+        val tokens = qNorm.split(Regex("\\s+"))
+            .filter { it.isNotBlank() && it.any { c -> c.isLetterOrDigit() } }
+        val primary = tokens.maxByOrNull { it.length } ?: qNorm
+        val candidates = queries.searchRanked("%$primary%", qNorm).awaitAsList()
 
-        // Multi-word, order-agnostic search
-        val tokens = SearchUtils.tokenize(qLower)
-        if (tokens.size >= 2) {
-            val primary = SearchUtils.longestToken(tokens) ?: tokens.first()
-            val likePrimary = "%$primary%"
-            val initial = queries.searchByAny(likePrimary, likePrimary, q).awaitAsList()
-            fun tokensPosSum(f: Food): Int = SearchUtils.tokensPosSum(fields(f), tokens)
-            val filtered = initial.filter { f ->
-                SearchUtils.tokensPresent(fields(f), tokens)
-            }
-            if (filtered.isNotEmpty()) {
-                return filtered.sortedWith(
-                    compareByDescending<Food> { trackingCount(it) > 0 }
-                        .thenByDescending { trackingCount(it) }
-                        .thenBy { if (exactMatch(it)) 0 else 1 }
-                        .thenBy { if (prefixMatch(it)) 0 else 1 }
-                        .thenBy { tokensPosSum(it) }
-                        .thenBy { levScore(it) }
-                        .thenBy { it.name.lowercase() }
+        if (candidates.isNotEmpty()) {
+            val filtered = if (tokens.size >= 2)
+                candidates.filter { row -> tokens.all { t -> normalize(row.name.lowercase()).contains(t) } }
+            else
+                candidates
+            return filtered.map { row ->
+                Pair(
+                    Food(row.id, row.name, row.energy_kcal_per_100g, row.unit, row.serving_size,
+                         row.gtin13, row.image_url, row.product_url, row.source, row.created_at),
+                    row.track_count.toInt()
                 )
             }
         }
 
-        val like = "%$qLower%"
-        val candidatesLike = queries.searchByAny(like, like, q).awaitAsList()
-
-        if (candidatesLike.isNotEmpty()) {
-            return candidatesLike.sortedWith(
-                compareByDescending<Food> { trackingCount(it) > 0 }
-                    .thenByDescending { trackingCount(it) }
-                    .thenBy { if (exactMatch(it)) 0 else 1 }
-                    .thenBy { if (prefixMatch(it)) 0 else 1 }
-                    .thenBy { containsPos(it) }
-                    .thenBy { levScore(it) }
-                    .thenBy { it.name.lowercase() }
-            )
-        }
-
-        // Levenshtein fallback
+        // Normalized full-scan: handles accented DB names that SQLite LIKE can't match
         val all = queries.selectAll().awaitAsList()
-        val withScore = all.map { it to levScore(it) }
-            .filter { it.second <= 2 }
-        
-        if (withScore.isNotEmpty()) {
-            return withScore.sortedWith(
-                compareByDescending<Pair<Food, Int>> { trackingCount(it.first) > 0 }
-                    .thenByDescending { trackingCount(it.first) }
-                    .thenBy { it.second } // distance
-                    .thenBy { it.first.name.lowercase() }
-            ).map { it.first }
+        val normalizedMatches = if (tokens.size >= 2) {
+            all.filter { f -> tokens.all { t -> normalize(f.name.lowercase()).contains(t) } }
+        } else {
+            all.filter { f -> normalize(f.name.lowercase()).contains(qNorm) }
         }
+        if (normalizedMatches.isNotEmpty()) return normalizedMatches.map { Pair(it, 0) }
 
-        return emptyList()
+        // Levenshtein fallback: edit distance on normalized strings
+        return all.filter { levenshtein(normalize(it.name.lowercase()), qNorm) <= 2 }.map { Pair(it, 0) }
     }
 }

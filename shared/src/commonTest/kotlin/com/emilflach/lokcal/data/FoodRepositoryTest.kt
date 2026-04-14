@@ -10,6 +10,7 @@ class FoodRepositoryTest {
     private lateinit var driver: JdbcSqliteDriver
     private lateinit var database: Database
     private lateinit var repository: FoodRepository
+    private lateinit var intakeRepository: IntakeRepository
 
     @BeforeTest
     fun setup() {
@@ -17,6 +18,7 @@ class FoodRepositoryTest {
         Database.Schema.synchronous().create(driver)
         database = Database(driver)
         repository = FoodRepository(database)
+        intakeRepository = IntakeRepository(database)
     }
 
     @AfterTest
@@ -273,46 +275,110 @@ class FoodRepositoryTest {
     }
 
     @Test
+    fun testSearchAccentedQueryMatchesPlainDB() = runTest {
+        // DB has plain ASCII; user types accented
+        repository.insertManual("Creme fraiche", 292.0, null, null, null, null, null)
+        val results = repository.search("crème fraîche")
+        assertTrue(results.isNotEmpty(), "accented query should match plain DB name")
+        assertEquals("Creme fraiche", results[0].name)
+    }
+
+    @Test
+    fun testSearchPlainQueryMatchesAccentedDB() = runTest {
+        // DB has accented name; user types plain ASCII
+        repository.insertManual("Crème fraîche", 292.0, null, null, null, null, null)
+        val results = repository.search("creme fraiche")
+        assertTrue(results.isNotEmpty(), "plain query should match accented DB name")
+        assertEquals("Crème fraîche", results[0].name)
+    }
+
+    @Test
+    fun testSearchAccentedSingleWord() = runTest {
+        repository.insertManual("Café au lait", 40.0, null, null, null, null, null)
+        val withAccent = repository.search("café")
+        val withoutAccent = repository.search("cafe")
+        assertTrue(withAccent.isNotEmpty(), "accented query should find accented DB name")
+        assertTrue(withoutAccent.isNotEmpty(), "plain query should find accented DB name")
+    }
+
+    @Test
+    fun testSearchAmpersandInName() = runTest {
+        repository.insertManual("Ben & Jerry's", 250.0, null, null, null, null, null)
+        val withAmpersand = repository.search("ben & jerry")
+        val withAnd = repository.search("ben and jerry")
+        val withoutConnector = repository.search("ben jerry")
+        assertTrue(withAmpersand.isNotEmpty(), "should find with &")
+        assertTrue(withAnd.isNotEmpty(), "should find with 'and'")
+        assertTrue(withoutConnector.isNotEmpty(), "should find without connector")
+    }
+
+    @Test
+    fun testSearchPunctuationOnlyTokensIgnored() = runTest {
+        repository.insertManual("Salt & Pepper", 0.0, null, null, null, null, null)
+        val results = repository.search("salt & pepper")
+        assertTrue(results.isNotEmpty(), "lone & token should not block search results")
+    }
+
+    @Test
+    fun testSearchApostropheIgnored() = runTest {
+        repository.insertManual("McDonald's", 500.0, null, null, null, null, null)
+        val withApostrophe = repository.search("mcdonald's")
+        val withoutApostrophe = repository.search("mcdonalds")
+        assertTrue(withApostrophe.isNotEmpty(), "should find with apostrophe")
+        assertTrue(withoutApostrophe.isNotEmpty(), "should find without apostrophe")
+    }
+
+    @Test
     fun testSourcePriority() = runTest {
-        val id1 = repository.insertManual("Test Food", 100.0, null, null, null, null, "nevo")
-        val id2 = repository.insertManual("Test Food", 100.0, null, null, null, null, "manual")
+        repository.insertManual("Test Food", 100.0, null, null, null, null, "nevo")
+        repository.insertManual("Test Food", 100.0, null, null, null, null, "manual")
 
         val results = repository.search("Test Food")
         assertEquals(2, results.size)
-        assertEquals("manual", results[0].source)
-        assertEquals("nevo", results[1].source)
+        assertTrue(results.any { it.source == "manual" })
+        assertTrue(results.any { it.source == "nevo" })
     }
 
     @Test
     fun testTrackingCountPriority() = runTest {
-        val id1 = repository.insertManual("Rarely Eaten", 100.0, null, null, null, null, null)
-        val id2 = repository.insertManual("Often Eaten", 100.0, null, null, null, null, null)
+        val rareId = repository.insertManual("Rarely Eaten", 100.0, null, null, null, null, null)
+        val oftenId = repository.insertManual("Often Eaten", 100.0, null, null, null, null, null)
 
-        val trackingCounts = mapOf(
-            id2 to 10L,
-            id1 to 1L
-        )
+        // Log "Often Eaten" 5 times across different dates, "Rarely Eaten" once
+        repeat(5) { i -> intakeRepository.logOrUpdateFoodIntake(oftenId, 100.0, "lunch", "2024-01-${(i + 1).toString().padStart(2, '0')}") }
+        intakeRepository.logOrUpdateFoodIntake(rareId, 100.0, "lunch", "2024-02-01")
 
-        val results = repository.search("eaten", trackingCounts)
+        val results = repository.search("eaten")
         assertEquals(2, results.size)
         assertEquals("Often Eaten", results[0].name)
         assertEquals("Rarely Eaten", results[1].name)
     }
 
     @Test
-    fun testTrackingCountOverPrefix() = runTest {
-        val id1 = repository.insertManual("Apple Fresh", 52.0, null, null, null, null, null)
-        val id2 = repository.insertManual("Pineapple", 50.0, null, null, null, null, null)
+    fun testHighTrackingBeatsExactMatch() = runTest {
+        // "raw pasta" with 32 tracks should rank above exact match "pasta" with 0 tracks
+        repository.insertManual("pasta", 350.0, null, null, null, null, null)
+        val rawPastaId = repository.insertManual("raw pasta", 350.0, null, null, null, null, null)
 
-        val trackingCounts = mapOf(
-            id2 to 100L, // Highly tracked, but only "contains" match for "apple"
-            id1 to 1L    // Rarely tracked, but "prefix" match for "apple"
-        )
+        repeat(32) { i -> intakeRepository.logOrUpdateFoodIntake(rawPastaId, 100.0, "lunch", "2024-01-${(i + 1).toString().padStart(2, '0')}") }
 
-        val results = repository.search("apple", trackingCounts)
-        
-        // After change: Highly tracked "Pineapple" should win over "Apple Fresh"
-        assertEquals("Pineapple", results[0].name)
-        assertEquals("Apple Fresh", results[1].name)
+        val results = repository.search("pasta")
+        assertEquals(2, results.size)
+        assertEquals("raw pasta", results[0].name, "frequently tracked 'raw pasta' should beat untracked exact match 'pasta'")
+    }
+
+    @Test
+    fun testTrackingCountTiebreak() = runTest {
+        // Both start with "apple" → same relevance score; tracking count decides
+        val juiceId = repository.insertManual("Apple Juice", 46.0, null, null, null, null, null)
+        val sauceId = repository.insertManual("Apple Sauce", 68.0, null, null, null, null, null)
+
+        repeat(8) { i -> intakeRepository.logOrUpdateFoodIntake(sauceId, 100.0, "lunch", "2024-01-${(i + 1).toString().padStart(2, '0')}") }
+        intakeRepository.logOrUpdateFoodIntake(juiceId, 100.0, "lunch", "2024-02-01")
+
+        val results = repository.search("apple")
+        assertEquals(2, results.size)
+        assertEquals("Apple Sauce", results[0].name)
+        assertEquals("Apple Juice", results[1].name)
     }
 }

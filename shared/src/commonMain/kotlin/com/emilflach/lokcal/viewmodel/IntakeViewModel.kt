@@ -4,10 +4,16 @@ import com.emilflach.lokcal.Food
 import com.emilflach.lokcal.Meal
 import com.emilflach.lokcal.data.*
 import com.emilflach.lokcal.util.NumberUtils
+import com.emilflach.lokcal.util.normalize
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+
+sealed class SearchResult {
+    data class FoodResult(val food: Food) : SearchResult()
+    data class MealResult(val meal: Meal) : SearchResult()
+}
 
 class IntakeViewModel(
     private val foodRepo: FoodRepository,
@@ -19,8 +25,7 @@ class IntakeViewModel(
 ) {
     data class UiState(
         val query: String = "",
-        val meals: List<Meal> = emptyList(),
-        val foods: List<Food> = emptyList(),
+        val results: List<SearchResult> = emptyList(),
         val selectedMealType: String,
         val isSearchingOnline: Boolean = false,
         val sourceSections: List<OnlineSearchManager.SearchSection> = emptyList(),
@@ -74,6 +79,7 @@ class IntakeViewModel(
         _state.value = _state.value.copy(gramsById = newMap)
     }
 
+    @Suppress("UNUSED") // Used by Swift
     fun refreshSourcesConfigured() {
         scope.launch {
             _state.value = _state.value.copy(sourcesConfigured = settingsRepo.getSourcePreferences().isNotEmpty())
@@ -87,19 +93,33 @@ class IntakeViewModel(
     private fun performSearch(mealType: String) {
         searchJob?.cancel()
         searchJob = scope.launch {
-            val trackingCounts = intakeRepo.getTrackingCounts()
-            val (meals, foods) = if (_state.value.query.isBlank()) {
+            val results = if (_state.value.query.isBlank()) {
                 getDefaultFoods(mealType)
             } else {
-                val foodTracking = trackingCounts.filterKeys { it.first == "FOOD" }.mapKeys { it.key.second }
-                val mealTracking = trackingCounts.filterKeys { it.first == "MEAL" }.mapKeys { it.key.second }
-                mealRepo.searchMeals(_state.value.query, mealTracking) to foodRepo.search(_state.value.query, foodTracking)
+                val foods = foodRepo.searchWithCounts(_state.value.query)
+                val meals = mealRepo.searchMealsWithCounts(_state.value.query)
+                val qNorm = normalize(_state.value.query.trim().lowercase())
+                fun nameBonus(name: String): Int {
+                    val n = normalize(name.lowercase())
+                    return when {
+                        n == qNorm -> 20
+                        n.startsWith(qNorm) -> 10
+                        else -> 0
+                    }
+                }
+                val foodResults = foods.map { (food, count) ->
+                    Pair(SearchResult.FoodResult(food), nameBonus(food.name) + count)
+                }
+                val mealResults = meals.map { (meal, count) ->
+                    Pair(SearchResult.MealResult(meal), nameBonus(meal.name) + count)
+                }
+                (mealResults + foodResults).sortedByDescending { it.second }.map { it.first }
             }
-            _state.value = _state.value.copy(meals = meals, foods = foods)
+            _state.value = _state.value.copy(results = results)
         }
     }
 
-    private suspend fun getDefaultFoods(mealType: String): Pair<List<Meal>, List<Food>> {
+    private suspend fun getDefaultFoods(mealType: String): List<SearchResult> {
         val frequent = intakeRepo.getFrequentFoods(mealType, 20)
         val foods = if (frequent.size < 20) {
             val recentIds = frequent.map { it.id }.toSet()
@@ -110,7 +130,7 @@ class IntakeViewModel(
         } else {
             frequent
         }
-        return emptyList<Meal>() to foods
+        return foods.map { SearchResult.FoodResult(it) }
     }
 
     fun defaultPortionGrams(food: Food) = portionService.defaultPortionForFood(food)
