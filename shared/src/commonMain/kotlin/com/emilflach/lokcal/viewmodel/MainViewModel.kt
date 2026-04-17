@@ -13,10 +13,14 @@ import com.emilflach.lokcal.data.SettingsRepository
 import com.emilflach.lokcal.data.WeightRepository
 import com.emilflach.lokcal.health.HealthManager
 import com.emilflach.lokcal.util.currentDateIso
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
@@ -201,6 +205,6 @@ class MainViewModel(
             if (isToday) "Today" else selectedDate.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.titlecase() }
         val month = selectedDate.month.name.take(3).lowercase().replaceFirstChar { it.titlecase() }
 
-        return "$weekDay, ${selectedDate.day} $month ${selectedDate.year}"
+        return "$weekDay, ${selectedDate.day} $month"
     }
 }

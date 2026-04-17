@@ -75,45 +75,30 @@ struct MainScreen: View {
                     }
                 }
                 ToolbarItemGroup(placement: .primaryAction) {
-                    if showWeightBadge {
-                        Button(action: {
-                            let currentDate = getCurrentDateIso()
-                            navigationPath.append(NavigationDestination.weightList(openAdd: true, returnToSettings: false, dateIso: currentDate, refreshId: refreshKey))
-                        }) {
-                            Image(systemName: "scalemass")
-                                .overlay(alignment: .topTrailing) {
+                    Button(action: {
+                        let currentDate = getCurrentDateIso()
+                        navigationPath.append(NavigationDestination.weightList(openAdd: showWeightBadge, returnToSettings: false, dateIso: showWeightBadge ? currentDate : nil, refreshId: refreshKey))
+                    }) {
+                        Image(systemName: "scalemass")
+                            .overlay(alignment: .topTrailing) {
+                                if showWeightBadge {
                                     Circle()
                                         .fill(Color(red: 0xD9/255, green: 0x91/255, blue: 0x0D/255))
                                         .frame(width: 7, height: 7)
                                         .opacity(badgePulse ? 0.3 : 1.0)
                                         .offset(x: 0, y: -2)
                                 }
-                        }
-                    } else {
-                        Button(action: {
-                            navigationPath.append(NavigationDestination.statistics)
-                        }) {
-                            Image(systemName: "chart.bar")
-                        }
+                            }
                     }
-                    Menu {
-                        Button(action: {
-                            navigationPath.append(NavigationDestination.weightList(openAdd: false, returnToSettings: false, dateIso: nil, refreshId: refreshKey))
-                        }) {
-                            Label("Weight", systemImage: "scalemass")
-                        }
-                        Button(action: {
-                            navigationPath.append(NavigationDestination.statistics)
-                        }) {
-                            Label("Statistics", systemImage: "chart.bar")
-                        }
-                        Button(action: {
-                            navigationPath.append(NavigationDestination.settings)
-                        }) {
-                            Label("Settings", systemImage: "gearshape")
-                        }
-                    } label: {
-                        Image(systemName: "slider.horizontal.3")
+                    Button(action: {
+                        navigationPath.append(NavigationDestination.statistics)
+                    }) {
+                        Image(systemName: "chart.bar")
+                    }
+                    Button(action: {
+                        navigationPath.append(NavigationDestination.settings)
+                    }) {
+                        Image(systemName: "gearshape")
                     }
                 }
             }
