@@ -406,6 +406,15 @@ suspend fun createDatabase(sqlDriverFactory: SqlDriverFactory, onProgress: ((Flo
         println("[Migration] V7 migration completed successfully")
     }
 
+    if (currentVersion < 8) {
+        println("[Migration] Starting V8 migration: Add source_url column to ImageCache")
+        tryExec(driver, "ALTER TABLE ImageCache ADD COLUMN source_url TEXT")
+        setSchemaVersion(driver, 8)
+        println("[Migration] V8 migration completed successfully")
+    }
+
+    // Skip schema version 9, it has been used for a temporary fix!
+
     val database = Database(driver)
     // Seed initial data on first launch
     IngredientSeeder.seedIfNeeded(database, onProgress)

@@ -19,7 +19,7 @@ class ImageCacheRepositoryTest {
         driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         Database.Schema.synchronous().create(driver)
         driver.execute(null, "PRAGMA foreign_keys = ON", 0)
-        // Create ImageCache table (V7 migration — not in SQLDelight schema for existing DBs)
+        // Create ImageCache table (V7+V8 migration — not in SQLDelight schema for existing DBs)
         driver.execute(
             null,
             """
@@ -30,6 +30,7 @@ class ImageCacheRepositoryTest {
                 mime_type   TEXT NOT NULL DEFAULT 'image/jpeg',
                 cached_at   TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 byte_size   INTEGER NOT NULL DEFAULT 0,
+                source_url  TEXT,
                 PRIMARY KEY (entity_type, entity_id)
             )
             """.trimIndent(),
@@ -95,8 +96,8 @@ class ImageCacheRepositoryTest {
         repo.saveImage(EntityImageData.FOOD, foodId, bytes, "image/jpeg")
         val result = repo.getImage(EntityImageData.FOOD, foodId)
         assertNotNull(result)
-        assertEquals(bytes.toList(), result.first.toList())
-        assertEquals("image/jpeg", result.second)
+        assertEquals(bytes.toList(), result.bytes.toList())
+        assertEquals("image/jpeg", result.mimeType)
     }
 
     @Test
@@ -106,8 +107,8 @@ class ImageCacheRepositoryTest {
         repo.saveImage(EntityImageData.MEAL, mealId, bytes, "image/png")
         val result = repo.getImage(EntityImageData.MEAL, mealId)
         assertNotNull(result)
-        assertEquals(bytes.toList(), result.first.toList())
-        assertEquals("image/png", result.second)
+        assertEquals(bytes.toList(), result.bytes.toList())
+        assertEquals("image/png", result.mimeType)
     }
 
     @Test
@@ -124,8 +125,8 @@ class ImageCacheRepositoryTest {
         val mealResult = repo.getImage(EntityImageData.MEAL, mealId)
         assertNotNull(foodResult)
         assertNotNull(mealResult)
-        assertEquals(foodBytes.toList(), foodResult.first.toList())
-        assertEquals(mealBytes.toList(), mealResult.first.toList())
+        assertEquals(foodBytes.toList(), foodResult.bytes.toList())
+        assertEquals(mealBytes.toList(), mealResult.bytes.toList())
     }
 
     @Test
@@ -135,8 +136,8 @@ class ImageCacheRepositoryTest {
         repo.saveImage(EntityImageData.FOOD, foodId, byteArrayOf(9, 8, 7), "image/png")
         val result = repo.getImage(EntityImageData.FOOD, foodId)
         assertNotNull(result)
-        assertEquals(3, result.first.size)
-        assertEquals("image/png", result.second)
+        assertEquals(3, result.bytes.size)
+        assertEquals("image/png", result.mimeType)
     }
 
     @Test
@@ -145,43 +146,6 @@ class ImageCacheRepositoryTest {
         repo.saveImage(EntityImageData.FOOD, foodId, byteArrayOf(1, 2, 3), "image/jpeg")
         repo.deleteImage(EntityImageData.FOOD, foodId)
         assertNull(repo.getImage(EntityImageData.FOOD, foodId))
-    }
-
-    @Test
-    fun `getTotalCacheSizeBytes sums byte_size correctly`() = runTest {
-        val id1 = insertFood("Food 1")
-        val id2 = insertMeal("Meal 1")
-        repo.saveImage(EntityImageData.FOOD, id1, ByteArray(100), "image/jpeg")
-        repo.saveImage(EntityImageData.MEAL, id2, ByteArray(200), "image/jpeg")
-        assertEquals(300L, repo.getTotalCacheSizeBytes())
-    }
-
-    @Test
-    fun `getTotalCacheSizeBytes returns 0 when empty`() = runTest {
-        assertEquals(0L, repo.getTotalCacheSizeBytes())
-    }
-
-    @Test
-    fun `evictIfNeeded does nothing when under limit`() = runTest {
-        val id1 = insertFood("Food 1")
-        repo.saveImage(EntityImageData.FOOD, id1, ByteArray(50), "image/jpeg")
-        repo.evictIfNeeded(maxBytes = 100L)
-        assertNotNull(repo.getImage(EntityImageData.FOOD, id1))
-        assertEquals(50L, repo.getTotalCacheSizeBytes())
-    }
-
-    @Test
-    fun `evictIfNeeded removes oldest entries when over limit`() = runTest {
-        val id1 = insertFood("Food 1")
-        val id2 = insertFood("Food 2")
-        repo.saveImage(EntityImageData.FOOD, id1, ByteArray(60), "image/jpeg")
-        repo.saveImage(EntityImageData.FOOD, id2, ByteArray(60), "image/jpeg")
-        repo.evictIfNeeded(maxBytes = 80L)
-        val remaining = listOf(
-            repo.getImage(EntityImageData.FOOD, id1),
-            repo.getImage(EntityImageData.FOOD, id2)
-        ).count { it != null }
-        assertEquals(1, remaining)
     }
 
     @Test

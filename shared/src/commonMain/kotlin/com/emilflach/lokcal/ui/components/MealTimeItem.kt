@@ -89,7 +89,7 @@ fun MealTimeItem(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxHeight()
-                    .width(72.dp)
+                    .width(100.dp)
                     .clip(MaterialTheme.shapes.medium)
                     .background(colors.backgroundSurface2)
             )
@@ -101,7 +101,7 @@ fun MealTimeItem(
                 tint = colors.foregroundSupport,
                 modifier = Modifier
                     .fillMaxHeight()
-                    .width(72.dp)
+                    .width(100.dp)
                     .clip(MaterialTheme.shapes.medium)
                     .background(colors.backgroundSurface2)
                     .padding(horizontal = 10.dp)

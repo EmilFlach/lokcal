@@ -65,19 +65,25 @@ private class DatabaseImageFetcher(
 
     override suspend fun fetch(): FetchResult? {
         val isPersistent = data.entityId > 0
+        val url = data.fallbackUrl.takeIf { it.isNotBlank() }
 
         // L2: check SQLite cache first (only for real, persisted entities)
         if (isPersistent) {
-            imageCache.getImage(data.entityType, data.entityId)?.let { (bytes, mime) ->
-                return SourceFetchResult(
-                    source = ImageSource(Buffer().apply { write(bytes) }, options.fileSystem),
-                    mimeType = mime,
-                    dataSource = DataSource.DISK,
-                )
+            val cached = imageCache.getImage(data.entityType, data.entityId)
+            if (cached != null) {
+                val urlChanged = url != null && (cached.sourceUrl == null || cached.sourceUrl != url)
+                if (urlChanged) {
+                    // URL has changed — evict stale entry and re-fetch from network
+                    imageCache.deleteImage(data.entityType, data.entityId)
+                } else {
+                    return SourceFetchResult(
+                        source = ImageSource(Buffer().apply { write(cached.bytes) }, options.fileSystem),
+                        mimeType = cached.mimeType,
+                        dataSource = DataSource.DISK,
+                    )
+                }
             }
         }
-
-        val url = data.fallbackUrl.takeIf { it.isNotBlank() }
 
         // L2.5: migration bridge — check Coil's existing disk cache (only for persistent entities)
         // Coil keys disk cache entries by the URL string for URL-based requests.
@@ -87,7 +93,7 @@ private class DatabaseImageFetcher(
                 coilDiskCache.openSnapshot(url)?.use { snapshot ->
                     val bytes = coilDiskCache.fileSystem.read(snapshot.data) { readByteArray() }
                     if (bytes.isNotEmpty()) {
-                        imageCache.saveImage(data.entityType, data.entityId, bytes, "image/jpeg")
+                        imageCache.saveImage(data.entityType, data.entityId, bytes, "image/jpeg", url)
                         coilDiskCache.remove(url) // clean up old URL-keyed entry after migrating
                         return SourceFetchResult(
                             source = ImageSource(Buffer().apply { write(bytes) }, options.fileSystem),
@@ -119,7 +125,7 @@ private class DatabaseImageFetcher(
 
         // Only persist to SQLite for real entities — transient search results use temp negative IDs
         if (isPersistent) {
-            imageCache.saveImage(data.entityType, data.entityId, bytes, mime)
+            imageCache.saveImage(data.entityType, data.entityId, bytes, mime, url)
         }
 
         return SourceFetchResult(
