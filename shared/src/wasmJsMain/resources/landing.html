@@ -109,9 +109,6 @@
       max-width: 440px; margin-bottom: 28px;
     }
     .hero-ctas { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
-    .hero-ctas .store-buttons { margin-bottom: 4px; }
-    a.try-browser { color: var(--n200); font-size: .85rem; text-decoration: none; }
-    a.try-browser:hover { color: var(--n100); }
 
     /* ── PHONE DEMO */
     .hero-demo { position: relative; flex-shrink: 0; }
@@ -188,8 +185,6 @@
     .mobile-cta-icon { font-size: 2.5rem; display: block; margin-bottom: 10px; }
     .mobile-cta-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 8px; }
     .mobile-cta-text { color: var(--n100); font-size: .9rem; margin-bottom: 20px; line-height: 1.6; }
-    .mobile-cta-card .store-buttons { flex-direction: column; }
-    .mobile-cta-card .store-btn { justify-content: center; }
 
     /* ── DIVIDER */
     hr { border: none; height: 1px; background: linear-gradient(90deg, transparent, rgba(75,99,227,.18), transparent); }
@@ -245,8 +240,6 @@
     .final-cta h2 { font-size: clamp(2.2rem, 4vw, 3.4rem); margin-bottom: 12px; }
     .final-cta .sub { color: var(--n100); font-size: 1rem; margin-bottom: 32px; }
     .final-cta .store-buttons { justify-content: center; }
-    .final-cta .browser-link { color: var(--n200); font-size: .82rem; margin-top: 16px; display: block; text-decoration: none; }
-    .final-cta .browser-link:hover { color: var(--n100); }
 
     /* ── OPEN SOURCE CALLOUT */
     .oss-band {
@@ -306,7 +299,7 @@
   <div class="nav-links">
     <a href="#features" class="btn-ghost">Features</a>
     <a href="https://github.com/EmilFlach/lokcal" class="btn-ghost" target="_blank" rel="noopener">GitHub</a>
-    <a href="#download" class="btn-primary">Download</a>
+    <a href="demo.html" class="btn-primary" target="_blank" rel="noopener">Try Now</a>
   </div>
 </nav>
 
@@ -324,17 +317,11 @@
         The alternatives were slow, full of junk data, and wanted a subscription. Lokcal is local-first so it's instant, it pulls from my local grocery store so the data is actually right, and shows the statistics that matter.
       </p>
       <div class="hero-ctas">
-        <div class="store-buttons">
-          <a href="#" class="store-btn lg">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-            App Store
-          </a>
-          <a href="#" class="store-btn lg">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-            Google Play
-          </a>
-        </div>
-        <a href="demo.html" class="try-browser">Try it now — no download needed →</a>
+        <a href="demo.html" class="store-btn lg" target="_blank" rel="noopener">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Try Lokcal in your browser
+        </a>
+        <span style="color:var(--n200);font-size:.85rem;">No download or account needed</span>
       </div>
     </div>
 
@@ -362,20 +349,13 @@
 
 <!-- ── MOBILE CTA -->
 <div class="mobile-cta-card">
-  <span class="mobile-cta-icon">📲</span>
+  <span class="mobile-cta-icon">🌐</span>
   <div class="mobile-cta-title">Free. No account required.</div>
-  <p class="mobile-cta-text">Download on iOS or Android, or try it right here in your browser. Your data never leaves your device.</p>
-  <div class="store-buttons">
-    <a href="#" class="store-btn">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-      App Store
-    </a>
-    <a href="#" class="store-btn">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-      Google Play
-    </a>
-  </div>
-  <a href="demo.html" style="color:var(--n200);font-size:.85rem;text-decoration:none;margin-top:12px;display:block">Try in browser →</a>
+  <p class="mobile-cta-text">Try it right here in your browser. No download, no account. Your data never leaves your device.</p>
+  <a href="demo.html" class="store-btn" target="_blank" rel="noopener" style="justify-content:center;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+    Try Lokcal in your browser
+  </a>
 </div>
 
 <div class="feat-band">
@@ -435,17 +415,12 @@
   <div class="eyebrow">Get started</div>
   <h2>Log it. Enjoy your food.</h2>
   <p class="sub">Free. No account. No subscription. Open it, log it, get on with your day.</p>
-  <div class="store-buttons">
-    <a href="#" class="store-btn lg">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-      App Store
-    </a>
-    <a href="#" class="store-btn lg">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-      Google Play
+  <div class="store-buttons" style="justify-content:center;">
+    <a href="demo.html" class="store-btn lg" target="_blank" rel="noopener">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      Try Lokcal in your browser
     </a>
   </div>
-  <a href="demo.html" class="browser-link">or try it in your browser first →</a>
 </section>
 
 <footer>

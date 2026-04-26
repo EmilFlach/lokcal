@@ -4,7 +4,7 @@
 
 > Track calories in 10 seconds. No account. No cloud. No subscription. Your data never leaves your device.
 
-[Try in browser](https://emilflach.github.io/lokcal/) · [App Store](#) · [Google Play](#)
+[Try in browser](https://lokcal.app)
 
 ---
 
@@ -32,9 +32,9 @@ Also included: weight tracking · exercise logging · automatic nightly backups 
 
 ## Download
 
-- [App Store](#) — iOS
-- [Google Play](#) — Android
-- [Try in browser](https://emilflach.github.io/lokcal/)
+- To be done — iOS
+- To be done — Android
+- [Try in browser](https://app.lokcal.app)
 - Desktop: see [Building from Source](#building-from-source) below
 
 ---
