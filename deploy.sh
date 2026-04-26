@@ -20,7 +20,9 @@ ssh "$SERVER" "mv $REMOTE_ROOT/lokcal/landing.html $REMOTE_ROOT/index.html && \
   cp $REMOTE_ROOT/lokcal/favicon-16x16.png $REMOTE_ROOT/ && \
   cp $REMOTE_ROOT/lokcal/favicon-32x32.png $REMOTE_ROOT/ && \
   cp $REMOTE_ROOT/lokcal/apple-touch-icon.png $REMOTE_ROOT/ && \
-  cp $REMOTE_ROOT/lokcal/manifest.json $REMOTE_ROOT/"
+  cp $REMOTE_ROOT/lokcal/manifest.json $REMOTE_ROOT/ && \
+  cp $REMOTE_ROOT/lokcal/app-screenshot.png $REMOTE_ROOT/ && \
+  chmod 644 $REMOTE_ROOT/app-screenshot.png"
 
 echo "Done.
 Landing: https://lokcal.app
