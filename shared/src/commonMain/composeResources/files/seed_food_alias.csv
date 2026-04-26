@@ -1,0 +1,1020 @@
+id,food_id,alias,alias_type,exists
+1,1,Biscuit sponge fingers,englishName,biscuit sponge fingers
+2,2,Mozzarella,englishName,mozzarella
+3,3,Raisins dried,englishName,dried raisins
+4,4,Runner beans,englishName,runner beans
+5,5,Apricots,englishName,apricots
+6,6,Wafer galette,englishName,wafer galette
+7,7,Iceberg lettuce,englishName,iceberg lettuce
+8,8,Kaassouffle,englishName,kaassouffle
+9,9,Mango,englishName,mango
+10,10,Margarine,englishName,margarine
+11,11,Whipped cream,englishName,whipped cream
+12,12,Dutch spiced cake,englishName,dutch spiced cake
+13,13,Croissant,englishName,croissant
+14,14,Frikandel,englishName,frikandel
+15,15,Iced cup cake,englishName,iced cup cake
+16,16,Mascarpone cheese,englishName,mascarpone cheese
+17,17,Eclair w whipped cream filling,englishName,eclair
+18,18,Snack sausage roll w bread dough pastry,englishName,sausage roll
+20,20,Biscuit Dutch Amaretti Bitterkoekjes,englishName,amaretti biscuit
+21,21,Aioli,englishName,aioli
+22,22,Tzatziki,englishName,tzatziki
+23,23,Pita bread,englishName,pita bread
+24,24,Celeriac,englishName,celeriac
+25,25,Frankfurter type beef sausage,englishName,beef frankfurter
+26,26,Beans kidney red,englishName,red kidney beans
+27,27,Brown beans,englishName,brown beans
+28,28,Cooked sausage,englishName,cooked sausage
+29,29,Ice cream,englishName,ice cream
+30,30,Apple juice,englishName,apple juice
+31,31,Penny waffle,englishName,penny waffle
+32,32,Butterhead lettuce,englishName,butterhead lettuce
+33,33,Sweet ketjap soy sauce,englishName,ketjap soy sauce
+34,34,French Beans,englishName,french beans
+35,35,Pak-choi cabbage,englishName,pak-choi cabbage
+36,36,Yoghurt Greek full fat,englishName,greek yoghurt
+37,37,Yoghurt Greek skimmed,englishName,skimmed greek yoghurt
+38,38,Red cabbage w apple pieces glass,englishName,red cabbage
+39,39,Brazil nuts,englishName,brazil nuts
+40,40,Walnuts,englishName,walnuts
+41,41,Raisins coated w milkchocolate,englishName,chocolate covered raisins
+42,42,Sausage frankfurter lean,englishName,lean frankfurter sausage
+43,43,Artichoke hearts canned,englishName,canned artichoke hearts
+44,44,Banana,englishName,dried apricots
+46,46,Cheese pastry w puff pastry,englishName,cheese pastry
+47,47,Dutch Eierkoek Cake sponge,englishName,eierkoek
+48,48,Camembert Cheese 30+,englishName,camembert cheese 30+
+49,49,Cheese Camembert,englishName,camembert cheese
+50,50,Orange juice,englishName,orange juice
+51,51,Jodekoek Dutch Biscuit,englishName,dutch jodekoek biscuit
+52,52,Apple sauce,englishName,apple sauce
+53,53,Bami vegetables,englishName,bami vegetables
+54,54,Soy sauce,englishName,soy sauce
+55,55,Cheese Ricotta,englishName,ricotta cheese
+56,56,Candy mix,englishName,candy mix
+57,57,Dairy spread light,englishName,light dairy spread
+58,58,Ketchup tomato,englishName,tomato ketchup
+59,59,Chilli beans,englishName,chilli beans
+60,60,Plain cake,englishName,plain cake
+61,61,Blackcurrants,englishName,blackcurrants
+62,62,Popcorn salted,englishName,salted popcorn
+63,63,Sweet popcorn,englishName,sweet popcorn
+64,64,Beef tomato,englishName,beef tomato
+65,65,Pickled atjar tjampoer,englishName,pickled atjar tjampoer
+66,66,Macadamia nuts,englishName,macadamia nuts
+67,67,Oil roasted pecans,englishName,oil roasted pecans
+68,68,Cashew nuts,englishName,cashew nuts
+69,69,Netted melon,englishName,netted melon
+70,70,Gluten free bread,englishName,gluten free bread
+71,71,Jaffa cakes/PiM's Cake,englishName,jaffa cakes/pim's cake
+72,72,Lamb's lettuce,englishName,lamb's lettuce
+73,73,Manderins,englishName,manderins
+75,75,Advocaat liqueur,englishName,advocaat liqueur
+76,76,Almond paste filled tarts av,englishName,almond tart
+77,77,Almonds,englishName,almonds
+78,78,Amaranth leaves,englishName,amaranth leaves
+79,79,Antroewa,englishName,antroewa
+80,80,Appel pie Dutch w shortbread w butter,englishName,apple pie
+81,81,Apple cake,englishName,apple cake
+82,82,Apple fritter,englishName,apple fritter
+83,83,Apple strudel,englishName,apple strudel
+84,84,Apple syrup,englishName,apple syrup
+85,85,Apple turnover,englishName,apple turnover
+86,86,Apricots in syrup,englishName,apricots in syrup
+87,87,Baguette,englishName,baguette
+88,88,Baklava nut-honey cake,englishName,baklava nut-honey cake
+89,89,Bamboo shoots,englishName,bamboo shoots
+90,90,Banana,englishName,banana
+91,91,Banana bread,englishName,banana bread
+92,92,Bapao meat stuffed Bread,englishName,bapao
+93,93,Barbecue sauce,englishName,barbecue sauce
+94,94,Bastogne shortbread Biscuit,englishName,bastogne shortbread biscuit
+95,95,Bean sprouts,englishName,bean sprouts
+96,96,Beans white / brown dried,englishName,dried beans
+97,97,Beer,englishName,beer
+98,98,Beer radler,englishName,radler beer
+99,99,Beetroot,englishName,beetroot
+100,100,Beetroot juice,englishName,beetroot juice
+101,101,Berliner pastry,englishName,berliner pastry
+102,102,Bilberries,englishName,bilberries
+103,103,Bilberries in syrup,englishName,bilberries in syrup
+104,104,Biscuit,englishName,biscuit
+105,105,Biscuit w chocolate,englishName,chocolate coated biscuit
+107,107,Bitterbal in oven,englishName,bitterbal from oven
+108,108,Black beans,englishName,black beans
+109,109,Black radish,englishName,black radish
+110,110,Blue Cheese Danish,englishName,danish blue cheese
+111,111,Bluefort Cheese,englishName,bluefort cheese
+112,112,Bounty Candybar,englishName,bounty candybar
+113,113,Boursin cheese cream soft,englishName,boursin
+114,114,Brandy,englishName,brandy
+115,115,Bread crumbs,englishName,bread crumbs
+116,116,Breadsticks,englishName,breadsticks
+117,117,Breezer,englishName,breezer
+118,118,Brie Cheese 50+,englishName,brie cheese 50+
+119,119,Brioche,englishName,brioche
+120,120,Broad beans,englishName,broad beans
+121,121,Brown bread,englishName,brown bread
+122,122,Brown bread with seeds,englishName,seeded brown bread
+123,123,Brown lentils,englishName,brown lentils
+124,124,Brown sugar castor,englishName,castor brown sugar
+125,125,Brownie,englishName,brownie
+126,126,Brussel sprouts,englishName,brussel sprouts
+127,127,Bulgur raw,englishName,raw bulgur
+128,128,Bun w vanilla custard,englishName,custard bun
+129,129,Campari,englishName,campari
+130,130,Candybar av,englishName,candybar av
+131,131,Candybar KitKat,englishName,kitkat candybar
+132,132,Candybar Milky Way,englishName,milky way candybar
+133,133,Candybar Nuts,englishName,nuts candybar
+134,134,Candybar Snickers,englishName,snickers candybar
+135,135,Canned Turkish cheese 60+ cow's milk,englishName,turkish cheese
+136,136,Cantaloupe melon,englishName,cantaloupe melon
+137,137,Capers,englishName,capers
+138,138,Carambola,englishName,carambola
+139,139,Carrot cake,englishName,carrot cake
+140,140,Cassava,englishName,cassava
+141,141,Cereal bar Hero B'tween,englishName,cereal bar
+142,142,Chanterelle mushrooms,englishName,chanterelle mushrooms
+143,143,Cheddar Cheese,englishName,cheddar cheese
+144,144,Cheese 10+,englishName,cheese 10+
+145,145,Cheese 20+,englishName,cheese 20+
+146,146,Cheese 30+,englishName,cheese 30+
+147,147,Cheese 35+,englishName,cheese 35+
+148,148,Cheese 45+,englishName,cheese 45+
+149,149,Cheese 50+,englishName,cheese 50+
+150,150,Cheese average w cumin 48+,englishName,cumin cheese
+151,151,Cheese Brie 60+,englishName,brie cheese 60+
+152,152,Cheese cottage,englishName,cottage cheese
+153,153,Cheese cream w herbs 25-30 g fat,englishName,herb cream cheese
+154,154,Cheese Edam 40+,englishName,edam cheese 40+
+155,155,Cheese fresh light 8% fat,englishName,light fresh cheese
+157,157,Cheese Kernhem 60+,englishName,kernhem cheese 60+
+158,158,Cheese raw milk 48+,englishName,raw milk cheese
+159,159,Cheese sheep/goat Turkish 50+ canned,englishName,turkish sheep cheese
+160,160,Cheese smoked 45+,englishName,smoked cheese 45+
+161,161,Cheese spread 20+,englishName,cheese spread 20+
+162,162,Cheese spread 40+,englishName,cheese spread 40+
+163,163,Cheese spread 45+,englishName,cheese spread 45+
+164,164,Cheesecake,englishName,cheesecake
+165,165,Cheesespread Heks'n kaas,englishName,heks'n kaas cheesespread
+166,166,Cherries in syrup,englishName,cherries in syrup
+167,167,Chewing gum,englishName,chewing gum
+168,168,Chia seeds dried,englishName,dried chia seeds
+169,169,Chicken fillet,englishName,chicken fillet
+170,170,Chicken nuggets deep-fried,englishName,chicken nuggets
+172,172,Chicken thigh,englishName,chicken thigh
+173,173,Chili pepper,englishName,chili pepper
+174,174,Chinese Cabbage,englishName,chinese cabbage
+175,175,Chocolate cake,englishName,chocolate cake
+176,176,Chocolate chip cookie,englishName,chocolate chip cookie
+177,177,Chocolate mousse,englishName,chocolate mousse
+178,178,Chocolate sauce for pudding,englishName,chocolate sauce
+179,179,Chocolate sprinkles,englishName,chocolate sprinkles
+180,180,Christmas bread with almond spice,englishName,christmas bread
+181,181,Cider,englishName,cider
+182,182,Clear soup,englishName,clear soup
+183,183,Coated peanuts,englishName,coated peanuts
+184,184,Coconut flavoured cookies,englishName,coconut flavoured cookies
+185,185,Coconut macaroons,englishName,coconut macaroons
+186,186,Cognac,englishName,cognac
+187,187,Cold cuts,englishName,cold cuts
+188,188,Couscous,englishName,couscous
+189,189,Cowberries,englishName,cowberries
+190,190,Crackers,englishName,crackers
+191,191,Cranberries dried sweetened,englishName,sweetened dried cranberries
+192,192,Cranberries fresh,englishName,fresh cranberries
+193,193,Cranberry compote,englishName,cranberry compote
+194,194,Creme fraiche,englishName,creme fraiche
+195,195,Cress garden,englishName,garden cress
+196,196,Crispbakes,englishName,crispbakes
+197,197,Crispbread,englishName,crispbread
+198,198,Croquette in oven,englishName,croquette from oven
+199,199,Croutons,englishName,croutons
+200,200,Curly kale,englishName,curly kale
+201,201,Currants dried,englishName,dried currants
+202,202,Curry ketchup,englishName,curry ketchup
+203,203,Dagoe leaf,englishName,dagoe leaf
+204,204,Dairy spread,englishName,dairy spread
+205,205,Dandelion leaves,englishName,dandelion leaves
+206,206,Danish pastry,englishName,danish pastry
+207,207,Deep-fried Chinese noodle ball,englishName,bamihap
+208,208,Deep-fried croquette,englishName,deepfried croquette
+209,209,Deep-fried spring roll,englishName,deepfried spring roll
+210,210,Deepfried bitterbal,englishName,deepfried bitterbal
+211,211,Digestive biscuit,englishName,digestive biscuit
+212,212,Doughnut Dutch style filled w currants and raisins,englishName,oliebol
+213,213,Dried apple soaked in water,englishName,soaked dried apple
+214,214,Dried apples,englishName,dried apples
+215,215,Dried dates,englishName,dried dates
+216,216,Dried goji berries,englishName,dried goji berries
+217,217,Dried pear,englishName,dried pear
+218,218,Dried pear soaked in water,englishName,soaked dried pear
+219,219,Dried seaweed agar agar,englishName,agar agar
+220,220,Dried soya beans,englishName,dried soya beans
+221,221,Dutch Boterkoek,englishName,dutch boterkoek
+222,222,Dutch Cheese in Swiss-style 45+,englishName,swiss-style cheese
+223,223,Dutch Krakeling Biscuit,englishName,dutch krakeling biscuit
+224,224,Dutch shortbread sprits biscuit,englishName,sprits biscuit
+225,225,Dutch Tompouce Cream slice,englishName,tompouce
+226,226,Dutch vieux Brandy,englishName,dutch vieux brandy
+227,227,Egg white,englishName,egg white
+228,228,Emmenthaler Cheese,englishName,emmenthaler cheese
+229,229,Falafel,englishName,falafel
+230,230,Fennel,englishName,fennel
+231,231,Feta Cheese,englishName,feta cheese
+232,232,Figs dried,englishName,dried figs
+233,233,Figs fresh,englishName,fresh figs
+234,234,Filled chocolate bar,englishName,filled chocolate bar
+235,235,Filled chocolates,englishName,filled chocolates
+236,236,Filo pastry,englishName,filo pastry
+237,237,Firm brown bun,englishName,firm brown bun
+238,238,Flan w fruit filling,englishName,fruit flan
+239,239,Focaccia,englishName,focaccia
+240,240,Frankfurter sausage,englishName,frankfurter sausage
+241,241,French fries,englishName,french fries
+242,242,Fresh citrus fruit,englishName,fresh citrus fruit
+243,243,Fresh dates,englishName,fresh dates
+244,244,Fresh goat cheese,englishName,fresh goat cheese
+245,245,Fresh sheep cheese,englishName,fresh sheep cheese
+246,246,Frikandel speciaal,englishName,frikandel speciaal
+247,247,Fruit biscuit,englishName,fruit biscuit
+248,248,Fruit forest,englishName,forest fruit
+249,249,Fruit in own juice,englishName,fruit in juice
+250,250,Fruit in syrup,englishName,fruit in syrup
+251,251,Fruit mixed dried soaked in water,englishName,soaked dried fruit
+252,252,Full fat cheese spread 48+,englishName,cheese spread
+253,253,Gateau w whipped cream,englishName,gateau
+254,254,Gelatin,englishName,gelatin
+255,255,Gherkins sweet pickled,englishName,sweet pickled gherkins
+256,256,Glasswort,englishName,glasswort
+257,257,Gnocchi unprepared,englishName,unprepared gnocchi
+258,258,Goat hard cheese,englishName,hard goat cheese
+259,259,Golden syrup pourable,englishName,pourable golden syrup
+260,260,Gooseberries,englishName,gooseberries
+261,261,Gorgonzola Cheese,englishName,gorgonzola cheese
+262,262,Gouda Cheese 48+ age 10-12 mths,englishName,old gouda cheese
+263,263,Gouda Cheese 48+ age 4-8 weeks,englishName,young gouda cheese
+264,264,Gouda cheese 48+ age 8 wk-4 mths,englishName,medium gouda cheese
+265,265,Grape juice,englishName,grape juice
+266,266,Grapefruit,englishName,grapefruit
+267,267,Grapefruit in syrup,englishName,grapefruit in syrup
+268,268,Grapefruit juice,englishName,grapefruit juice
+269,269,Grapes,englishName,grapes
+270,270,"Grated coconut, dried",englishName,dried grated coconut
+271,271,Green asparagus,englishName,green asparagus
+272,272,Green dried peas,englishName,dried green peas
+273,273,Green olives in brine,englishName,green olives
+274,274,Green sweet pepper,englishName,green sweet pepper
+275,275,Gruyere Cheese,englishName,gruyere cheese
+276,276,Guava (pink fleshed),englishName,guava (pink fleshed)
+277,277,Half fat custard all flavours,englishName,half fat custard
+278,278,Hamburger raw,englishName,raw hamburger
+279,279,Hemp seed,englishName,hemp seed
+280,280,Honey/mustard salad dressing,englishName,honey mustard dressing
+281,281,Honeydew melon,englishName,honeydew melon
+282,282,Hot chocolate from vending machine,englishName,hot chocolate
+283,283,Hummus,englishName,hummus
+284,284,Ice lolly,englishName,ice lolly
+285,285,Iced Doughnut,englishName,iced doughnut
+286,286,Irish coffee,englishName,irish coffee
+287,287,Jackfruit in water,englishName,jackfruit in water
+288,288,Juice redcurrant,englishName,redcurrant juice
+289,289,Kaisoi,englishName,kaisoi
+290,290,Kaki,englishName,kaki
+291,291,Kidney beans red dried,englishName,dried kidney beans
+292,292,Kipkorn,englishName,kipkorn
+293,293,Kiwi,englishName,kiwi
+294,294,Kletskop Biscuit Dutch,englishName,dutch kletskop biscuit
+296,296,Kruidnoten Biscuit spiced small,englishName,kruidnoten
+297,297,Kruidnoten w chocolate av spiced small Biscuit,englishName,chocolate covered kruidnoten
+298,298,Kumquat,englishName,kumquat
+299,299,Lentils green and brown dried,englishName,dried lentils
+300,300,Lime,englishName,lime
+301,301,Linseeds,englishName,linseeds
+302,302,Lion Candybar,englishName,lion candybar
+303,303,Liqueur 15-25 vol% alcohol,englishName,liqueur 15-25%
+304,304,Liqueur <15 vol% alcohol,englishName,liqueur <15%
+305,305,Liqueur >25 vol% alcohol,englishName,liqueur >25%
+306,306,Liqueur w cream 15-25 vol% alcohol,englishName,cream liqueur
+307,307,Liquorice,englishName,liquorice
+308,308,Long yard beans,englishName,yardlong beans
+309,309,Low alcohol beer,englishName,low alcohol beer
+310,310,Luikse Waffle,englishName,luikse waffle
+311,311,Lychees,englishName,lychees
+312,312,M&M's w peanuts,englishName,m&m's w peanuts
+313,313,Madeira,englishName,madeira
+314,314,Maltesers,englishName,maltesers
+315,315,Mange-tout,englishName,mange-tout
+316,316,Marrowfat peas,englishName,marrowfat peas
+317,317,Mars Candybar,englishName,mars candybar
+318,318,Marshmallows,englishName,marshmallows
+319,319,Matzes Crackers,englishName,matzes crackers
+320,320,Meat coconut,englishName,coconut meat
+321,321,Meatball Berenklauw deep-fried,englishName,deepfried berenklauw
+322,322,Medlar,englishName,medlar
+323,323,Melon in syrup,englishName,melon in syrup
+324,324,Milk semi-skimmed,englishName,semi-skimmed milk
+325,325,Milk whole,englishName,whole milk
+326,326,Minced beef/pork,englishName,minced beef/pork
+327,327,Mixed dried fruit,englishName,mixed dried fruit
+328,328,Mixed nuts,englishName,mixed nuts
+329,329,Mixed nuts and raisins,englishName,mixed nuts with raisins
+330,330,Mon Chou soft cheese cream,englishName,mon chou
+331,331,Muesli bar,englishName,muesli bar
+332,332,Muesli crunchy w chocolate,englishName,chocolate muesli
+333,333,Mulberries,englishName,mulberries
+334,334,Multifruit Juice,englishName,multifruit juice
+335,335,Muscatel,englishName,muscatel
+336,336,Nectarine,englishName,nectarine
+337,337,Noodle soup,englishName,noodle soup
+338,338,Nori dried seaweed,englishName,nori dried seaweed
+339,339,Old Amsterdam Cheese 48+,englishName,old amsterdam
+340,340,Onions,englishName,onions
+341,341,Oven french fries,englishName,oven french fries
+342,342,Papaya,englishName,papaya
+343,343,Parmesan Cheese,englishName,parmesan cheese
+344,344,Passion fruit,englishName,passion fruit
+345,345,Pate,englishName,pate
+346,346,Paturain Cheese cream soft,englishName,paturain
+347,347,Peach,englishName,peach
+348,348,Peaches in syrup,englishName,peaches in syrup
+349,349,Peanut biscuit,englishName,peanut biscuit
+350,350,Peanut butter,englishName,peanut butter
+351,351,Peanut sauce,englishName,peanut sauce
+352,352,Peanuts,englishName,peanuts
+354,354,Peanuts milkchocolate coated,englishName,chocolate coated peanuts
+355,355,Pear juice,englishName,pear juice
+356,356,Pears in syrup,englishName,pears in syrup
+357,357,Peas marrowfat dried,englishName,dried marrowfat peas
+358,358,Pepper orange sweet,englishName,sweet orange pepper
+359,359,Pesto green,englishName,green pesto
+360,360,Pesto red,englishName,red pesto
+361,361,Piccalilly,englishName,piccalilly
+363,363,Pickled canned peppers,englishName,pickled canned peppers
+364,364,Pineapple in own juice,englishName,pineapple in juice
+365,365,Pineapple in syrup,englishName,pineapple in syrup
+366,366,Pineapple juice,englishName,pineapple juice
+367,367,Pistachio nuts,englishName,pistachio nuts
+368,368,Plums,englishName,plums
+369,369,Plums in syrup,englishName,plums in syrup
+370,370,Poeng bottlegourd,englishName,poeng bottlegourd
+371,371,Pomegranate,englishName,pomegranate
+372,372,Pork spare rib raw,englishName,raw spare rib
+373,373,Port wine,englishName,port wine
+374,374,Potato crisps,englishName,potato crisps
+375,375,Potatoes,englishName,potatoes
+376,376,Prawn crackers,englishName,prawn crackers
+377,377,Pretzel sticks,englishName,pretzel sticks
+378,378,Prunes,englishName,prunes
+379,379,Prunes soaked in water,englishName,soaked prunes
+380,380,Puff pastry filled with almond paste,englishName,almond puff pastry
+381,381,Puffed rice cakes,englishName,puffed rice cakes
+382,382,Purslane,englishName,purslane
+383,383,Quark full fat,englishName,full fat quark
+384,384,Quark half fat,englishName,half fat quark
+385,385,Quark low fat,englishName,low fat quark
+386,386,Quinoa raw,englishName,raw quinoa
+387,387,Rambol Cheese,englishName,rambol cheese
+388,388,Raspberries,englishName,raspberries
+389,389,Raspberries in syrup,englishName,raspberries in syrup
+390,390,Raw chestnuts,englishName,raw chestnuts
+391,391,Raw pasta,englishName,raw pasta
+394,394,Red lettuce,englishName,red lettuce
+395,395,Red wine,englishName,red wine
+396,396,Redcurrants,englishName,redcurrants
+397,397,Rempejek peanut biscuit,englishName,rempejek peanut biscuit
+398,398,Rhubarb,englishName,rhubarb
+399,399,Rhubarb puree with sugar,englishName,rhubarb puree
+400,400,Ripe olives in brine,englishName,ripe olives
+401,401,Ripe plantain,englishName,ripe plantain
+402,402,Rocket lettuce,englishName,rocket lettuce
+403,403,Romaine lettuce,englishName,romaine lettuce
+404,404,Roquefort Cheese,englishName,roquefort cheese
+405,405,Rose wine,englishName,rose wine
+406,406,Rye bread,englishName,rye bread
+407,407,Saint Paulin Cheese/Port Salut,englishName,saint paulin
+408,408,Salad dressing vinaigrette,englishName,vinaigrette salad dressing
+409,409,Salami,englishName,salami
+410,410,Salsify,englishName,salsify
+411,411,Salted biscuit,englishName,salted biscuit
+412,412,Salty liquorice lolly,englishName,salty liquorice lolly
+413,413,Sauce garlic 20-<30% oil,englishName,garlic sauce
+414,414,Sauerkraut cabbage,englishName,sauerkraut cabbage
+415,415,Sausage smoked beef cooked,englishName,smoked beef sausage
+416,416,Sausage smoked pork cooked,englishName,smoked pork sausage
+417,417,Seaweed kelp,englishName,kelp seaweed
+418,418,Seitan,englishName,seitan
+419,419,Seroendeng,englishName,seroendeng
+420,420,Shandy,englishName,shandy
+421,422,Sherry,englishName,sherry
+422,423,Skimmed milk,englishName,skimmed milk
+423,424,Smoked lean cooked sausage,englishName,smoked sausage
+424,425,Smoothie fruit,englishName,fruit smoothie
+425,426,Snack roll puff pastry w Frikandel,englishName,frikandelbroodje
+426,427,Solid foamed candy 'schuimpje',englishName,schuimpje
+427,428,Speculaas Biscuit spiced av,englishName,speculaas
+428,429,Speculaas flavoured spread,englishName,speculaas flavoured spread
+429,430,Spiced cake Indonesian- Spekkoek,englishName,spekkoek
+430,431,Spiced frozen deep fried rice ball,englishName,nasibal
+431,432,Split pea soup,englishName,split pea soup
+432,433,Spread chocolate hazelnut,englishName,chocolate hazelnut spread
+433,434,Stewed tomatoes with vegetable oil,englishName,stewed tomatoes
+434,435,Stilton Cheese,englishName,stilton cheese
+435,436,Strawberries,englishName,strawberries
+436,437,Strawberries in syrup,englishName,strawberries in syrup
+437,438,Stuffed sweet pepper with cream cheese,englishName,cheese stuffed sweet pepper
+438,439,Sun-dried tomato,englishName,sun-dried tomato
+439,440,Swede,englishName,swede
+440,441,Sweet pepper red,englishName,red sweet pepper
+441,442,Sweet pepper yellow,englishName,yellow sweet pepper
+442,443,Sweet white wine,englishName,sweet white wine
+443,444,Sweets marshmallow type Spekkie,englishName,spekkie
+444,445,Swiss chard leaf,englishName,swiss chard leaf
+445,446,Taai-taai Dutch Biscuit,englishName,taai-taai dutch biscuit
+446,447,Tangerines in syrup,englishName,tangerines in syrup
+447,448,Tannia,englishName,tannia
+448,449,Tannia leaves,englishName,tannia leaves
+449,450,Tapioca,englishName,tapioca
+450,451,Tempeh,englishName,tempeh
+451,452,Thickened soup,englishName,thickened soup
+452,453,Toffees,englishName,toffees
+453,454,Tomato puree concentrated,englishName,concentrated tomato puree
+454,455,Tomato sieved pack,englishName,sieved tomato pack
+455,456,Tomatoes,englishName,tomatoes
+456,457,Tomatoes canned,englishName,canned tomatoes
+458,459,Tortilla,englishName,tortilla
+459,460,Turkish Tursu pickled Vegetables,englishName,tursu
+460,461,Turnip tops,englishName,turnip tops
+461,462,Twix Candybar,englishName,twix candybar
+462,463,Vegetable oil,englishName,vegetable oil
+463,464,Vermouth,englishName,vermouth
+464,465,Vine tomato,englishName,vine tomato
+465,466,Vodka,englishName,vodka
+466,467,Water-soaked raisins,englishName,water-soaked raisins
+467,468,Whisky,englishName,whisky
+468,469,White asparagus,englishName,white asparagus
+469,470,White beans,englishName,white beans
+470,471,White bread bun,englishName,white bread bun
+471,472,White cabbage,englishName,white cabbage
+472,473,White castor sugar,englishName,white castor sugar
+473,474,White currant bun wheat,englishName,currant bun
+474,475,White raw rice,englishName,raw white rice
+475,476,Wine white dry,englishName,dry white wine
+476,477,Yellow/green split peas dried,englishName,split peas
+477,478,Yoghurt drink,englishName,yoghurt drink
+478,479,Yoghurt full fat,englishName,full fat yoghurt
+479,480,Yoghurt half fat,englishName,half fat yoghurt
+480,481,Yoghurt low fat,englishName,low fat yoghurt
+481,482,Yoghurt vanilla half fat,englishName,vanilla yoghurt
+482,1,Lange vingers,dutchName,biscuit sponge fingers
+483,2,Kaas Mozzarella,dutchName,mozzarella
+484,3,Rozijnen gedroogd,dutchName,dried raisins
+485,4,Snijbonen,dutchName,runner beans
+486,5,Abrikozen,dutchName,apricots
+487,6,Galette wafel,dutchName,wafer galette
+488,7,Ijsbergsla,dutchName,iceberg lettuce
+489,8,Kaassouffle,dutchName,kaassouffle
+490,9,Mango,dutchName,mango
+491,10,Margarine,dutchName,margarine
+492,11,Slagroom,dutchName,whipped cream
+493,12,Ontbijtkoek,dutchName,dutch spiced cake
+494,13,Croissant,dutchName,croissant
+495,14,Frikandel,dutchName,frikandel
+496,15,Roze koek,dutchName,iced cup cake
+497,16,Kaas Mascarpone,dutchName,mascarpone cheese
+498,17,Slagroomsoes,dutchName,eclair
+499,18,Worstenbroodje,dutchName,sausage roll
+501,20,Bitterkoek,dutchName,amaretti biscuit
+502,21,Aioli,dutchName,aioli
+503,22,Tzatziki,dutchName,tzatziki
+504,23,Pitabroodje,dutchName,pita bread
+505,24,Knolselderij,dutchName,celeriac
+506,25,Runder knakworst,dutchName,beef frankfurter
+507,26,Rode kidneybonen,dutchName,red kidney beans
+508,27,Bruine bonen,dutchName,brown beans
+509,28,Gelderse worst,dutchName,cooked sausage
+510,29,Roomijs,dutchName,ice cream
+511,30,Appelsap,dutchName,apple juice
+512,31,Pennywafel,dutchName,penny waffle
+513,32,Kropsla,dutchName,butterhead lettuce
+514,33,Ketjap manis,dutchName,ketjap soy sauce
+515,34,Sperziebonen,dutchName,french beans
+516,35,Paksoi,dutchName,pak-choi cabbage
+517,36,Yoghurt Griekse volle,dutchName,greek yoghurt
+518,37,Yoghurt Griekse magere,dutchName,skimmed greek yoghurt
+519,38,Kool rode m appeltjes,dutchName,red cabbage
+520,39,Paranoten ongezouten,dutchName,brazil nuts
+521,40,Walnoten ongezouten,dutchName,walnuts
+522,41,Melkchocoladerozijnen,dutchName,chocolate covered raisins
+523,42,Magere knakworst,dutchName,lean frankfurter sausage
+524,43,Artisjokharten,dutchName,canned artichoke hearts
+525,44,Abrikozen gedroogd,dutchName,dried apricots
+527,46,Kaasbroodje,dutchName,cheese pastry
+528,47,Eierkoek,dutchName,eierkoek
+529,48,Kaas Camembert 30+,dutchName,camembert cheese 30+
+530,49,Kaas Camembert 45+,dutchName,camembert cheese
+531,50,Sinaasappelsap,dutchName,orange juice
+532,51,Jodekoek,dutchName,dutch jodekoek biscuit
+533,52,Appelmoes,dutchName,apple sauce
+534,53,Bamigroenten,dutchName,bami vegetables
+535,54,Sojasaus,dutchName,soy sauce
+536,55,Kaas Ricotta,dutchName,ricotta cheese
+537,56,Snoepmix,dutchName,candy mix
+538,57,Zuivelspread light,dutchName,light dairy spread
+539,58,Tomatenketchup,dutchName,tomato ketchup
+540,59,Chilibonen,dutchName,chilli beans
+541,60,Cake naturel,dutchName,plain cake
+542,61,Zwarte bessen,dutchName,blackcurrants
+543,62,Popcorn zout,dutchName,salted popcorn
+544,63,Popcorn zoet,dutchName,sweet popcorn
+545,64,Vleestomaat,dutchName,beef tomato
+546,65,Atjar tjampoer,dutchName,pickled atjar tjampoer
+547,66,Macademianoten ongezouten,dutchName,macadamia nuts
+548,67,Pecannoten ongezouten,dutchName,oil roasted pecans
+549,68,Cashewnoten gezouten,dutchName,cashew nuts
+550,69,Galiameloen,dutchName,netted melon
+551,70,Glutenvrij brood,dutchName,gluten free bread
+552,71,Koekje PiM's sinaasappel,dutchName,jaffa cakes/pim's cake
+553,72,Veldsla,dutchName,lamb's lettuce
+554,73,Mandarijn,dutchName,manderins
+556,75,Advocaat,dutchName,advocaat liqueur
+557,76,Gevuldekoek,dutchName,almond tart
+558,77,Amandelen,dutchName,almonds
+559,78,Klaroen,dutchName,amaranth leaves
+560,79,Antroewa,dutchName,antroewa
+561,80,Appeltaart,dutchName,apple pie
+562,81,Appelcake,dutchName,apple cake
+563,82,Appelbeignet,dutchName,apple fritter
+564,83,Appelcarre,dutchName,apple strudel
+565,84,Appelstroop,dutchName,apple syrup
+566,85,Appelflap,dutchName,apple turnover
+567,86,Abrikozen op siroop,dutchName,apricots in syrup
+568,87,Stokbrood,dutchName,baguette
+569,88,Baklava,dutchName,baklava nut-honey cake
+570,89,Bamboespruiten,dutchName,bamboo shoots
+571,90,Bananen,dutchName,banana
+572,91,Bananenbrood,dutchName,banana bread
+573,92,Broodje bapao vlees,dutchName,bapao
+574,93,Barbecuesaus,dutchName,barbecue sauce
+575,94,Koek Bastogne,dutchName,bastogne shortbread biscuit
+576,95,Tauge,dutchName,bean sprouts
+577,96,Bruine bonen/ witte bonen gedroogd,dutchName,dried beans
+578,97,Bier,dutchName,beer
+579,98,Bier radler,dutchName,radler beer
+580,99,Biet rode,dutchName,beetroot
+581,100,Bietensap,dutchName,beetroot juice
+582,101,Berliner bol,dutchName,berliner pastry
+583,102,Bosbessen,dutchName,bilberries
+584,103,Bosbessen op siroop,dutchName,bilberries in syrup
+585,104,Koekje,dutchName,biscuit
+586,105,Chocoladebiscuit,dutchName,chocolate coated biscuit
+588,107,Bitterbal in oven,dutchName,bitterbal from oven
+589,108,Zwarte bonen,dutchName,black beans
+590,109,Rammenas,dutchName,black radish
+591,110,Kaas Danish Blue,dutchName,danish blue cheese
+592,111,Kaas blauwschimmel Bluefort,dutchName,bluefort cheese
+593,112,Candybar Bounty,dutchName,bounty candybar
+594,113,Kaas room- zachte Boursin,dutchName,boursin
+595,114,Brandewijn,dutchName,brandy
+596,115,Paneermeel,dutchName,bread crumbs
+597,116,Soepstengel,dutchName,breadsticks
+598,117,Breezer,dutchName,breezer
+599,118,Kaas Brie 50+,dutchName,brie cheese 50+
+600,119,Brioche,dutchName,brioche
+601,120,Tuinbonen,dutchName,broad beans
+602,121,Bruinbrood,dutchName,brown bread
+603,122,Bruinbrood met zaden,dutchName,seeded brown bread
+604,123,Linzen bruine,dutchName,brown lentils
+605,124,Basterdsuiker bruine,dutchName,castor brown sugar
+606,125,Brownie,dutchName,brownie
+607,126,Spruitjes,dutchName,brussel sprouts
+608,127,Bulgur rauw,dutchName,raw bulgur
+609,128,Puddingbroodje,dutchName,custard bun
+610,129,Campari,dutchName,campari
+611,130,Candybar gem,dutchName,candybar av
+612,131,Candybar KitKat,dutchName,kitkat candybar
+613,132,Candybar Milky Way,dutchName,milky way candybar
+614,133,Candybar Nuts,dutchName,nuts candybar
+615,134,Candybar Snickers,dutchName,snickers candybar
+616,135,Kaas Turkse 60+ obv koemelk blik,dutchName,turkish cheese
+617,136,Meloen cantaloupe,dutchName,cantaloupe melon
+618,137,Kappertjes,dutchName,capers
+619,138,Stervrucht,dutchName,carambola
+620,139,Worteltaart,dutchName,carrot cake
+621,140,Cassave rauw,dutchName,cassava
+622,141,Graanreep Hero B'tween,dutchName,cereal bar
+623,142,Cantharel,dutchName,chanterelle mushrooms
+624,143,Kaas Cheddar,dutchName,cheddar cheese
+625,144,Kaas 10+,dutchName,cheese 10+
+626,145,Kaas 20+,dutchName,cheese 20+
+627,146,Kaas 30+,dutchName,cheese 30+
+628,147,Kaas 35+,dutchName,cheese 35+
+629,148,Kaas 45+,dutchName,cheese 45+
+630,149,Kaas 50+,dutchName,cheese 50+
+631,150,Komijnekaas,dutchName,cumin cheese
+632,151,Kaas Brie 60+,dutchName,brie cheese 60+
+633,152,Kaas huttenkase,dutchName,cottage cheese
+634,153,Kaas room- m kruiden 25-30 g vet,dutchName,herb cream cheese
+635,154,Kaas Edammer 40+,dutchName,edam cheese 40+
+636,155,Kaas verse light 8% vet,dutchName,light fresh cheese
+638,157,Kaas Kernhemmer 60+,dutchName,kernhem cheese 60+
+639,158,Kaas rauwmelkse 48+,dutchName,raw milk cheese
+640,159,Kaas schapen-/geiten- Turkse 50+ blik,dutchName,turkish sheep cheese
+641,160,Kaas rook- 45+,dutchName,smoked cheese 45+
+642,161,Kaas smeer- 20+,dutchName,cheese spread 20+
+643,162,Kaas smeer- 40+,dutchName,cheese spread 40+
+644,163,Kaas smeer- 45+,dutchName,cheese spread 45+
+645,164,Cheesecake,dutchName,cheesecake
+646,165,Heksenkaas,dutchName,heks'n kaas cheesespread
+647,166,Kersen op siroop,dutchName,cherries in syrup
+648,167,Kauwgom,dutchName,chewing gum
+649,168,Chiazaad gedroogd,dutchName,dried chia seeds
+650,169,Kipfilet rauw,dutchName,chicken fillet
+651,170,Kipnuggets in frituur,dutchName,chicken nuggets
+653,172,Kippendij rauw,dutchName,chicken thigh
+654,173,Chilipeper,dutchName,chili pepper
+655,174,Kool Chinese,dutchName,chinese cabbage
+656,175,Chocoladecake,dutchName,chocolate cake
+657,176,Chocolate chip cookie,dutchName,chocolate chip cookie
+658,177,Chocolademousse,dutchName,chocolate mousse
+659,178,Chocoladesaus,dutchName,chocolate sauce
+660,179,Chocoladehagelslag,dutchName,chocolate sprinkles
+661,180,Kerststol,dutchName,christmas bread
+662,181,Cider,dutchName,cider
+663,182,Soep helder,dutchName,clear soup
+664,183,Borrelnoten,dutchName,coated peanuts
+665,184,Kokoskoek,dutchName,coconut flavoured cookies
+666,185,Kokosmakronen,dutchName,coconut macaroons
+667,186,Cognac,dutchName,cognac
+668,187,Vleeswaren,dutchName,cold cuts
+669,188,Couscous rauw,dutchName,couscous
+670,189,Vossenbessen,dutchName,cowberries
+671,190,Cracker,dutchName,crackers
+672,191,Cranberry gedroogd gezoet,dutchName,sweetened dried cranberries
+673,192,Cranberry vers,dutchName,fresh cranberries
+674,193,Cranberrycompote gezoet,dutchName,cranberry compote
+675,194,Creme fraiche,dutchName,creme fraiche
+676,195,Sterkers,dutchName,garden cress
+677,196,Beschuit,dutchName,crispbakes
+678,197,Knackebrod,dutchName,crispbread
+679,198,Kroket in oven,dutchName,croquette from oven
+680,199,Croutons,dutchName,croutons
+681,200,Boerenkool,dutchName,curly kale
+682,201,Krenten gedroogd,dutchName,dried currants
+683,202,Curryketchup,dutchName,curry ketchup
+684,203,Dagoeblad,dutchName,dagoe leaf
+685,204,Zuivelspread,dutchName,dairy spread
+686,205,Paardenbloemblad,dutchName,dandelion leaves
+687,206,Koffiebroodje,dutchName,danish pastry
+688,207,Bamischijf,dutchName,bamihap
+689,208,Kroket in frituur,dutchName,deepfried croquette
+690,209,Maaltijdloempia,dutchName,deepfried spring roll
+691,210,Bitterbal in frituur,dutchName,deepfried bitterbal
+692,211,Biscuit digestive-,dutchName,digestive biscuit
+693,212,Oliebol,dutchName,oliebol
+694,213,Appeltjes gedroogd geweekt,dutchName,soaked dried apple
+695,214,Appeltjes gedroogd,dutchName,dried apples
+696,215,Dadels gedroogd,dutchName,dried dates
+697,216,Gojibessen,dutchName,dried goji berries
+698,217,Peren gedroogd,dutchName,dried pear
+699,218,Peren gedroogd geweekt,dutchName,soaked dried pear
+700,219,Zeewier agar agar gedroogd,dutchName,agar agar
+701,220,Sojabonen gedroogd,dutchName,dried soya beans
+702,221,Boterkoek,dutchName,dutch boterkoek
+703,222,Kaas gaten- Hollandse 45+,dutchName,swiss-style cheese
+704,223,Koekje krakeling,dutchName,dutch krakeling biscuit
+705,224,Sprits m roomboter,dutchName,sprits biscuit
+706,225,Tompouce,dutchName,tompouce
+707,226,Vieux,dutchName,dutch vieux brandy
+708,227,Kippenei eiwit,dutchName,egg white
+709,228,Kaas Emmentaler,dutchName,emmenthaler cheese
+710,229,Falafel onbereid,dutchName,falafel
+711,231,Kaas Feta,dutchName,feta cheese
+712,232,Vijgen gedroogd,dutchName,dried figs
+713,233,Vijgen vers,dutchName,fresh figs
+714,234,Kinder bueno,dutchName,filled chocolate bar
+715,235,Bonbon,dutchName,filled chocolates
+716,236,Filodeeg onbereid,dutchName,filo pastry
+717,237,Meergranenbroodje,dutchName,firm brown bun
+718,238,Vruchtenvlaai,dutchName,fruit flan
+719,239,Focaccia,dutchName,focaccia
+720,240,Knakworst,dutchName,frankfurter sausage
+721,241,Patat,dutchName,french fries
+722,242,Citrusvruchten,dutchName,fresh citrus fruit
+723,243,Dadels vers,dutchName,fresh dates
+724,244,Kaas geiten- verse,dutchName,fresh goat cheese
+725,245,Kaas schapen- vers,dutchName,fresh sheep cheese
+726,246,Frikandel speciaal,dutchName,frikandel speciaal
+727,247,Sultana,dutchName,fruit biscuit
+728,248,Bosvruchten,dutchName,forest fruit
+729,249,Vruchten op eigen sap,dutchName,fruit in juice
+730,250,Vruchten op siroop,dutchName,fruit in syrup
+731,251,Tuttifrutti gedroogd geweekt,dutchName,soaked dried fruit
+732,252,Kaas smeer- volvet 48+,dutchName,cheese spread
+733,253,Slagroomtaart,dutchName,gateau
+734,254,Gelatine,dutchName,gelatin
+735,255,Augurk zoetzuur,dutchName,sweet pickled gherkins
+736,256,Zeekraal,dutchName,glasswort
+737,257,Gnocchi onbereid,dutchName,unprepared gnocchi
+738,258,Kaas geiten- hard,dutchName,hard goat cheese
+739,259,Schenkstroop,dutchName,pourable golden syrup
+740,260,Kruisbessen,dutchName,gooseberries
+741,261,Kaas blauwschimmel Gorgonzola,dutchName,gorgonzola cheese
+742,262,Kaas Goudse 48+ oud,dutchName,old gouda cheese
+743,263,Kaas Goudse 48+ jong,dutchName,young gouda cheese
+744,264,Kaas Goudse 48+ jong belegen,dutchName,medium gouda cheese
+745,265,Druivensap,dutchName,grape juice
+746,266,Grapefruit,dutchName,grapefruit
+747,267,Grapefruit op siroop,dutchName,grapefruit in syrup
+748,268,Grapefruitsap,dutchName,grapefruit juice
+749,269,Druiven,dutchName,grapes
+750,270,Kokos geraspt gedroogd,dutchName,dried grated coconut
+751,271,Asperge groen,dutchName,green asparagus
+752,272,Erwten groene gedroogd,dutchName,dried green peas
+753,273,Groene olijven,dutchName,green olives
+754,274,Paprika groen,dutchName,green sweet pepper
+755,275,Kaas Gruyere,dutchName,gruyere cheese
+756,276,Guave (met roze vruchtvlees),dutchName,guava (pink fleshed)
+757,277,Vla halfvolle alle smaken,dutchName,half fat custard
+758,278,Hamburger rauw,dutchName,raw hamburger
+759,279,Hennepzaad,dutchName,hemp seed
+760,280,Honing-mosterd dressing,dutchName,honey mustard dressing
+761,281,Suikermeloen,dutchName,honeydew melon
+762,282,Chocolademelk uit automaat,dutchName,hot chocolate
+763,283,Hummus,dutchName,hummus
+764,284,Waterijs,dutchName,ice lolly
+765,285,Donut m glazuur,dutchName,iced doughnut
+766,286,Irish coffee,dutchName,irish coffee
+767,287,Jackfruit in water,dutchName,jackfruit in water
+768,288,Rode bessensap,dutchName,redcurrant juice
+769,289,Kaisoi,dutchName,kaisoi
+770,290,Kaki,dutchName,kaki
+771,291,Rode kidneybonen gedroogd,dutchName,dried kidney beans
+772,292,Kipkorn,dutchName,kipkorn
+773,293,Kiwi,dutchName,kiwi
+774,294,Kletskop,dutchName,dutch kletskop biscuit
+775,295,Spitskool,dutchName,pointed spitskool
+776,296,Kruidnoten,dutchName,kruidnoten
+777,297,Chocoladekruidnoten,dutchName,chocolate covered kruidnoten
+778,298,Kumquat,dutchName,kumquat
+779,299,Linzen groene en bruine gedroogd,dutchName,dried lentils
+780,300,Limoen,dutchName,lime
+781,301,Lijnzaad,dutchName,linseeds
+782,302,Candybar Lion,dutchName,lion candybar
+783,303,Likeur 15-25 vol% alc,dutchName,liqueur 15-25%
+784,304,Likeur <15 vol% alc,dutchName,liqueur <15%
+785,305,Likeur >25 vol% alc,dutchName,liqueur >25%
+786,306,Likeur m room 15-25 vol% alc,dutchName,cream liqueur
+787,307,Drop,dutchName,liquorice
+788,308,Kousenband,dutchName,yardlong beans
+789,309,Bier alcoholarm,dutchName,low alcohol beer
+790,310,Luikse wafel,dutchName,luikse waffle
+791,311,Lychee,dutchName,lychees
+792,312,M&m's met pinda's,dutchName,m&m's w peanuts
+793,313,Madeira,dutchName,madeira
+794,314,Maltesers,dutchName,maltesers
+795,315,Peultjes,dutchName,mange-tout
+796,316,Kapucijners,dutchName,marrowfat peas
+797,317,Candybar Mars,dutchName,mars candybar
+798,318,Marshmallows,dutchName,marshmallows
+799,319,Cracker Matzes,dutchName,matzes crackers
+800,320,Kokosnootvlees,dutchName,coconut meat
+801,321,Berenklauw,dutchName,deepfried berenklauw
+802,322,Mispel,dutchName,medlar
+803,323,Meloen op siroop,dutchName,melon in syrup
+804,324,Melk halfvolle,dutchName,semi-skimmed milk
+805,325,Melk volle,dutchName,whole milk
+806,326,Half om half gehakt rauw,dutchName,minced beef/pork
+807,327,Tuttifrutti gedroogd,dutchName,mixed dried fruit
+808,328,Noten gemengd gezouten,dutchName,mixed nuts
+809,329,Studentenhaver,dutchName,mixed nuts with raisins
+810,330,Kaas room- zachte Mon Chou,dutchName,mon chou
+811,331,Mueslireep,dutchName,muesli bar
+812,332,Cruesli,dutchName,chocolate muesli
+813,333,Moerbeibessen,dutchName,mulberries
+814,334,Multivruchtensap,dutchName,multifruit juice
+815,335,Muskaatwijn,dutchName,muscatel
+816,336,Nectarine,dutchName,nectarine
+817,337,Noedelsoep,dutchName,noodle soup
+818,338,Zeewier nori gedroogd,dutchName,nori dried seaweed
+819,339,Kaas Old Amsterdam 48+,dutchName,old amsterdam
+820,340,Ui,dutchName,onions
+821,341,Ovenfriet,dutchName,oven french fries
+822,342,Papaja,dutchName,papaya
+823,343,Kaas Parmezaanse,dutchName,parmesan cheese
+824,344,Passievrucht,dutchName,passion fruit
+825,345,Roompate,dutchName,pate
+826,346,Kaas room- zachte Paturain,dutchName,paturain
+827,347,Perzik,dutchName,peach
+828,348,Perziken op siroop,dutchName,peaches in syrup
+829,349,Pindakoek,dutchName,peanut biscuit
+830,350,Pindakaas,dutchName,peanut butter
+831,351,Satesaus,dutchName,peanut sauce
+832,352,Pinda's,dutchName,peanuts
+834,354,Melkchocoladepinda's,dutchName,chocolate coated peanuts
+835,355,Perensap,dutchName,pear juice
+836,356,Peren op siroop,dutchName,pears in syrup
+837,357,Kapucijners gedroogd,dutchName,dried marrowfat peas
+838,358,Paprika oranje,dutchName,sweet orange pepper
+839,359,Pesto groene,dutchName,green pesto
+840,360,Pesto rode,dutchName,red pesto
+841,361,Piccalilly,dutchName,piccalilly
+843,363,Jalapeno pepers in zuur,dutchName,pickled canned peppers
+844,364,Ananas op eigen sap,dutchName,pineapple in juice
+845,365,Ananas op siroop,dutchName,pineapple in syrup
+846,366,Ananassap,dutchName,pineapple juice
+847,367,Pistachenoten,dutchName,pistachio nuts
+848,368,Pruimen,dutchName,plums
+849,369,Pruimen op siroop,dutchName,plums in syrup
+850,370,Poeng,dutchName,poeng bottlegourd
+851,371,Granaatappel,dutchName,pomegranate
+852,372,Varkenskrabbetjes rauw,dutchName,raw spare rib
+853,373,Port,dutchName,port wine
+854,374,Chips,dutchName,potato crisps
+855,375,Aardappel rauw,dutchName,potatoes
+856,376,Kroepoek,dutchName,prawn crackers
+857,377,Pepsels,dutchName,pretzel sticks
+858,378,Pruimen gedroogd,dutchName,prunes
+859,379,Pruimen gedroogd geweekt,dutchName,soaked prunes
+860,380,Amandelbroodje,dutchName,almond puff pastry
+861,381,Rijstwafel,dutchName,puffed rice cakes
+862,382,Postelein,dutchName,purslane
+863,383,Kwark volle,dutchName,full fat quark
+864,384,Kwark halfvolle,dutchName,half fat quark
+865,385,Kwark magere,dutchName,low fat quark
+866,386,Quinoa rauw,dutchName,raw quinoa
+867,387,Kaas Rambol,dutchName,rambol cheese
+868,388,Framboos,dutchName,raspberries
+869,389,Framboos op siroop,dutchName,raspberries in syrup
+870,390,Kastanje rauw,dutchName,raw chestnuts
+871,391,Pasta rauw,dutchName,raw pasta
+874,394,Sla rode,dutchName,red lettuce
+875,395,Wijn rode,dutchName,red wine
+876,396,Aalbessen,dutchName,redcurrants
+877,397,Rempejek pindakoekje,dutchName,rempejek peanut biscuit
+878,398,Rabarber,dutchName,rhubarb
+879,399,Rabarbermoes,dutchName,rhubarb puree
+880,400,Zwarte olijven,dutchName,ripe olives
+881,401,Bakbanaan,dutchName,ripe plantain
+882,402,Rucolasla,dutchName,rocket lettuce
+883,403,Sla romaine,dutchName,romaine lettuce
+884,404,Kaas blauwschimmel Roquefort,dutchName,roquefort cheese
+885,405,Wijn rose,dutchName,rose wine
+886,406,Roggebrood,dutchName,rye bread
+887,407,Kaas Saint Paulin/Port Salut,dutchName,saint paulin
+888,408,Vinaigrettedressing,dutchName,vinaigrette salad dressing
+889,409,Worst salami,dutchName,salami
+890,410,Schorseneren,dutchName,salsify
+891,411,Tuc,dutchName,salted biscuit
+892,412,Salmiakkogel,dutchName,salty liquorice lolly
+893,413,Knoflooksaus 20-<30% olie,dutchName,garlic sauce
+894,414,Zuurkool,dutchName,sauerkraut cabbage
+895,415,Runderrookworst gekookt,dutchName,smoked beef sausage
+896,416,Varkensrookworst gekookt,dutchName,smoked pork sausage
+897,417,Zeewier kelp,dutchName,kelp seaweed
+898,418,Seitan,dutchName,seitan
+899,419,Seroendeng,dutchName,seroendeng
+900,420,Shandy,dutchName,shandy
+901,422,Sherry,dutchName,sherry
+902,423,Melk magere,dutchName,skimmed milk
+903,424,Magere rookworst gekookt,dutchName,smoked sausage
+904,425,Smoothie vruchten,dutchName,fruit smoothie
+905,426,Frikandelbroodje,dutchName,frikandelbroodje
+906,427,Banaanschuimpje,dutchName,schuimpje
+907,428,Speculaas gem,dutchName,speculaas
+908,429,Speculoos,dutchName,speculaas flavoured spread
+909,430,Spekkoek,dutchName,spekkoek
+910,431,Nasischijf,dutchName,nasibal
+911,432,Erwtensoep met vlees,dutchName,split pea soup
+912,433,Nutella,dutchName,chocolate hazelnut spread
+913,434,Tomaat gestoofd,dutchName,stewed tomatoes
+914,435,Kaas Stilton,dutchName,stilton cheese
+915,436,Aardbeien,dutchName,strawberries
+916,437,Aardbeien op siroop,dutchName,strawberries in syrup
+917,438,Peper zoete gevuld m roomkaas,dutchName,cheese stuffed sweet pepper
+918,439,Tomaat zongedroogd,dutchName,sun-dried tomato
+919,440,Koolraap,dutchName,swede
+920,441,Paprika rood,dutchName,red sweet pepper
+921,442,Paprika geel,dutchName,yellow sweet pepper
+922,443,Wijn witte zoete,dutchName,sweet white wine
+923,444,Spekkie,dutchName,spekkie
+924,445,Snijbiet,dutchName,swiss chard leaf
+925,446,Taai-taai,dutchName,taai-taai dutch biscuit
+926,447,Mandarijnen op siroop,dutchName,tangerines in syrup
+927,448,Pomtajer rauw,dutchName,tannia
+928,449,Tajerblad,dutchName,tannia leaves
+929,450,Tapioca,dutchName,tapioca
+930,451,Tempeh onbereid,dutchName,tempeh
+931,452,Soep gebonden,dutchName,thickened soup
+932,453,Fruittoffee,dutchName,toffees
+933,454,Tomatenpuree geconcentreerd,dutchName,concentrated tomato puree
+934,455,Tomaat gezeefd pak,dutchName,sieved tomato pack
+935,456,Tomaat,dutchName,tomatoes
+936,457,Tomaat in blik,dutchName,canned tomatoes
+938,459,Tortilla,dutchName,tortilla
+939,460,Tafelzuur tursu Turks,dutchName,tursu
+940,461,Raapstelen,dutchName,turnip tops
+941,462,Candybar Twix,dutchName,twix candybar
+942,463,Olie plantaardig,dutchName,vegetable oil
+943,464,Vermouth zoete,dutchName,vermouth
+944,465,Trostomaat,dutchName,vine tomato
+945,466,Wodka,dutchName,vodka
+946,467,Rozijnen gedroogd geweekt,dutchName,water-soaked raisins
+947,468,Whisky,dutchName,whisky
+948,469,Asperge wit,dutchName,white asparagus
+949,470,Witte bonen,dutchName,white beans
+950,471,Wit bolletje,dutchName,white bread bun
+951,472,Kool witte,dutchName,white cabbage
+952,473,Basterdsuiker witte,dutchName,white castor sugar
+953,474,Rozijnenbol,dutchName,currant bun
+954,475,Rijst witte rauw,dutchName,raw white rice
+955,476,Wijn witte droge,dutchName,dry white wine
+956,477,Splitpesie erwten gedroogd,dutchName,split peas
+957,478,Yoghurtdrank,dutchName,yoghurt drink
+958,479,Yoghurt volle,dutchName,full fat yoghurt
+959,480,Yoghurt halfvolle,dutchName,half fat yoghurt
+960,481,Yoghurt magere,dutchName,low fat yoghurt
+961,482,Vanilleyoghurt halfvol,dutchName,vanilla yoghurt
+962,17,eclair w whipped cream filling,original_name,eclair
+963,18,snack sausage roll w bread dough pastry,original_name,sausage roll
+965,20,biscuit dutch amaretti bitterkoekjes,original_name,amaretti biscuit
+966,25,frankfurter type beef sausage,original_name,beef frankfurter
+967,36,yoghurt greek full fat,original_name,greek yoghurt
+968,38,red cabbage w apple pieces glass,original_name,red cabbage
+969,41,raisins coated w milkchocolate,original_name,chocolate covered raisins
+971,46,cheese pastry w puff pastry,original_name,cheese pastry
+972,47,dutch eierkoek cake sponge,original_name,eierkoek
+974,76,almond paste filled tarts av,original_name,almond tart
+975,80,appel pie dutch w shortbread w butter,original_name,apple pie
+976,92,bapao meat stuffed bread,original_name,bapao
+977,96,beans white / brown dried,original_name,dried beans
+979,113,boursin cheese cream soft,original_name,boursin
+980,122,brown bread with seeds,original_name,seeded brown bread
+981,128,bun w vanilla custard,original_name,custard bun
+982,135,canned turkish cheese 60+ cow's milk,original_name,turkish cheese
+983,141,cereal bar hero b'tween,original_name,cereal bar
+984,150,cheese average w cumin 48+,original_name,cumin cheese
+985,153,cheese cream w herbs 25-30 g fat,original_name,herb cream cheese
+986,155,cheese fresh light 8% fat,original_name,light fresh cheese
+988,158,cheese raw milk 48+,original_name,raw milk cheese
+989,159,cheese sheep/goat turkish 50+ canned,original_name,turkish sheep cheese
+990,178,chocolate sauce for pudding,original_name,chocolate sauce
+991,180,christmas bread with almond spice,original_name,christmas bread
+992,207,deep-fried chinese noodle ball,original_name,bamihap
+993,212,doughnut dutch style filled w currants and raisins,original_name,oliebol
+994,213,dried apple soaked in water,original_name,soaked dried apple
+995,218,dried pear soaked in water,original_name,soaked dried pear
+996,219,dried seaweed agar agar,original_name,agar agar
+997,222,dutch cheese in swiss-style 45+,original_name,swiss-style cheese
+998,224,dutch shortbread sprits biscuit,original_name,sprits biscuit
+999,225,dutch tompouce cream slice,original_name,tompouce
+1000,238,flan w fruit filling,original_name,fruit flan
+1001,251,fruit mixed dried soaked in water,original_name,soaked dried fruit
+1002,252,full fat cheese spread 48+,original_name,cheese spread
+1003,253,gateau w whipped cream,original_name,gateau
+1004,262,gouda cheese 48+ age 10-12 mths,original_name,old gouda cheese
+1005,263,gouda cheese 48+ age 4-8 weeks,original_name,young gouda cheese
+1006,264,gouda cheese 48+ age 8 wk-4 mths,original_name,medium gouda cheese
+1007,282,hot chocolate from vending machine,original_name,hot chocolate
+1008,296,kruidnoten biscuit spiced small,original_name,kruidnoten
+1009,297,kruidnoten w chocolate av spiced small biscuit,original_name,chocolate covered kruidnoten
+1010,299,lentils green and brown dried,original_name,dried lentils
+1011,303,liqueur 15-25 vol% alcohol,original_name,liqueur 15-25%
+1012,304,liqueur <15 vol% alcohol,original_name,liqueur <15%
+1013,305,liqueur >25 vol% alcohol,original_name,liqueur >25%
+1014,306,liqueur w cream 15-25 vol% alcohol,original_name,cream liqueur
+1015,329,mixed nuts and raisins,original_name,mixed nuts with raisins
+1016,330,mon chou soft cheese cream,original_name,mon chou
+1017,332,muesli crunchy w chocolate,original_name,chocolate muesli
+1018,339,old amsterdam cheese 48+,original_name,old amsterdam
+1020,380,puff pastry filled with almond paste,original_name,almond puff pastry
+1021,407,saint paulin cheese/port salut,original_name,saint paulin
+1022,413,sauce garlic 20-<30% oil,original_name,garlic sauce
+1023,415,sausage smoked beef cooked,original_name,smoked beef sausage
+1024,416,sausage smoked pork cooked,original_name,smoked pork sausage
+1025,424,smoked lean cooked sausage,original_name,smoked sausage
+1026,426,snack roll puff pastry w frikandel,original_name,frikandelbroodje
+1027,427,solid foamed candy 'schuimpje',original_name,schuimpje
+1028,428,speculaas biscuit spiced av,original_name,speculaas
+1029,430,spiced cake indonesian- spekkoek,original_name,spekkoek
+1030,431,spiced frozen deep fried rice ball,original_name,nasibal
+1031,434,stewed tomatoes with vegetable oil,original_name,stewed tomatoes
+1032,438,stuffed sweet pepper with cream cheese,original_name,cheese stuffed sweet pepper
+1033,444,sweets marshmallow type spekkie,original_name,spekkie
+1035,460,turkish tursu pickled vegetables,original_name,tursu
+1036,474,white currant bun wheat,original_name,currant bun
+1037,477,yellow/green split peas dried,original_name,split peas
+1038,482,yoghurt vanilla half fat,original_name,vanilla yoghurt
+1039,33,sweet ketjap soy sauce,original_name,ketjap soy sauce
+1041,249,fruit in own juice,original_name,fruit in juice
+1042,273,green olives in brine,original_name,green olives
+1043,277,half fat custard all flavours,original_name,half fat custard
+1044,291,kidney beans red dried,original_name,dried kidney beans
+1045,346,paturain cheese cream soft,original_name,paturain
+1046,364,pineapple in own juice,original_name,pineapple in juice
+1047,372,pork spare rib raw,original_name,raw spare rib
+1048,379,prunes soaked in water,original_name,soaked prunes
+1049,399,rhubarb puree with sugar,original_name,rhubarb puree
+1050,400,ripe olives in brine,original_name,ripe olives
