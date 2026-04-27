@@ -8,7 +8,6 @@ import coil3.annotation.ExperimentalCoilApi
 import coil3.compose.LocalPlatformContext
 import coil3.decode.DataSource
 import coil3.decode.ImageSource
-import coil3.disk.DiskCache
 import coil3.fetch.FetchResult
 import coil3.fetch.Fetcher
 import coil3.fetch.SourceFetchResult
@@ -49,13 +48,6 @@ private class EntityImageKeyer : Keyer<EntityImageData> {
         "${data.entityType.lowercase()}:${data.entityId}"
 }
 
-/**
- * Four-tier fetch: SQLite BLOB → Coil disk cache (migration bridge) → network URL → save to SQLite.
- *
- * The Coil disk cache bridge (L2.5) ensures that images downloaded by the old URL-keyed loader
- * are not abandoned when an existing user upgrades. On first access after migration, the bytes
- * are read from Coil's disk cache and saved permanently to SQLite.
- */
 private fun String.toWsrvUrl(): String {
     if (startsWith("https://wsrv.nl/") || startsWith("http://wsrv.nl/")) return this
     val encoded = encodeURLParameter()
@@ -67,7 +59,6 @@ private class DatabaseImageFetcher(
     private val options: Options,
     private val imageCache: ImageCacheRepository,
     private val httpClient: HttpClient,
-    private val coilDiskCache: DiskCache?,
 ) : Fetcher {
 
     override suspend fun fetch(): FetchResult? {
@@ -89,28 +80,6 @@ private class DatabaseImageFetcher(
                         dataSource = DataSource.DISK,
                     )
                 }
-            }
-        }
-
-        // L2.5: migration bridge — check Coil's existing disk cache (only for persistent entities)
-        // Coil keys disk cache entries by the URL string for URL-based requests.
-        // Images cached before this migration live here; without this tier they would be abandoned.
-        if (isPersistent && url != null && coilDiskCache != null) {
-            try {
-                coilDiskCache.openSnapshot(url)?.use { snapshot ->
-                    val bytes = coilDiskCache.fileSystem.read(snapshot.data) { readByteArray() }
-                    if (bytes.isNotEmpty()) {
-                        imageCache.saveImage(data.entityType, data.entityId, bytes, "image/jpeg", url)
-                        coilDiskCache.remove(url) // clean up old URL-keyed entry after migrating
-                        return SourceFetchResult(
-                            source = ImageSource(Buffer().apply { write(bytes) }, options.fileSystem),
-                            mimeType = "image/jpeg",
-                            dataSource = DataSource.DISK,
-                        )
-                    }
-                }
-            } catch (_: Exception) {
-                // Disk cache read failure is non-fatal; fall through to network
             }
         }
 
@@ -147,8 +116,7 @@ private class DatabaseImageFetcher(
         private val httpClient: HttpClient,
     ) : Fetcher.Factory<EntityImageData> {
         override fun create(data: EntityImageData, options: Options, imageLoader: ImageLoader): Fetcher =
-            // imageLoader is fully built here — diskCache is accessible without circular dependency
-            DatabaseImageFetcher(data, options, imageCache, httpClient, imageLoader.diskCache)
+            DatabaseImageFetcher(data, options, imageCache, httpClient)
     }
 }
 
@@ -176,7 +144,7 @@ fun rememberKtorImageLoader(imageCache: ImageCacheRepository): ImageLoader {
             }
         }
         ImageLoader.Builder(platformContext)
-            .diskCachePolicy(CachePolicy.READ_ONLY) // SQLite is the write cache; prevent Coil from duplicating data on disk
+            .diskCachePolicy(CachePolicy.DISABLED)
             .components {
                 add(EntityImageKeyer())
                 add(DatabaseImageFetcher.Factory(imageCache, httpClient))
