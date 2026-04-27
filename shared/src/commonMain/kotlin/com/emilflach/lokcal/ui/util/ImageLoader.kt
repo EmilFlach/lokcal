@@ -20,7 +20,8 @@ import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
-import io.ktor.http.*
+import io.ktor.http.encodeURLParameter
+import io.ktor.http.isSuccess
 import okio.Buffer
 
 val LocalImageCache = compositionLocalOf<ImageCacheRepository> {
@@ -65,13 +66,12 @@ private class DatabaseImageFetcher(
         val isPersistent = data.entityId > 0
         val url = data.fallbackUrl.takeIf { it.isNotBlank() }
 
-        // L2: check SQLite cache first (only for real, persisted entities)
+        // SQLite cache (persistent entities only)
         if (isPersistent) {
             val cached = imageCache.getImage(data.entityType, data.entityId)
             if (cached != null) {
                 val urlChanged = url != null && (cached.sourceUrl == null || cached.sourceUrl != url)
                 if (urlChanged) {
-                    // URL has changed — evict stale entry and re-fetch from network
                     imageCache.deleteImage(data.entityType, data.entityId)
                 } else {
                     return SourceFetchResult(
@@ -83,7 +83,7 @@ private class DatabaseImageFetcher(
             }
         }
 
-        // L3: fetch from network
+        // Network fetch via wsrv.nl proxy
         if (url == null) return null
         val response = try {
             httpClient.get(url.toWsrvUrl())
@@ -97,16 +97,13 @@ private class DatabaseImageFetcher(
         } catch (_: Exception) {
             return null
         }
-        val mime = "image/jpeg"
-
-        // Only persist to SQLite for real entities — transient search results use temp negative IDs
         if (isPersistent) {
-            imageCache.saveImage(data.entityType, data.entityId, bytes, mime, url)
+            imageCache.saveImage(data.entityType, data.entityId, bytes, "image/jpeg", url)
         }
 
         return SourceFetchResult(
             source = ImageSource(Buffer().apply { write(bytes) }, options.fileSystem),
-            mimeType = mime,
+            mimeType = "image/jpeg",
             dataSource = DataSource.NETWORK,
         )
     }
@@ -130,17 +127,6 @@ fun rememberKtorImageLoader(imageCache: ImageCacheRepository): ImageLoader {
                 requestTimeoutMillis = 15_000
                 connectTimeoutMillis = 10_000
                 socketTimeoutMillis = 15_000
-            }
-            defaultRequest {
-                header(HttpHeaders.UserAgent, "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36")
-                header(HttpHeaders.Accept, "*/*")
-                header(HttpHeaders.AcceptLanguage, "en-US,en;q=0.9")
-                header("sec-ch-ua", "\"Chromium\";v=\"124\", \"Google Chrome\";v=\"124\", \"Not-A(Brand\";v=\"99\"")
-                header("sec-ch-ua-mobile", "?1")
-                header("sec-ch-ua-platform", "\"Android\"")
-                header("sec-fetch-dest", "empty")
-                header("sec-fetch-mode", "cors")
-                header("sec-fetch-site", "cross-site")
             }
         }
         ImageLoader.Builder(platformContext)
