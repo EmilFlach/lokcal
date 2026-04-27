@@ -2,31 +2,27 @@
 
 **Android · iOS · Desktop · Web** — all from one codebase.
 
-> Track calories in 10 seconds. No account. No cloud. No subscription. Your data never leaves your device.
+> I tried the big apps and they were all the same: slow, full of junk data, and hidden behind subscriptions. I made Lokcal to be different — it's instant, uses real grocery data, and respects your privacy.
 
-[Try in browser](https://lokcal.app)
-
----
-
-Lokcal runs natively on Android, iOS, Desktop, and Web — all from one codebase. No account. No subscription. No cloud. Log in seconds, check the graph, get on with your day.
+[Try in browser](https://app.lokcal.app)
 
 ---
 
 ## Features
 
-**Your data never leaves your device.**
-No cloud, no account, no breach surface. Lokcal stores everything locally — there is nothing to take.
+**Your data stays on your phone.**
+No accounts and no cloud means there's nothing to sell and no servers to breach. Your logs are yours.
 
-**Food data that matches what you actually buy.**
-Hundreds of common foods included out of the box. Add more by searching stores in the Netherlands, the US, Italy, and beyond. Open Food Facts covers everything else.
+**Data from actual store shelves.**
+Stop scrolling through 1,000 types of "Large Egg." Search data from Albert Heijn, Kroger, and Esselunga for accuracy.
 
-**Your actual maintenance calories, not a generic formula.**
-Lokcal watches your weight against your intake over time and works out your actual maintenance number — no questionnaire, no formula.
+**Know your actual metabolism.**
+Instead of guessing with a questionnaire, Lokcal compares your real weight trends to your intake to find your actual maintenance calories.
 
-**10 seconds to log a full meal.**
-"Same as yesterday", leftovers, frequently used items, and barcode scanning mean that once a food is in your database, logging it is instant.
+**Log it in seconds.**
+Because it's local-first, there are no loading spinners. Open the app, log your meal, and get back to your life.
 
-Also included: weight tracking · exercise logging · automatic nightly backups · data export · fully offline · no ads
+Also included: barcode scanner · "same as yesterday" shortcut · weekly dashboard to rebalance goals · food breakdown (cost/macro focus) · weight & exercise tracking · full data import/export
 
 ---
 
