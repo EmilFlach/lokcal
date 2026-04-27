@@ -41,7 +41,7 @@ internal fun OnboardingScreen(onGetStarted: () -> Unit) {
             Spacer(Modifier.height(12.dp))
 
             Text(
-                text = "A very fast calorie tracker.",
+                text = "A calorie tracker that is instant, uses real grocery data and respects your privacy",
                 style = MaterialTheme.typography.titleMedium.copy(
                     color = colors.foregroundDefault,
                     fontWeight = FontWeight.Normal
@@ -52,7 +52,7 @@ internal fun OnboardingScreen(onGetStarted: () -> Unit) {
             Spacer(Modifier.height(40.dp))
 
             Text(
-                text = "Most apps push you to set a calorie goal on day one. Lokcal works better the other way; track for a few weeks first, then decide. No pressure yet.",
+                text = "Don't set a goal yet. Just track for four weeks to see how you actually eat. Learn the rhythm of weighing food at home and estimating while out.",
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = colors.foregroundSupport,
                     lineHeight = 22.sp
@@ -62,11 +62,11 @@ internal fun OnboardingScreen(onGetStarted: () -> Unit) {
 
             Spacer(Modifier.height(36.dp))
 
-            OnboardingStep(number = "1", text = "Log everything you eat, also on bad days")
+            OnboardingStep(number = "1", text = "Log everything. Even (especially) the bad days.")
             Spacer(Modifier.height(16.dp))
-            OnboardingStep(number = "2", text = "Weigh yourself once a week")
+            OnboardingStep(number = "2", text = "Weigh yourself daily. Do this for one month to find your baseline, then switch to weekly.")
             Spacer(Modifier.height(16.dp))
-            OnboardingStep(number = "3", text = "Check Statistics after 2 weeks to see your patterns")
+            OnboardingStep(number = "3", text = "Review the data. After 4 weeks, your stats are complete enough to start making informed changes.")
 
             Spacer(Modifier.weight(1.5f))
 

@@ -561,7 +561,7 @@ internal fun StatisticsBody(
                     if (weightData.isEmpty()) {
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            "Add weekly weigh-ins to see your weight trend alongside calories",
+                            "Add daily weigh-ins to see your weight trend alongside calories",
                             style = MaterialTheme.typography.bodySmall,
                             color = colors.foregroundSupport
                         )
@@ -679,7 +679,7 @@ private fun OnboardingCard(
             // Step 2: Weight tracking
             OnboardingStep(
                 done = weightDone,
-                title = "Add weekly weigh-ins",
+                title = "Add daily weigh-ins",
                 statusLabel = null,
                 unlocks = "Weight trend · maintenance calories · personalized recommendations",
                 colors = colors
