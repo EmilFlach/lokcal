@@ -14,6 +14,8 @@ CREATE TABLE MealItem (
     quantity_g REAL NOT NULL CHECK (quantity_g >= 0)
 );
 
+CREATE INDEX IF NOT EXISTS idx_mealitem_meal_id ON MealItem(meal_id);
+
 mealInsertWithPortions:
 INSERT INTO Meal(name, description, total_portions) VALUES (?, ?, ?);
 

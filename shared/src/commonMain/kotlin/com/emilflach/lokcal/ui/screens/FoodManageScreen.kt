@@ -121,9 +121,9 @@ fun FoodManageScreen(
                     headlineContent = { Text(food.name) },
                     supportingContent = {
                         val kcal = food.energy_kcal_per_100g
-                        val servingSize = food.serving_size
+                        val servingSize = food.serving_size?.let { if (it % 1 == 0.0) it.toLong().toString() else it.toString() }
                         val freq = frequencies["FOOD" to food.id] ?: 0
-                        Text("${kcal.toInt()} kcal • ${servingSize}g • $freq times")
+                        Text("${kcal.toInt()} kcal${if (servingSize != null) " • ${servingSize}g" else ""} • $freq times")
                     },
                     modifier = Modifier.clip(
                         getRoundedCornerShape(

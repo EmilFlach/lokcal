@@ -7,15 +7,14 @@ CREATE TABLE Exercise (
     notes TEXT
 );
 
+CREATE INDEX IF NOT EXISTS idx_exercise_timestamp ON Exercise(timestamp);
+
 logExercise:
 INSERT INTO Exercise(timestamp, exercise_type, duration_min, energy_kcal_total, notes)
 VALUES (?, ?, ?, ?, ?);
 
 selectExerciseByDateRange:
 SELECT * FROM Exercise WHERE timestamp BETWEEN ? AND ? ORDER BY timestamp DESC;
-
-selectExerciseById:
-SELECT * FROM Exercise WHERE id = ?;
 
 updateExercise:
 UPDATE Exercise SET exercise_type = ?, duration_min = ?, energy_kcal_total = ?, notes = ? WHERE id = ?;

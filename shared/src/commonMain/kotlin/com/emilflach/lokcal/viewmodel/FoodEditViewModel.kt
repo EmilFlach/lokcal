@@ -142,7 +142,7 @@ class FoodEditViewModel(
                         isEdit = true,
                         name = f.name,
                         energyText = (f.energy_kcal_per_100g).roundToInt().toString(),
-                        servingSize = f.serving_size ?: "",
+                        servingSize = f.serving_size?.let { if (it % 1 == 0.0) it.toLong().toString() else it.toString() } ?: "",
                         productUrl = f.product_url ?: "",
                         imageUrl = f.image_url ?: "",
                         gtin13 = f.gtin13 ?: "",
@@ -158,7 +158,7 @@ class FoodEditViewModel(
 
     fun updateName(v: String) { _edit.value = _edit.value.copy(name = v); persist() }
     fun updateEnergyText(v: String) { _edit.value = _edit.value.copy(energyText = v.filter { it.isDigit() || it == '.' || it == ',' }); persist() }
-    fun updateServingSize(v: String) { _edit.value = _edit.value.copy(servingSize = v); persist() }
+    fun updateServingSize(v: String) { _edit.value = _edit.value.copy(servingSize = v.filter { it.isDigit() || it == '.' }); persist() }
     fun updateProductUrl(v: String) { _edit.value = _edit.value.copy(productUrl = v); persist() }
     fun updateImageUrl(v: String) { _edit.value = _edit.value.copy(imageUrl = v); persist() }
     fun updateGtin13(v: String) { _edit.value = _edit.value.copy(gtin13 = v.filter { it.isDigit() }); persist() }
@@ -177,14 +177,14 @@ class FoodEditViewModel(
                     productUrl = s.productUrl.trim().ifBlank { null },
                     imageUrl = s.imageUrl.trim().ifBlank { null },
                     gtin13 = s.gtin13.trim().ifBlank { null },
-                    servingSize = s.servingSize.trim().ifBlank { null },
+                    servingSize = s.servingSize.trim().replace(',', '.').ifBlank { null }?.toDoubleOrNull(),
                     source = s.source.trim().ifBlank { null },
                 )
             } else if (!s.isEdit && name.isNotBlank()) {
                 val id = repo.insertManual(
                     name = name,
                     energyKcalPer100g = energy,
-                    servingSize = s.servingSize.trim().ifBlank { null },
+                    servingSize = s.servingSize.trim().replace(',', '.').ifBlank { null }?.toDoubleOrNull(),
                     gtin13 = s.gtin13.trim().ifBlank { null },
                     imageUrl = s.imageUrl.trim().ifBlank { null },
                     productUrl = s.productUrl.trim().ifBlank { null },

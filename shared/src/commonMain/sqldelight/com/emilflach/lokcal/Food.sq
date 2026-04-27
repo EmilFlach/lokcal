@@ -4,7 +4,7 @@ CREATE TABLE Food (
     name TEXT NOT NULL,
     energy_kcal_per_100g REAL NOT NULL DEFAULT 0,
     unit TEXT NOT NULL DEFAULT 'g',
-    serving_size TEXT,
+    serving_size REAL,
     gtin13 TEXT,
     image_url TEXT,
     product_url TEXT,

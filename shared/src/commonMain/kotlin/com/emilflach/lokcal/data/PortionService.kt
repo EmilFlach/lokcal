@@ -23,8 +23,8 @@ class PortionService(private val intakeRepo: IntakeRepository? = null) {
         else -> 100.0
     }
 
-    fun defaultPortion(foodServingSize: String?): Double {
-        return foodServingSize?.toDoubleOrNull()?.takeIf { it > 0 } ?: 100.0
+    fun defaultPortion(foodServingSize: Double?): Double {
+        return foodServingSize?.takeIf { it > 0 } ?: 100.0
     }
 
     fun portions(quantityGrams: Double, portionGrams: Double): Double {
@@ -38,20 +38,8 @@ class PortionService(private val intakeRepo: IntakeRepository? = null) {
         return newText to NumberUtils.parseDecimal(newText)
     }
 
-    fun subtractPortionGrams(currentGramsText: String, portionGrams: Double): Pair<String, Double> {
-        val newGrams = (NumberUtils.parseDecimal(currentGramsText) - portionGrams).coerceAtLeast(0.0)
-        val newText = newGrams.toInt().toString()
-        return newText to NumberUtils.parseDecimal(newText)
-    }
-
     fun addPortionCount(currentPortionsText: String): Pair<String, Double> {
         val newP = (NumberUtils.parseDecimal(currentPortionsText) + 1.0).coerceAtLeast(0.0)
-        val newText = NumberUtils.formatPortions(newP)
-        return newText to NumberUtils.parseDecimal(newText)
-    }
-
-    fun subtractPortionCount(currentPortionsText: String): Pair<String, Double> {
-        val newP = (NumberUtils.parseDecimal(currentPortionsText) - 1.0).coerceAtLeast(0.0)
         val newText = NumberUtils.formatPortions(newP)
         return newText to NumberUtils.parseDecimal(newText)
     }

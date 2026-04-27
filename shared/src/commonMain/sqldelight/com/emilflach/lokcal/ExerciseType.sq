@@ -6,6 +6,8 @@ CREATE TABLE ExerciseType (
     image_url TEXT
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_exercise_type_name ON ExerciseType(name);
+
 insertExerciseType:
 INSERT INTO ExerciseType(name, kcal_per_hour, sort_order, image_url) VALUES (?, ?, ?, ?);
 

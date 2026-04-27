@@ -235,7 +235,7 @@ class OnlineSearchManager(
         name = name,
         energy_kcal_per_100g = energyKcalPer100g ?: 0.0,
         unit = "g",
-        serving_size = servingSize?.toString(),
+        serving_size = servingSize,
         gtin13 = gtin13,
         image_url = imageUrl,
         product_url = productUrl,

@@ -31,7 +31,7 @@ class FoodRepositoryTest {
         val foodId = repository.insertManual(
             name = "Apple",
             energyKcalPer100g = 52.0,
-            servingSize = "100g",
+            servingSize = 100.0,
             gtin13 = "1234567890123",
             imageUrl = "https://example.com/apple.jpg",
             productUrl = "https://example.com/apple",
@@ -50,7 +50,7 @@ class FoodRepositoryTest {
         assertEquals("https://example.com/apple", food.product_url)
         assertEquals("https://example.com/apple.jpg", food.image_url)
         assertEquals("1234567890123", food.gtin13)
-        assertEquals("100g", food.serving_size)
+        assertEquals(100.0, food.serving_size)
         assertEquals("manual", food.source)
 
         // Check aliases
@@ -95,7 +95,7 @@ class FoodRepositoryTest {
             productUrl = "https://example.com/orange",
             imageUrl = "https://example.com/orange.jpg",
             gtin13 = "9876543210987",
-            servingSize = "150g",
+            servingSize = 150.0,
             source = "ah"
         )
 

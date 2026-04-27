@@ -17,6 +17,8 @@ CREATE TABLE Intake (
     )
 );
 
+CREATE INDEX IF NOT EXISTS idx_intake_timestamp ON Intake(timestamp);
+
 logFoodIntake:
 INSERT INTO Intake(timestamp, meal_type, source_type, source_food_id, quantity_g, item_name, energy_kcal_total, notes)
 VALUES (?, ?, 'FOOD', ?, ?, ?, ?, ?);
@@ -30,31 +32,6 @@ SELECT * FROM Intake WHERE meal_type = ? AND timestamp BETWEEN ? AND ? ORDER BY 
 
 deleteIntakeById:
 DELETE FROM Intake WHERE id = ?;
-
-updateIntakeQuantity:
-UPDATE Intake
-SET energy_kcal_total = CASE
-    WHEN quantity_g > 0 THEN energy_kcal_total * (? / quantity_g)
-    WHEN source_type = 'FOOD' AND source_food_id IS NOT NULL THEN (
-        SELECT energy_kcal_per_100g FROM Food WHERE id = source_food_id
-    ) * (? / 100.0)
-    ELSE energy_kcal_total
-END,
-    quantity_g = ?
-WHERE id = ?;
-
-updateIntakeQuantityAndId:
-UPDATE Intake
-SET energy_kcal_total = CASE
-    WHEN quantity_g > 0 THEN energy_kcal_total * (? / quantity_g)
-    WHEN source_type = 'FOOD' AND source_food_id IS NOT NULL THEN (
-        SELECT energy_kcal_per_100g FROM Food WHERE id = source_food_id
-    ) * (? / 100.0)
-    ELSE energy_kcal_total
-END,
-    quantity_g = ?,
-    id = (SELECT MAX(id) + 1 FROM Intake)
-WHERE id = ?;
 
 -- Direct setter for cases where repository recomputes kcal/qty (e.g., MEAL when previous qty was 0)
 updateIntakeQuantityDirect:
@@ -80,19 +57,6 @@ JOIN (
 ORDER BY r.frequency DESC
 LIMIT ?;
 
--- Most frequently selected meals (by count of intakes), returns Meal rows
-frequentMeals:
-SELECT m.* FROM Meal m
-JOIN (
-  SELECT source_meal_id AS meal_id, COUNT(*) AS frequency
-  FROM Intake
-  WHERE source_type = 'MEAL' AND source_meal_id IS NOT NULL
-  AND meal_type = ?
-  GROUP BY source_meal_id
-) r ON r.meal_id = m.id
-ORDER BY r.frequency DESC
-LIMIT ?;
-
 -- All items (food and meal) with their tracking counts
 itemTrackingCounts:
 SELECT
@@ -113,37 +77,6 @@ SELECT * FROM Intake WHERE leftover = 1 ORDER BY timestamp DESC;
 
 selectLatestIntakeId:
 SELECT id FROM Intake ORDER BY id DESC LIMIT 1;
-
--- Stats: Most eaten foods by weight in a date range (including foods from meals)
-statsMostEatenByWeight:
-SELECT
-    food_id,
-    item_name,
-    SUM(quantity_g) AS total_quantity_g,
-    COUNT(*) AS intake_count
-FROM (
-    -- Direct food intakes
-    SELECT
-        source_food_id AS food_id,
-        item_name,
-        quantity_g
-    FROM Intake
-    WHERE source_type = 'FOOD' AND timestamp BETWEEN ? AND ?
-
-    UNION ALL
-
-    -- Food items from meal intakes
-    SELECT
-        mi.food_id,
-        f.name AS item_name,
-        (mi.quantity_g * (i.quantity_g / (SELECT COALESCE(SUM(quantity_g), 1.0) FROM MealItem WHERE meal_id = i.source_meal_id))) AS quantity_g
-    FROM Intake i
-    JOIN MealItem mi ON i.source_meal_id = mi.meal_id
-    JOIN Food f ON f.id = mi.food_id
-    WHERE i.source_type = 'MEAL' AND i.timestamp BETWEEN ? AND ?
-)
-GROUP BY food_id, item_name
-ORDER BY total_quantity_g DESC;
 
 -- Stats: Most eaten foods by kcal in a date range (including foods from meals)
 statsMostEatenByKcal:
@@ -206,21 +139,6 @@ FROM (
 )
 ORDER BY day ASC;
 
-getTotalKcalEaten:
-SELECT SUM(energy_kcal_total)
-FROM Intake
-WHERE timestamp BETWEEN ? AND ?;
-
-getTotalWeightEatenG:
-SELECT SUM(quantity_g)
-FROM Intake
-WHERE timestamp BETWEEN ? AND ?;
-
-getCountTrackedIntakes:
-SELECT COUNT(*)
-FROM Intake
-WHERE timestamp BETWEEN ? AND ?;
-
 allItemFrequencies:
 SELECT
     i.source_type,
@@ -233,32 +151,4 @@ LEFT JOIN Meal m ON i.source_meal_id = m.id
 WHERE (i.source_type = 'FOOD' AND f.id IS NOT NULL)
    OR (i.source_type = 'MEAL' AND m.id IS NOT NULL)
 GROUP BY i.source_type, i.source_food_id, i.source_meal_id;
-
-itemsMissingImage:
-SELECT
-    source_type,
-    source_food_id,
-    source_meal_id,
-    item_name,
-    MAX(image_url) AS image_url,
-    COUNT(*) AS frequency
-FROM (
-    SELECT
-        i.source_type,
-        i.source_food_id,
-        i.source_meal_id,
-        i.item_name,
-        CASE
-            WHEN i.source_type = 'FOOD' THEN f.image_url
-            WHEN i.source_type = 'MEAL' THEN m.image_url
-        END AS image_url
-    FROM Intake i
-    LEFT JOIN Food f ON i.source_food_id = f.id
-    LEFT JOIN Meal m ON i.source_meal_id = m.id
-    WHERE (i.source_type = 'FOOD' AND f.id IS NOT NULL)
-       OR (i.source_type = 'MEAL' AND m.id IS NOT NULL)
-)
-WHERE (image_url IS NULL OR image_url = '')
-GROUP BY source_type, source_food_id, source_meal_id, item_name
-ORDER BY frequency DESC;
 

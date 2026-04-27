@@ -23,7 +23,7 @@ class FoodRepository(database: Database) {
         productUrl: String?,
         imageUrl: String?,
         gtin13: String?,
-        servingSize: String?,
+        servingSize: Double?,
         source: String?,
     ) {
         queries.updateDetails(
@@ -41,7 +41,7 @@ class FoodRepository(database: Database) {
     suspend fun insertManual(
         name: String,
         energyKcalPer100g: Double,
-        servingSize: String?,
+        servingSize: Double?,
         gtin13: String?,
         imageUrl: String?,
         productUrl: String?,

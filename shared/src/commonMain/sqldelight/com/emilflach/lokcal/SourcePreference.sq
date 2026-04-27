@@ -1,5 +1,5 @@
 CREATE TABLE source_preference (
-    preference_order INTEGER PRIMARY KEY CHECK (preference_order IN (1, 2)),
+    preference_order INTEGER PRIMARY KEY,
     source_id TEXT NOT NULL
 );
 

@@ -184,7 +184,7 @@ class IntakeViewModel(
                     val newId = foodRepo.insertManual(
                         name = sourceItem.name,
                         energyKcalPer100g = sourceItem.energyKcalPer100g ?: 0.0,
-                        servingSize = sourceItem.servingSize?.toString() ?: "100",
+                        servingSize = sourceItem.servingSize,
                         gtin13 = sourceItem.gtin13,
                         imageUrl = sourceItem.imageUrl,
                         productUrl = sourceItem.productUrl,

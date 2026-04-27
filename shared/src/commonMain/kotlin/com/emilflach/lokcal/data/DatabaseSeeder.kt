@@ -1,5 +1,6 @@
 package com.emilflach.lokcal.data
 
+import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import com.emilflach.lokcal.Database
 import kotlinx.coroutines.Dispatchers
@@ -7,7 +8,7 @@ import kotlinx.coroutines.withContext
 import lokcal.shared.generated.resources.Res
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
-object IngredientSeeder {
+object DatabaseSeeder {
     private const val META_KEY = "ingredients_seeded"
 
     @OptIn(ExperimentalResourceApi::class)
@@ -66,7 +67,7 @@ object IngredientSeeder {
 
             val kcal = cols.getOrNull(2)?.toDoubleOrNull() ?: 0.0
             // cols[3] is unit — skipped, DB defaults to 'g'
-            val servingSize = cols.getOrNull(4)?.trim()?.ifEmpty { null }
+            val servingSize = cols.getOrNull(4)?.trim()?.ifEmpty { null }?.toDoubleOrNull()
             val gtin13 = cols.getOrNull(5)?.trim()?.ifEmpty { null }
             val imageUrl = cols.getOrNull(6)?.trim()?.ifEmpty { null }
             val productUrl = cols.getOrNull(7)?.trim()?.ifEmpty { null }
@@ -89,6 +90,21 @@ object IngredientSeeder {
 
         metaQ.setMeta(META_KEY, "1")
         onProgress?.invoke(1.0f)
+    }
+
+    suspend fun seedExerciseTypesIfNeeded(database: Database) {
+        val q = database.exerciseTypeQueries
+        val existing = q.selectAllExerciseTypes().awaitAsList().map { it.name }.toSet()
+        data class Default(val name: String, val kcal: Double, val order: Long)
+        listOf(
+            Default("Low intensity", 200.0, 0L),
+            Default("High intensity", 740.0, 1L),
+            Default("AUTOMATIC_STEPS", 220.0, -1L),
+        ).forEach { d ->
+            if (d.name !in existing) {
+                q.insertExerciseType(name = d.name, kcal_per_hour = d.kcal, sort_order = d.order, image_url = null)
+            }
+        }
     }
 
     private fun parseCsvLine(line: String): List<String> {
