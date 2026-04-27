@@ -191,7 +191,9 @@ internal fun StatisticsBody(
             item {
                 val net = ins.avgNetIntake
                 val budget = ins.dailyBudget
-                val delta = (net - budget).toInt()
+                val netInt = net.toInt()
+                val budgetInt = budget.toInt()
+                val delta = netInt - budgetInt
                 val overBudget = delta > 100
                 val underBudget = delta < -100
                 Surface(
@@ -249,7 +251,7 @@ internal fun StatisticsBody(
                                 Spacer(Modifier.height(4.dp))
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        "${net.toInt()}",
+                                        "$netInt",
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold,
                                         color = colors.foregroundDefault
@@ -267,9 +269,9 @@ internal fun StatisticsBody(
                         Spacer(Modifier.height(10.dp))
                         Text(
                             when {
-                                underBudget -> "Net is ${-delta} kcal below your ${budget.toInt()} kcal goal"
-                                overBudget  -> "Net is $delta kcal above your ${budget.toInt()} kcal goal"
-                                else        -> "Net is on target (${budget.toInt()} kcal goal)"
+                                underBudget -> "Net is ${-delta} kcal below your $budgetInt kcal goal"
+                                overBudget  -> "Net is $delta kcal above your $budgetInt kcal goal"
+                                else        -> "Net is on target ($budgetInt kcal goal)"
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = when {
@@ -887,5 +889,5 @@ internal fun rollingAverage(values: List<Double>, windowSize: Int): List<Double>
     }
 }
 
-internal fun Double.roundToOneDecimal(): Double = (this * 10).toInt() / 10.0
-internal fun Double.roundToTwoDecimals(): Double = (this * 100).toInt() / 100.0
+internal fun Double.roundToOneDecimal(): Double = kotlin.math.round(this * 10) / 10.0
+internal fun Double.roundToTwoDecimals(): Double = kotlin.math.round(this * 100) / 100.0
