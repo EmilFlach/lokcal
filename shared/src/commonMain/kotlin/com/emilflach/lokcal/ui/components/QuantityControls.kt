@@ -6,7 +6,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -79,28 +78,15 @@ fun GramQuantityControls(
         Spacer(Modifier.width(6.dp))
         OutlinedIconButton(
             onClick = {
-                val (newText, commitVal) = portionService.subtractPortionGrams(text, portionGrams)
-                tf = tf.copy(text = newText)
-                text = newText
-                onCommitGrams(commitVal)
+                onDelete()
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-            }
-        ) {
-            Icon(imageVector = Icons.Filled.Remove, contentDescription = "Subtract a portion")
-        }
-        IconButton(
-            modifier = Modifier.size(32.dp),
-            onClick = {
-            onDelete()
-            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-        }) {
+            }) {
             Icon(
                 imageVector = Icons.Outlined.Delete,
                 contentDescription = "Delete item",
                 tint = colors.foregroundSupport
             )
         }
-        Spacer(Modifier.width(4.dp))
     }
 }
 
@@ -159,7 +145,6 @@ fun PortionQuantityControls(
                 modifier = Modifier.offset(-(4).dp),
                 imageVector = Icons.Filled.Add,
                 contentDescription = "Add a portion")
-            Spacer(Modifier.width(4.dp))
             Text(text = "1")
         }
 
@@ -167,29 +152,15 @@ fun PortionQuantityControls(
 
         OutlinedIconButton(
             onClick = {
-                val (newText, commitVal) = portionService.subtractPortionCount(text)
-                tf = tf.copy(text = newText)
-                text = newText
-                onCommitPortions(commitVal)
+                onDelete()
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-            }
-        ) {
-            Icon(imageVector = Icons.Filled.Remove, contentDescription = "Subtract a portion")
+            }) {
+                Icon(
+                    imageVector = Icons.Outlined.Delete,
+                    contentDescription = "Delete item",
+                    tint = colors.foregroundSupport
+                )
         }
-
-        IconButton(
-            modifier = Modifier.size(32.dp),
-            onClick = {
-            onDelete()
-            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-        }) {
-            Icon(
-                imageVector = Icons.Outlined.Delete,
-                contentDescription = "Delete item",
-                tint = colors.foregroundSupport
-            )
-        }
-        Spacer(Modifier.width(4.dp))
     }
 }
 
@@ -236,9 +207,10 @@ fun MinuteQuantityControls(
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
             },
         ) {
-            Icon(imageVector = Icons.Filled.Add, contentDescription = "Add 30 min")
-            Spacer(Modifier.width(4.dp))
-            Text(text = "30 min")
+            Icon(
+                modifier = Modifier.offset(-(4).dp),
+                imageVector = Icons.Filled.Add, contentDescription = "Add 30 min")
+            Text(text = "30m")
         }
         Spacer(Modifier.width(6.dp))
         OutlinedIconButton(

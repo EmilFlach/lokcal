@@ -66,7 +66,7 @@ fun IntakeTextField(
                 color = colors.foregroundDefault,
                 textAlign = TextAlign.End
             ),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             keyboardActions = KeyboardActions(onDone = { handleDone() }),
             cursorBrush = SolidColor(colors.foregroundDefault),
             modifier = Modifier
