@@ -6,6 +6,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -155,18 +158,27 @@ fun MainSummaryKcal(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "Burned ›",
+                        text = "Burned",
                         style = if (isCompact) MaterialTheme.typography.labelMedium else MaterialTheme.typography.titleSmall,
                         color = colors.foregroundSupport,
                     )
                     Spacer(Modifier.weight(1f))
-                    Text(
-                        text = animatedBurned.roundToInt().toString(),
-                        style = if (isCompact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
-                        color = colors.foregroundSupport,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    if(animatedBurned == 0f) {
+                        Icon(
+                            modifier = Modifier.offset(4.dp),
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = "Add exercise",
+                            tint = colors.foregroundSupport,
+                        )
+                    } else {
+                        Text(
+                            text = animatedBurned.roundToInt().toString(),
+                            style = if (isCompact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
+                            color = colors.foregroundSupport,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
             Surface(
