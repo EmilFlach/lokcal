@@ -240,3 +240,107 @@ struct FoodEditView: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
 }
+
+// MARK: - ExerciseManage Screen (navigation destination)
+
+struct ExerciseManageScreen: View {
+    let dateIso: String
+    @Binding var navigationPath: NavigationPath
+
+    var body: some View {
+        ExerciseManageView(navigationPath: $navigationPath, dateIso: dateIso)
+            .ignoresSafeArea(.all)
+            .navigationTitle("Exercises")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        navigationPath.append(NavigationDestination.exerciseTypeEdit(exerciseTypeId: nil, dateIso: dateIso, isBuiltIn: false))
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                }
+            }
+    }
+}
+
+// MARK: - ExerciseTypeEdit Screen (navigation destination)
+
+struct ExerciseTypeEditScreen: View {
+    let exerciseTypeId: Int64?
+    let dateIso: String
+    let isBuiltIn: Bool
+    @Binding var navigationPath: NavigationPath
+
+    var body: some View {
+        let onDeleted = {
+            navigationPath.removeLast()
+        }
+        ExerciseTypeEditView(exerciseTypeId: exerciseTypeId, dateIso: dateIso, navigationPath: $navigationPath)
+            .ignoresSafeArea(.all)
+            .navigationTitle(exerciseTypeId == nil ? "Add Exercise Type" : "Edit Exercise Type")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                if exerciseTypeId != nil && !isBuiltIn {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button(role: .destructive) {
+                            ScreenFactoriesKt.getGlobalExerciseManageViewModel().delete {
+                                onDeleted()
+                            }
+                        } label: {
+                            Image(systemName: "trash")
+                        }
+                    }
+                }
+            }
+    }
+}
+
+// MARK: - ExerciseManage ViewController Wrapper
+
+struct ExerciseManageView: UIViewControllerRepresentable {
+    @Binding var navigationPath: NavigationPath
+    let dateIso: String
+
+    func makeUIViewController(context: Context) -> UIViewController {
+        ScreenFactoriesKt.ExerciseManageViewController(
+            onBack: {
+                navigationPath.removeLast()
+            },
+            onOpenEdit: { typeId in
+                let id = typeId?.int64Value
+                let isBuiltIn = id.map { ScreenFactoriesKt.isExerciseTypeBuiltIn(id: $0) } ?? false
+                navigationPath.append(NavigationDestination.exerciseTypeEdit(
+                    exerciseTypeId: id,
+                    dateIso: dateIso,
+                    isBuiltIn: isBuiltIn
+                ))
+            }
+        )
+    }
+
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
+}
+
+// MARK: - ExerciseTypeEdit ViewController Wrapper
+
+struct ExerciseTypeEditView: UIViewControllerRepresentable {
+    let exerciseTypeId: Int64?
+    let dateIso: String
+    @Binding var navigationPath: NavigationPath
+
+    func makeUIViewController(context: Context) -> UIViewController {
+        let kotlinId: KotlinLong? = exerciseTypeId.map { KotlinLong(longLong: $0) }
+        return ScreenFactoriesKt.ExerciseTypeEditViewController(
+            exerciseTypeId: kotlinId,
+            onBack: {
+                navigationPath.removeLast()
+            },
+            onDeleted: {
+                navigationPath.removeLast()
+            }
+        )
+    }
+
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
+}

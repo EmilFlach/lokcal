@@ -8,39 +8,35 @@ import com.emilflach.lokcal.util.currentDateIso
 class ExerciseRepository(private val db: Database) {
     private val q get() = db.exerciseQueries
 
-    enum class Type(val dbName: String, val kcalPerHour: Double) {
-        AUTOMATIC_STEPS("AUTOMATIC_STEPS", 220.0),
-        WALKING("WALKING", 200.0),
-        RUNNING("RUNNING", 740.0);
+    companion object {
+        const val AUTOMATIC_STEPS_KEY = "AUTOMATIC_STEPS"
+        const val AUTOMATIC_STEPS_KCAL_PER_HOUR = 220.0
+        const val AUTOMATIC_STEPS_DISPLAY_NAME = "Automatic step counter"
 
-        companion object {
-            fun fromDb(name: String): Type = entries.first { it.dbName == name }
-        }
+        fun displayName(typeName: String) =
+            if (typeName == AUTOMATIC_STEPS_KEY) AUTOMATIC_STEPS_DISPLAY_NAME else typeName
     }
 
-    suspend fun logExercise(type: Type, minutes: Double, timestamp: String, notes: String? = null) {
+    suspend fun logExercise(typeName: String, kcalPerHour: Double, minutes: Double, timestamp: String, notes: String? = null) {
         require(minutes >= 0.0) { "minutes must be >= 0" }
-        val kcalPerMinute = type.kcalPerHour / 60.0
-        val total = kcalPerMinute * minutes
-        q.logExercise(timestamp = timestamp, exercise_type = type.dbName, duration_min = minutes, energy_kcal_total = total, notes = notes)
+        val total = (kcalPerHour / 60.0) * minutes
+        q.logExercise(timestamp = timestamp, exercise_type = typeName, duration_min = minutes, energy_kcal_total = total, notes = notes)
     }
 
-    suspend fun updateExercise(id: Long, type: Type, minutes: Double, notes: String?) {
+    suspend fun updateExercise(id: Long, typeName: String, kcalPerHour: Double, minutes: Double, notes: String?) {
         require(minutes >= 0.0) { "minutes must be >= 0" }
-        val kcalPerMinute = type.kcalPerHour / 60.0
-        val total = kcalPerMinute * minutes
-        q.updateExercise(exercise_type = type.dbName, duration_min = minutes, energy_kcal_total = total, notes = notes, id = id)
+        val total = (kcalPerHour / 60.0) * minutes
+        q.updateExercise(exercise_type = typeName, duration_min = minutes, energy_kcal_total = total, notes = notes, id = id)
     }
 
     suspend fun logAutomaticSteps(steps: Int) {
-        val minutes = if(steps > 0) steps / 100.0 else 0.0
+        val minutes = if (steps > 0) steps / 100.0 else 0.0
         val timestamp = currentDateIso() + "T12:00:00"
-        val type = Type.AUTOMATIC_STEPS
-        val existing = getByDateRange(timestamp, timestamp).firstOrNull { it.exercise_type == type.dbName }
+        val existing = getByDateRange(timestamp, timestamp).firstOrNull { it.exercise_type == AUTOMATIC_STEPS_KEY }
         if (existing == null) {
-            logExercise(type = type, minutes = minutes, timestamp = timestamp, notes = null)
+            logExercise(typeName = AUTOMATIC_STEPS_KEY, kcalPerHour = AUTOMATIC_STEPS_KCAL_PER_HOUR, minutes = minutes, timestamp = timestamp)
         } else {
-            updateExercise(id = existing.id, type = type, minutes = minutes, notes = existing.notes)
+            updateExercise(id = existing.id, typeName = AUTOMATIC_STEPS_KEY, kcalPerHour = AUTOMATIC_STEPS_KCAL_PER_HOUR, minutes = minutes, notes = existing.notes)
         }
     }
 

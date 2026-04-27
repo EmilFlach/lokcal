@@ -14,6 +14,8 @@ enum NavigationDestination: Hashable {
     case foodEdit(foodId: Int64?, dateIso: String)
     case editMealFromList(mealId: Int64, dateIso: String)
     case exerciseList(dateIso: String, refreshId: Int = 0)
+    case exerciseManage(dateIso: String)
+    case exerciseTypeEdit(exerciseTypeId: Int64?, dateIso: String, isBuiltIn: Bool = false)
     case weightList(openAdd: Bool, returnToSettings: Bool, dateIso: String?, refreshId: Int = 0)
     case statistics
     case statisticsDemo
@@ -74,6 +76,10 @@ struct NativeNavigationView: View {
             FoodEditScreen(foodId: foodId, navigationPath: $navigationPath, refreshKey: $refreshKey)
         case .exerciseList(let dateIso, _):
             ExerciseListScreen(dateIso: dateIso, navigationPath: $navigationPath, refreshKey: refreshKey)
+        case .exerciseManage(let dateIso):
+            ExerciseManageScreen(dateIso: dateIso, navigationPath: $navigationPath)
+        case .exerciseTypeEdit(let exerciseTypeId, let dateIso, let isBuiltIn):
+            ExerciseTypeEditScreen(exerciseTypeId: exerciseTypeId, dateIso: dateIso, isBuiltIn: isBuiltIn, navigationPath: $navigationPath)
         case .weightList(let openAdd, let returnToSettings, _, _):
             WeightListScreen(openAdd: openAdd, returnToSettings: returnToSettings, navigationPath: $navigationPath, refreshKey: $refreshKey)
         case .statistics:

@@ -8,6 +8,7 @@ import com.emilflach.lokcal.theme.AppTheme
 import com.emilflach.lokcal.ui.screens.AppLoadingScreen
 import com.emilflach.lokcal.ui.util.LocalImageCache
 import com.emilflach.lokcal.util.currentDateIso
+import com.emilflach.lokcal.viewmodel.ExerciseManageViewModel
 import com.emilflach.lokcal.viewmodel.FoodEditViewModel
 import com.emilflach.lokcal.viewmodel.MainViewModel
 import com.emilflach.lokcal.viewmodel.MealsListViewModel
@@ -29,6 +30,7 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
     val intakeRepo = remember(database) { IntakeRepository(database!!) }
     val mealRepo = remember(database) { MealRepository(database!!) }
     val exerciseRepo = remember(database) { ExerciseRepository(database!!) }
+    val exerciseTypeRepo = remember(database) { ExerciseTypeRepository(database!!) }
     val weightRepo = remember(database) { WeightRepository(database!!) }
     val settingsRepo = remember(database) { SettingsRepository(database!!) }
     val imageCacheRepo = remember(database) { ImageCacheRepository(database!!) }
@@ -38,6 +40,7 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
     }
     val mealsListViewModel = remember(intakeRepo, mealRepo, imageCacheRepo) { MealsListViewModel(intakeRepo, mealRepo, imageCacheRepo) }
     val foodEditViewModel = remember(foodRepo, intakeRepo, mealRepo, imageCacheRepo) { FoodEditViewModel(foodRepo, intakeRepo, mealRepo, imageCacheRepo) }
+    val exerciseManageViewModel = remember(exerciseTypeRepo) { ExerciseManageViewModel(exerciseTypeRepo) }
 
     val onboardingComplete by produceState<Boolean?>(null, settingsRepo) {
         value = settingsRepo.isOnboardingComplete()
@@ -58,6 +61,8 @@ internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
             mainViewModel = mainViewModel,
             mealsListViewModel = mealsListViewModel,
             foodEditViewModel = foodEditViewModel,
+            exerciseManageViewModel = exerciseManageViewModel,
+            exerciseTypeRepo = exerciseTypeRepo,
             startOnboarding = onboardingComplete == false,
         )
     }

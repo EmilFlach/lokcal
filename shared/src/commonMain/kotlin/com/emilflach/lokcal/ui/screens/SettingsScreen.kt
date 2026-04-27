@@ -33,6 +33,7 @@ fun SettingsScreen(
     onOpenMealsList: () -> Unit,
     onOpenWeightList: () -> Unit,
     onOpenFoodManage: () -> Unit,
+    onOpenExerciseManage: () -> Unit,
     onOpenSourcePreferences: () -> Unit,
     onRequestHealthPermissions: () -> Unit,
     settingsRepo: SettingsRepository,
@@ -79,7 +80,7 @@ fun SettingsScreen(
                     headlineContent = { Text("Manage meals") },
                     colors = itemColors,
                     modifier = Modifier
-                        .clip(getRoundedCornerShape(0, 3))
+                        .clip(getRoundedCornerShape(0, 4))
                         .clickable { onOpenMealsList() }
                 )
             }
@@ -89,8 +90,18 @@ fun SettingsScreen(
                     headlineContent = { Text("Manage foods") },
                     colors = itemColors,
                     modifier = Modifier
-                        .clip(getRoundedCornerShape(1, 3))
+                        .clip(getRoundedCornerShape(1, 4))
                         .clickable { onOpenFoodManage() }
+                )
+            }
+            item { Spacer(Modifier.height(2.dp)) }
+            item {
+                ListItem(
+                    headlineContent = { Text("Manage exercises") },
+                    colors = itemColors,
+                    modifier = Modifier
+                        .clip(getRoundedCornerShape(2, 4))
+                        .clickable { onOpenExerciseManage() }
                 )
             }
             item { Spacer(Modifier.height(2.dp)) }
@@ -99,7 +110,7 @@ fun SettingsScreen(
                     headlineContent = { Text("Weight log") },
                     colors = itemColors,
                     modifier = Modifier
-                        .clip(getRoundedCornerShape(2, 3))
+                        .clip(getRoundedCornerShape(3, 4))
                         .clickable { onOpenWeightList() }
                 )
             }

@@ -56,6 +56,14 @@ internal sealed interface Screen : NavKey {
     data class ExerciseList(val dateIso: String) : Screen {
         override fun browserInfo() = "exercise_list" to mapOf("date" to dateIso)
     }
+    @Serializable
+    data class ExerciseManage(val dateIso: String) : Screen {
+        override fun browserInfo() = "exercise_manage" to mapOf("date" to dateIso)
+    }
+    @Serializable
+    data class ExerciseTypeEdit(val exerciseTypeId: Long?, val dateIso: String) : Screen {
+        override fun browserInfo() = "exercise_type_edit" to mapOf("id" to (exerciseTypeId?.toString() ?: ""), "date" to dateIso)
+    }
     // Weight flow
     @Serializable
     sealed interface ReturnTo {
@@ -98,6 +106,8 @@ internal val navigationConfig = SavedStateConfiguration {
             subclass(Screen.FoodEdit::class, Screen.FoodEdit.serializer())
             subclass(Screen.EditMealFromList::class, Screen.EditMealFromList.serializer())
             subclass(Screen.ExerciseList::class, Screen.ExerciseList.serializer())
+            subclass(Screen.ExerciseManage::class, Screen.ExerciseManage.serializer())
+            subclass(Screen.ExerciseTypeEdit::class, Screen.ExerciseTypeEdit.serializer())
             subclass(Screen.WeightList::class, Screen.WeightList.serializer())
             subclass(Screen.Statistics::class, Screen.Statistics.serializer())
             subclass(Screen.StatisticsDemo::class, Screen.StatisticsDemo.serializer())

@@ -1,0 +1,28 @@
+CREATE TABLE ExerciseType (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    kcal_per_hour REAL NOT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    image_url TEXT
+);
+
+insertExerciseType:
+INSERT INTO ExerciseType(name, kcal_per_hour, sort_order, image_url) VALUES (?, ?, ?, ?);
+
+insertManual:
+INSERT INTO ExerciseType(name, kcal_per_hour, image_url) VALUES (?, ?, ?);
+
+updateExerciseType:
+UPDATE ExerciseType SET name = ?, kcal_per_hour = ?, sort_order = ?, image_url = ? WHERE id = ?;
+
+deleteExerciseType:
+DELETE FROM ExerciseType WHERE id = ?;
+
+selectAllExerciseTypes:
+SELECT * FROM ExerciseType ORDER BY sort_order ASC, id ASC;
+
+selectExerciseTypeById:
+SELECT * FROM ExerciseType WHERE id = ?;
+
+lastInsertedId:
+SELECT last_insert_rowid();

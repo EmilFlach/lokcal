@@ -27,7 +27,8 @@ class ExerciseRepositoryTest {
     @Test
     fun testLogWalkingExercise() = runTest {
         repository.logExercise(
-            type = ExerciseRepository.Type.WALKING,
+            typeName = "Walking",
+            kcalPerHour = 200.0,
             minutes = 30.0,
             timestamp = "2024-01-15T10:00:00",
             notes = "Morning walk"
@@ -35,7 +36,7 @@ class ExerciseRepositoryTest {
 
         val exercises = repository.getByDateRange("2024-01-15T00:00:00", "2024-01-15T23:59:59")
         assertEquals(1, exercises.size)
-        assertEquals("WALKING", exercises[0].exercise_type)
+        assertEquals("Walking", exercises[0].exercise_type)
         assertEquals(30.0, exercises[0].duration_min)
         assertEquals(100.0, exercises[0].energy_kcal_total, 0.01) // 200 kcal/hr * 0.5 hr
         assertEquals("Morning walk", exercises[0].notes)
@@ -44,7 +45,8 @@ class ExerciseRepositoryTest {
     @Test
     fun testLogRunningExercise() = runTest {
         repository.logExercise(
-            type = ExerciseRepository.Type.RUNNING,
+            typeName = "Running",
+            kcalPerHour = 740.0,
             minutes = 20.0,
             timestamp = "2024-01-15T18:00:00",
             notes = null
@@ -52,7 +54,7 @@ class ExerciseRepositoryTest {
 
         val exercises = repository.getByDateRange("2024-01-15T00:00:00", "2024-01-15T23:59:59")
         assertEquals(1, exercises.size)
-        assertEquals("RUNNING", exercises[0].exercise_type)
+        assertEquals("Running", exercises[0].exercise_type)
         assertEquals(20.0, exercises[0].duration_min)
         assertEquals(246.67, exercises[0].energy_kcal_total, 0.1) // 740 kcal/hr * (20/60) hr
     }
@@ -80,7 +82,8 @@ class ExerciseRepositoryTest {
     @Test
     fun testUpdateExercise() = runTest {
         repository.logExercise(
-            type = ExerciseRepository.Type.WALKING,
+            typeName = "Walking",
+            kcalPerHour = 200.0,
             minutes = 30.0,
             timestamp = "2024-01-15T10:00:00",
             notes = "Original"
@@ -91,14 +94,15 @@ class ExerciseRepositoryTest {
 
         repository.updateExercise(
             id = exerciseId,
-            type = ExerciseRepository.Type.RUNNING,
+            typeName = "Running",
+            kcalPerHour = 740.0,
             minutes = 45.0,
             notes = "Updated"
         )
 
         val updated = repository.getByDateRange("2024-01-15T00:00:00", "2024-01-15T23:59:59")
         assertEquals(1, updated.size)
-        assertEquals("RUNNING", updated[0].exercise_type)
+        assertEquals("Running", updated[0].exercise_type)
         assertEquals(45.0, updated[0].duration_min)
         assertEquals("Updated", updated[0].notes)
     }
@@ -106,7 +110,8 @@ class ExerciseRepositoryTest {
     @Test
     fun testDeleteExercise() = runTest {
         repository.logExercise(
-            type = ExerciseRepository.Type.WALKING,
+            typeName = "Walking",
+            kcalPerHour = 200.0,
             minutes = 30.0,
             timestamp = "2024-01-15T10:00:00"
         )
@@ -122,9 +127,9 @@ class ExerciseRepositoryTest {
 
     @Test
     fun testGetByDateRange() = runTest {
-        repository.logExercise(ExerciseRepository.Type.WALKING, 30.0, "2024-01-15T10:00:00")
-        repository.logExercise(ExerciseRepository.Type.RUNNING, 20.0, "2024-01-16T10:00:00")
-        repository.logExercise(ExerciseRepository.Type.WALKING, 25.0, "2024-01-17T10:00:00")
+        repository.logExercise(typeName = "Walking", kcalPerHour = 200.0, minutes = 30.0, timestamp = "2024-01-15T10:00:00")
+        repository.logExercise(typeName = "Running", kcalPerHour = 740.0, minutes = 20.0, timestamp = "2024-01-16T10:00:00")
+        repository.logExercise(typeName = "Walking", kcalPerHour = 200.0, minutes = 25.0, timestamp = "2024-01-17T10:00:00")
 
         val jan15 = repository.getByDateRange("2024-01-15T00:00:00", "2024-01-15T23:59:59")
         assertEquals(1, jan15.size)
@@ -138,9 +143,9 @@ class ExerciseRepositoryTest {
 
     @Test
     fun testSumKcalByDate() = runTest {
-        repository.logExercise(ExerciseRepository.Type.WALKING, 30.0, "2024-01-15T10:00:00") // 100 kcal
-        repository.logExercise(ExerciseRepository.Type.WALKING, 30.0, "2024-01-15T14:00:00") // 100 kcal
-        repository.logExercise(ExerciseRepository.Type.RUNNING, 20.0, "2024-01-15T18:00:00") // ~247 kcal
+        repository.logExercise(typeName = "Walking", kcalPerHour = 200.0, minutes = 30.0, timestamp = "2024-01-15T10:00:00") // 100 kcal
+        repository.logExercise(typeName = "Walking", kcalPerHour = 200.0, minutes = 30.0, timestamp = "2024-01-15T14:00:00") // 100 kcal
+        repository.logExercise(typeName = "Running", kcalPerHour = 740.0, minutes = 20.0, timestamp = "2024-01-15T18:00:00") // ~247 kcal
 
         val total = repository.sumKcalByDate("2024-01-15T00:00:00", "2024-01-15T23:59:59")
         assertEquals(446.67, total, 1.0) // Sum of all exercises
@@ -148,43 +153,14 @@ class ExerciseRepositoryTest {
 
     @Test
     fun testGetDailyBurned() = runTest {
-        repository.logExercise(ExerciseRepository.Type.WALKING, 30.0, "2024-01-15T10:00:00")
-        repository.logExercise(ExerciseRepository.Type.RUNNING, 20.0, "2024-01-16T10:00:00")
+        repository.logExercise(typeName = "Walking", kcalPerHour = 200.0, minutes = 30.0, timestamp = "2024-01-15T10:00:00")
+        repository.logExercise(typeName = "Running", kcalPerHour = 740.0, minutes = 20.0, timestamp = "2024-01-16T10:00:00")
 
         val daily = repository.getDailyBurned("2024-01-15T00:00:00", "2024-01-16T23:59:59")
         assertEquals(2, daily.size)
         assertEquals("2024-01-15", daily[0].day)
+        assertEquals(100.0, daily[0].total_burned!!, 0.01) // 200 kcal/hr * 0.5 hr
         assertEquals("2024-01-16", daily[1].day)
-    }
-
-    @Test
-    fun testExerciseTypeEnum() {
-        assertEquals("WALKING", ExerciseRepository.Type.WALKING.dbName)
-        assertEquals("RUNNING", ExerciseRepository.Type.RUNNING.dbName)
-        assertEquals("AUTOMATIC_STEPS", ExerciseRepository.Type.AUTOMATIC_STEPS.dbName)
-
-        assertEquals(200.0, ExerciseRepository.Type.WALKING.kcalPerHour)
-        assertEquals(740.0, ExerciseRepository.Type.RUNNING.kcalPerHour)
-        assertEquals(220.0, ExerciseRepository.Type.AUTOMATIC_STEPS.kcalPerHour)
-    }
-
-    @Test
-    fun testExerciseTypeFromDb() {
-        assertEquals(ExerciseRepository.Type.WALKING, ExerciseRepository.Type.fromDb("WALKING"))
-        assertEquals(ExerciseRepository.Type.RUNNING, ExerciseRepository.Type.fromDb("RUNNING"))
-        assertEquals(ExerciseRepository.Type.AUTOMATIC_STEPS, ExerciseRepository.Type.fromDb("AUTOMATIC_STEPS"))
-    }
-
-    @Test
-    fun testMultipleExercisesOnSameDay() = runTest {
-        repository.logExercise(ExerciseRepository.Type.WALKING, 30.0, "2024-01-15T08:00:00")
-        repository.logExercise(ExerciseRepository.Type.WALKING, 20.0, "2024-01-15T12:00:00")
-        repository.logExercise(ExerciseRepository.Type.RUNNING, 15.0, "2024-01-15T18:00:00")
-
-        val exercises = repository.getByDateRange("2024-01-15T00:00:00", "2024-01-15T23:59:59")
-        assertEquals(3, exercises.size)
-
-        val totalKcal = repository.sumKcalByDate("2024-01-15T00:00:00", "2024-01-15T23:59:59")
-        assertTrue(totalKcal > 0)
+        assertEquals(246.67, daily[1].total_burned!!, 0.1) // 740 kcal/hr * (20/60) hr
     }
 }

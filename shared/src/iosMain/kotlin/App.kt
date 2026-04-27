@@ -7,6 +7,7 @@ import com.emilflach.lokcal.screens.initializeRepositories
 import com.emilflach.lokcal.theme.AppTheme
 import com.emilflach.lokcal.ui.screens.AppLoadingScreen
 import com.emilflach.lokcal.util.currentDateIso
+import com.emilflach.lokcal.viewmodel.ExerciseManageViewModel
 import com.emilflach.lokcal.viewmodel.FoodEditViewModel
 import com.emilflach.lokcal.viewmodel.MainViewModel
 import com.emilflach.lokcal.viewmodel.MealsListViewModel
@@ -31,6 +32,7 @@ fun initializeApp(onReady: (Boolean) -> Unit) = ComposeUIViewController {
         val intakeRepo = remember(db) { IntakeRepository(db) }
         val mealRepo = remember(db) { MealRepository(db) }
         val exerciseRepo = remember(db) { ExerciseRepository(db) }
+        val exerciseTypeRepo = remember(db) { ExerciseTypeRepository(db) }
         val weightRepo = remember(db) { WeightRepository(db) }
         val settingsRepo = remember(db) { SettingsRepository(db) }
         val imageCacheRepo = remember(db) { ImageCacheRepository(db) }
@@ -44,6 +46,9 @@ fun initializeApp(onReady: (Boolean) -> Unit) = ComposeUIViewController {
         val foodEditViewModel = remember(foodRepo, intakeRepo, mealRepo, imageCacheRepo) {
             FoodEditViewModel(foodRepo, intakeRepo, mealRepo, imageCacheRepo)
         }
+        val exerciseManageViewModel = remember(exerciseTypeRepo) {
+            ExerciseManageViewModel(exerciseTypeRepo)
+        }
 
         LaunchedEffect(db) {
             initializeRepositories(
@@ -51,12 +56,14 @@ fun initializeApp(onReady: (Boolean) -> Unit) = ComposeUIViewController {
                 intakeRepo = intakeRepo,
                 mealRepo = mealRepo,
                 exerciseRepo = exerciseRepo,
+                exerciseTypeRepo = exerciseTypeRepo,
                 weightRepo = weightRepo,
                 settingsRepo = settingsRepo,
                 imageCacheRepo = imageCacheRepo,
                 mainViewModel = mainViewModel,
                 mealsListViewModel = mealsListViewModel,
-                foodEditViewModel = foodEditViewModel
+                foodEditViewModel = foodEditViewModel,
+                exerciseManageViewModel = exerciseManageViewModel,
             )
             val needsOnboarding = !settingsRepo.isOnboardingComplete()
             onReady(needsOnboarding)

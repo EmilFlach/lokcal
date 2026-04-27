@@ -22,6 +22,7 @@ private lateinit var globalFoodRepo: FoodRepository
 private lateinit var globalIntakeRepo: IntakeRepository
 private lateinit var globalMealRepo: MealRepository
 private lateinit var globalExerciseRepo: ExerciseRepository
+private lateinit var globalExerciseTypeRepo: ExerciseTypeRepository
 private lateinit var globalWeightRepo: WeightRepository
 private lateinit var globalSettingsRepo: SettingsRepository
 private lateinit var globalImageCacheRepo: ImageCacheRepository
@@ -30,6 +31,7 @@ private lateinit var globalImageCacheRepo: ImageCacheRepository
 private lateinit var globalMainViewModel: MainViewModel
 private lateinit var globalMealsListViewModel: MealsListViewModel
 private lateinit var globalFoodEditViewModel: FoodEditViewModel
+private lateinit var globalExerciseManageViewModel: ExerciseManageViewModel
 
 /**
  * Initialize repositories and view models. Must be called before using any screen factories.
@@ -39,23 +41,27 @@ fun initializeRepositories(
     intakeRepo: IntakeRepository,
     mealRepo: MealRepository,
     exerciseRepo: ExerciseRepository,
+    exerciseTypeRepo: ExerciseTypeRepository,
     weightRepo: WeightRepository,
     settingsRepo: SettingsRepository,
     imageCacheRepo: ImageCacheRepository,
     mainViewModel: MainViewModel,
     mealsListViewModel: MealsListViewModel,
-    foodEditViewModel: FoodEditViewModel
+    foodEditViewModel: FoodEditViewModel,
+    exerciseManageViewModel: ExerciseManageViewModel,
 ) {
     globalFoodRepo = foodRepo
     globalIntakeRepo = intakeRepo
     globalMealRepo = mealRepo
     globalExerciseRepo = exerciseRepo
+    globalExerciseTypeRepo = exerciseTypeRepo
     globalWeightRepo = weightRepo
     globalSettingsRepo = settingsRepo
     globalImageCacheRepo = imageCacheRepo
     globalMainViewModel = mainViewModel
     globalMealsListViewModel = mealsListViewModel
     globalFoodEditViewModel = foodEditViewModel
+    globalExerciseManageViewModel = exerciseManageViewModel
 }
 
 /**
@@ -66,6 +72,13 @@ fun getGlobalMainViewModel(): MainViewModel = globalMainViewModel
 fun getGlobalFoodEditViewModel(): FoodEditViewModel = globalFoodEditViewModel
 
 fun getGlobalMealsListViewModel(): MealsListViewModel = globalMealsListViewModel
+
+fun getGlobalExerciseManageViewModel(): ExerciseManageViewModel = globalExerciseManageViewModel
+
+fun isExerciseTypeBuiltIn(id: Long): Boolean =
+    globalExerciseManageViewModel.types.value
+        .firstOrNull { it.id == id }
+        ?.name == ExerciseRepository.AUTOMATIC_STEPS_KEY
 
 // Main Screen
 fun MainViewController(
@@ -241,6 +254,7 @@ fun SettingsViewController(
     onOpenMealsList: () -> Unit,
     onOpenWeightList: () -> Unit,
     onOpenFoodManage: () -> Unit,
+    onOpenExerciseManage: () -> Unit,
     onOpenSourcePreferences: () -> Unit
 ) = ComposeUIViewController {
     AppTheme {
@@ -250,6 +264,7 @@ fun SettingsViewController(
                 onOpenMealsList = onOpenMealsList,
                 onOpenWeightList = onOpenWeightList,
                 onOpenFoodManage = onOpenFoodManage,
+                onOpenExerciseManage = onOpenExerciseManage,
                 onOpenSourcePreferences = onOpenSourcePreferences,
                 onRequestHealthPermissions = { HealthManager.requestPermissions() },
                 settingsRepo = globalSettingsRepo
@@ -374,13 +389,47 @@ fun ExerciseListViewController(
 ) = ComposeUIViewController {
     AppTheme {
         CompositionLocalProvider(LocalImageCache provides globalImageCacheRepo) {
-            val vm = remember(globalExerciseRepo, dateIso, refreshKey) {
-                ExerciseListViewModel(globalExerciseRepo, dateIso)
+            val vm = remember(globalExerciseRepo, globalExerciseTypeRepo, dateIso, refreshKey) {
+                ExerciseListViewModel(globalExerciseRepo, globalExerciseTypeRepo, dateIso)
             }
             ExerciseListScreen(
                 viewModel = vm,
                 onBack = onBack,
                 onEnableHealth = { HealthManager.requestPermissions() }
+            )
+        }
+    }
+}
+
+// ExerciseManage Screen
+fun ExerciseManageViewController(
+    onBack: () -> Unit,
+    onOpenEdit: (Long?) -> Unit,
+) = ComposeUIViewController {
+    AppTheme {
+        CompositionLocalProvider(LocalImageCache provides globalImageCacheRepo) {
+            ExerciseManageScreen(
+                viewModel = globalExerciseManageViewModel,
+                onBack = onBack,
+                onOpenEdit = onOpenEdit
+            )
+        }
+    }
+}
+
+// ExerciseTypeEdit Screen
+fun ExerciseTypeEditViewController(
+    exerciseTypeId: Long?,
+    onBack: () -> Unit,
+    onDeleted: () -> Unit,
+) = ComposeUIViewController {
+    AppTheme {
+        CompositionLocalProvider(LocalImageCache provides globalImageCacheRepo) {
+            ExerciseTypeEditScreen(
+                viewModel = globalExerciseManageViewModel,
+                exerciseTypeId = exerciseTypeId,
+                onBack = onBack,
+                onDeleted = onDeleted
             )
         }
     }

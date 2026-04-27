@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
-import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.AutoGraph
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -24,6 +23,7 @@ import com.emilflach.lokcal.data.ExerciseRepository
 import com.emilflach.lokcal.health.HealthManager
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.*
+import com.emilflach.lokcal.ui.util.EntityImageData
 import com.emilflach.lokcal.viewmodel.ExerciseListViewModel
 import kotlin.math.roundToInt
 
@@ -45,7 +45,7 @@ fun ExerciseListScreen(
     val displayedItems = if (healthGranted) {
         state.items
     } else {
-        state.items.filter { it.exercise_type != ExerciseRepository.Type.AUTOMATIC_STEPS.dbName }
+        state.items.filter { it.exercise_type != ExerciseRepository.AUTOMATIC_STEPS_KEY }
     }
 
     BackHandler {
@@ -125,26 +125,30 @@ fun ExerciseListScreen(
             itemsIndexed(displayedItems) { index, e ->
                 val actualIndex = if (showHealthBanner) index + 1 else index
                 val totalSize = if (showHealthBanner) displayedItems.size + 1 else displayedItems.size
-                val label = when (e.exercise_type) {
-                    ExerciseRepository.Type.AUTOMATIC_STEPS.dbName -> "Automatic step counter"
-                    ExerciseRepository.Type.WALKING.dbName -> "Low intensity"
-                    ExerciseRepository.Type.RUNNING.dbName -> "High intensity"
-                    else -> e.exercise_type
-                }
-                val image = when (e.exercise_type) {
-                    ExerciseRepository.Type.AUTOMATIC_STEPS.dbName -> Icons.Default.AutoGraph
-                    ExerciseRepository.Type.WALKING.dbName -> Icons.AutoMirrored.Filled.DirectionsWalk
-                    ExerciseRepository.Type.RUNNING.dbName -> Icons.AutoMirrored.Filled.DirectionsRun
-                    else -> null
+                val label = ExerciseRepository.displayName(e.exercise_type)
+                val typeEntry = state.typeMap[e.exercise_type]
+                val imageUrl = typeEntry?.image_url
+                val imageEntity = if (!imageUrl.isNullOrBlank()) {
+                    EntityImageData(EntityImageData.EXERCISE_TYPE, typeEntry.id, imageUrl)
+                } else null
+                val icon = when {
+                    !imageUrl.isNullOrBlank() -> null
+                    e.exercise_type == ExerciseRepository.AUTOMATIC_STEPS_KEY -> Icons.Default.AutoGraph
+                    else -> Icons.AutoMirrored.Filled.DirectionsRun
                 }
 
                 MealTimeItem(
                     title = label,
-                    subtitle = "${e.energy_kcal_total.toInt()} kcal",
+                    subtitle = if (e.exercise_type == ExerciseRepository.AUTOMATIC_STEPS_KEY)
+                        "${e.duration_min.toInt()} min · ${e.energy_kcal_total.toInt()} kcal"
+                    else "${e.energy_kcal_total.toInt()} kcal",
                     index = actualIndex,
                     size = totalSize,
-                    iconName = image,
+                    imageUrl = imageUrl,
+                    imageEntity = imageEntity,
+                    iconName = icon,
                     quantityControls = { requester ->
+                    if (e.exercise_type != ExerciseRepository.AUTOMATIC_STEPS_KEY) {
                         MinuteQuantityControls(
                             requester = requester,
                             stateKey = e.exercise_type,
@@ -152,6 +156,7 @@ fun ExerciseListScreen(
                             onCommitMinutes = { viewModel.updateDuration(e.exercise_type, it) }
                         )
                     }
+                }
                 )
             }
         }

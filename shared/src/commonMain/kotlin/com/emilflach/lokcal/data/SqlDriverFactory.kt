@@ -1,5 +1,6 @@
 package com.emilflach.lokcal.data
 
+import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.db.SqlSchema
@@ -415,9 +416,51 @@ suspend fun createDatabase(sqlDriverFactory: SqlDriverFactory, onProgress: ((Flo
 
     // Skip schema version 9, it has been used for a temporary fix!
 
+    if (currentVersion < 10) {
+        println("[Migration] Starting V10 migration: Add ExerciseType table")
+        tryExec(driver, "CREATE TABLE IF NOT EXISTS ExerciseType (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, kcal_per_hour REAL NOT NULL, sort_order INTEGER NOT NULL DEFAULT 0)")
+        tryExec(driver, "INSERT OR IGNORE INTO ExerciseType(name, kcal_per_hour, sort_order) VALUES ('Low intensity', 200.0, 0)")
+        tryExec(driver, "INSERT OR IGNORE INTO ExerciseType(name, kcal_per_hour, sort_order) VALUES ('High intensity', 740.0, 1)")
+        setSchemaVersion(driver, 10)
+        println("[Migration] V10 migration completed successfully")
+    }
+
+    if (currentVersion < 11) {
+        println("[Migration] Starting V11 migration: Add image_url to ExerciseType, seed AUTOMATIC_STEPS")
+        tryExec(driver, "ALTER TABLE ExerciseType ADD COLUMN image_url TEXT")
+        tryExec(driver, "INSERT OR IGNORE INTO ExerciseType(name, kcal_per_hour, sort_order) VALUES ('AUTOMATIC_STEPS', 220.0, -1)")
+        setSchemaVersion(driver, 11)
+        println("[Migration] V11 migration completed successfully")
+    }
+
+    if (currentVersion < 12) {
+        println("[Migration] Starting V12 migration: Map old exercise type names to current names")
+        tryExec(driver, "UPDATE Exercise SET exercise_type = 'Low intensity' WHERE exercise_type = 'WALKING'")
+        tryExec(driver, "UPDATE Exercise SET exercise_type = 'High intensity' WHERE exercise_type = 'RUNNING'")
+        setSchemaVersion(driver, 12)
+        println("[Migration] V12 migration completed successfully")
+    }
+
     val database = Database(driver)
     // Seed initial data on first launch
     IngredientSeeder.seedIfNeeded(database, onProgress)
+    seedExerciseTypesIfNeeded(database)
     return database
+}
+
+private suspend fun seedExerciseTypesIfNeeded(database: Database) {
+    val q = database.exerciseTypeQueries
+    val existing = q.selectAllExerciseTypes().awaitAsList().map { it.name }.toSet()
+
+    data class Default(val name: String, val kcal: Double, val order: Long)
+    listOf(
+        Default("Low intensity", 200.0, 0L),
+        Default("High intensity", 740.0, 1L),
+        Default("AUTOMATIC_STEPS", 220.0, -1L),
+    ).forEach { d ->
+        if (d.name !in existing) {
+            q.insertExerciseType(name = d.name, kcal_per_hour = d.kcal, sort_order = d.order, image_url = null)
+        }
+    }
 }
 

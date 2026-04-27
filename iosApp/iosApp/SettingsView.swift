@@ -52,6 +52,10 @@ struct SettingsView: UIViewControllerRepresentable {
                 let currentDate = getCurrentDateIso()
                 navigationPath.append(NavigationDestination.foodManage(dateIso: currentDate))
             },
+            onOpenExerciseManage: {
+                let currentDate = getCurrentDateIso()
+                navigationPath.append(NavigationDestination.exerciseManage(dateIso: currentDate))
+            },
             onOpenSourcePreferences: {
                 navigationPath.append(NavigationDestination.sourcePreference)
             }

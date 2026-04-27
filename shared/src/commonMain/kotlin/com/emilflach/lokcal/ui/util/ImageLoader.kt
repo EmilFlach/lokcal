@@ -40,6 +40,7 @@ data class EntityImageData(
     companion object {
         const val FOOD = "FOOD"
         const val MEAL = "MEAL"
+        const val EXERCISE_TYPE = "EXERCISE_TYPE"
     }
 }
 

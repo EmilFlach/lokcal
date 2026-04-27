@@ -27,6 +27,8 @@ internal fun AppNavigation(
     mainViewModel: MainViewModel,
     mealsListViewModel: MealsListViewModel,
     foodEditViewModel: FoodEditViewModel,
+    exerciseManageViewModel: ExerciseManageViewModel,
+    exerciseTypeRepo: ExerciseTypeRepository,
     startOnboarding: Boolean = false,
 ) {
     val colors = LocalRecipesColors.current
@@ -163,6 +165,7 @@ internal fun AppNavigation(
                         onOpenMealsList = { backStack.add(Screen.MealsManage(currentDateIso())) },
                         onOpenWeightList = { backStack.add(Screen.WeightList(returnTo = Screen.ReturnTo.Settings)) },
                         onOpenFoodManage = { backStack.add(Screen.FoodManage(currentDateIso())) },
+                        onOpenExerciseManage = { backStack.add(Screen.ExerciseManage(currentDateIso())) },
                         onOpenSourcePreferences = { backStack.add(Screen.SourcePreference) },
                         onRequestHealthPermissions = { HealthManager.requestPermissions() },
                         settingsRepo = settingsRepo
@@ -206,13 +209,28 @@ internal fun AppNavigation(
                             ) + fadeOut(animationSpec = tween(200)))
                     }
                 ) { s ->
-                    val vm = remember(exerciseRepo, s.dateIso, refreshToggle) {
-                        ExerciseListViewModel(exerciseRepo, s.dateIso)
+                    val vm = remember(exerciseRepo, exerciseTypeRepo, s.dateIso, refreshToggle) {
+                        ExerciseListViewModel(exerciseRepo, exerciseTypeRepo, s.dateIso)
                     }
                     ExerciseListScreen(
                         viewModel = vm,
                         onBack = { backStack.removeLastOrNull() },
                         onEnableHealth = { HealthManager.requestPermissions() }
+                    )
+                }
+                entry<Screen.ExerciseManage> { s ->
+                    ExerciseManageScreen(
+                        viewModel = exerciseManageViewModel,
+                        onBack = { backStack.removeLastOrNull() },
+                        onOpenEdit = { id -> backStack.add(Screen.ExerciseTypeEdit(id, s.dateIso)) }
+                    )
+                }
+                entry<Screen.ExerciseTypeEdit> { s ->
+                    ExerciseTypeEditScreen(
+                        viewModel = exerciseManageViewModel,
+                        exerciseTypeId = s.exerciseTypeId,
+                        onBack = { exerciseManageViewModel.reloadTypes(); backStack.removeLastOrNull() },
+                        onDeleted = { exerciseManageViewModel.reloadTypes(); backStack.removeLastOrNull() }
                     )
                 }
                 entry<Screen.WeightList> { s ->
