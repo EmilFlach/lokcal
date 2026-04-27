@@ -56,6 +56,12 @@ private class EntityImageKeyer : Keyer<EntityImageData> {
  * are not abandoned when an existing user upgrades. On first access after migration, the bytes
  * are read from Coil's disk cache and saved permanently to SQLite.
  */
+private fun String.toWsrvUrl(): String {
+    if (startsWith("https://wsrv.nl/") || startsWith("http://wsrv.nl/")) return this
+    val encoded = encodeURLParameter()
+    return "https://wsrv.nl/?url=$encoded&w=200&h=200&fit=cover&output=jpg&q=75"
+}
+
 private class DatabaseImageFetcher(
     private val data: EntityImageData,
     private val options: Options,
@@ -111,7 +117,7 @@ private class DatabaseImageFetcher(
         // L3: fetch from network
         if (url == null) return null
         val response = try {
-            httpClient.get(url)
+            httpClient.get(url.toWsrvUrl())
         } catch (_: Exception) {
             return null
         }
@@ -122,7 +128,7 @@ private class DatabaseImageFetcher(
         } catch (_: Exception) {
             return null
         }
-        val mime = response.contentType()?.toString() ?: "image/jpeg"
+        val mime = "image/jpeg"
 
         // Only persist to SQLite for real entities — transient search results use temp negative IDs
         if (isPersistent) {
