@@ -128,9 +128,17 @@
       }
       .phone::before { display: none; }
       .phone-home { display: none; }
-      .phone-screen { border-radius: 0; }
+      .phone-screen {
+        border-radius: 0;
+        height: 100%;
+        width: 100%;
+      }
 
-      iframe { height: 100dvh; }
+      iframe {
+        height: 100%;
+        width: 100%;
+        transform: none;
+      }
     }
   </style>
 </head>
