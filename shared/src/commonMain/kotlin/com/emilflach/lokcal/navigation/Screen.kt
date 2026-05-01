@@ -90,6 +90,11 @@ internal sealed interface Screen : NavKey {
     data object Onboarding : Screen {
         override fun browserInfo() = "onboarding" to emptyMap<String, String>()
     }
+    // About
+    @Serializable
+    data object Licenses : Screen {
+        override fun browserInfo() = "licenses" to emptyMap<String, String>()
+    }
 }
 
 internal val navigationConfig = SavedStateConfiguration {
@@ -112,6 +117,7 @@ internal val navigationConfig = SavedStateConfiguration {
             subclass(Screen.Statistics::class, Screen.Statistics.serializer())
             subclass(Screen.StatisticsDemo::class, Screen.StatisticsDemo.serializer())
             subclass(Screen.Onboarding::class, Screen.Onboarding.serializer())
+            subclass(Screen.Licenses::class, Screen.Licenses.serializer())
         }
     }
 }

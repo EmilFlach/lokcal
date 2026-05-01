@@ -58,6 +58,38 @@ struct SettingsView: UIViewControllerRepresentable {
             },
             onOpenSourcePreferences: {
                 navigationPath.append(NavigationDestination.sourcePreference)
+            },
+            onOpenLicenses: {
+                navigationPath.append(NavigationDestination.licenses)
+            }
+        )
+    }
+
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
+}
+
+// MARK: - Licenses Screen (navigation destination)
+
+struct LicensesScreen: View {
+    @Binding var navigationPath: NavigationPath
+
+    var body: some View {
+        LicensesView(navigationPath: $navigationPath)
+            .ignoresSafeArea(.all)
+            .navigationTitle("Open source licenses")
+            .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+// MARK: - Licenses ViewController Wrapper
+
+struct LicensesView: UIViewControllerRepresentable {
+    @Binding var navigationPath: NavigationPath
+
+    func makeUIViewController(context: Context) -> UIViewController {
+        ScreenFactoriesKt.LicensesViewController(
+            onBack: {
+                navigationPath.removeLast()
             }
         )
     }

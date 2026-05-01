@@ -16,6 +16,7 @@ plugins {
     alias(libs.plugins.hotReload)
     alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.sqlDelight)
+    alias(libs.plugins.aboutlibraries)
 }
 
 val localProps = Properties().apply {
@@ -104,6 +105,7 @@ kotlin {
             implementation(libs.compose.charts)
             implementation(libs.kscan)
             implementation(libs.haze)
+            implementation(libs.aboutlibraries.compose.m3)
         }
 
         commonTest.dependencies {
@@ -192,6 +194,16 @@ sqldelight {
             srcDirs.setFrom("src/commonMain/sqldelight")
             generateAsync.set(true)
         }
+    }
+}
+
+aboutLibraries {
+    collect {
+        fetchRemoteLicense = false
+        fetchRemoteFunding = false
+    }
+    export {
+        outputFile = file("src/commonMain/composeResources/files/aboutlibraries.json")
     }
 }
 

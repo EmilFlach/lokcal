@@ -19,6 +19,7 @@ enum NavigationDestination: Hashable {
     case weightList(openAdd: Bool, returnToSettings: Bool, dateIso: String?, refreshId: Int = 0)
     case statistics
     case statisticsDemo
+    case licenses
 }
 
 // MARK: - Native Navigation Container
@@ -86,6 +87,8 @@ struct NativeNavigationView: View {
             StatisticsScreen(navigationPath: $navigationPath)
         case .statisticsDemo:
             StatisticsDemoScreen(navigationPath: $navigationPath)
+        case .licenses:
+            LicensesScreen(navigationPath: $navigationPath)
         }
     }
 }

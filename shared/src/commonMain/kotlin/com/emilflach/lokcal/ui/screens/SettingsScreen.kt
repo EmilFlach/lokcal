@@ -15,6 +15,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.backup.BackupManager
@@ -35,6 +36,7 @@ fun SettingsScreen(
     onOpenFoodManage: () -> Unit,
     onOpenExerciseManage: () -> Unit,
     onOpenSourcePreferences: () -> Unit,
+    onOpenLicenses: () -> Unit,
     onRequestHealthPermissions: () -> Unit,
     settingsRepo: SettingsRepository,
 ) {
@@ -345,6 +347,33 @@ fun SettingsScreen(
                         }
                     }
                 }
+            }
+
+            item { Spacer(Modifier.height(16.dp)) }
+
+            // Section: About
+            item { SettingsSectionHeader("About") }
+            item { Spacer(Modifier.height(4.dp)) }
+            item {
+                val uriHandler = LocalUriHandler.current
+                ListItem(
+                    headlineContent = { Text("View on GitHub") },
+                    supportingContent = { Text("github.com/emilflach/lokcal", color = colors.foregroundSupport) },
+                    colors = itemColors,
+                    modifier = Modifier
+                        .clip(getRoundedCornerShape(0, 2))
+                        .clickable { uriHandler.openUri("https://github.com/EmilFlach/lokcal") }
+                )
+            }
+            item { Spacer(Modifier.height(2.dp)) }
+            item {
+                ListItem(
+                    headlineContent = { Text("Open source licenses") },
+                    colors = itemColors,
+                    modifier = Modifier
+                        .clip(getRoundedCornerShape(1, 2))
+                        .clickable { onOpenLicenses() }
+                )
             }
 
             item { Spacer(Modifier.height(16.dp)) }

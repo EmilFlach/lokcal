@@ -167,6 +167,7 @@ internal fun AppNavigation(
                         onOpenFoodManage = { backStack.add(Screen.FoodManage(currentDateIso())) },
                         onOpenExerciseManage = { backStack.add(Screen.ExerciseManage(currentDateIso())) },
                         onOpenSourcePreferences = { backStack.add(Screen.SourcePreference) },
+                        onOpenLicenses = { backStack.add(Screen.Licenses) },
                         onRequestHealthPermissions = { HealthManager.requestPermissions() },
                         settingsRepo = settingsRepo
                     )
@@ -263,6 +264,9 @@ internal fun AppNavigation(
                     StatisticsDemoScreen(
                         onBack = { backStack.removeLastOrNull() }
                     )
+                }
+                entry<Screen.Licenses> {
+                    LicensesScreen(onBack = { backStack.removeLastOrNull() })
                 }
                 entry<Screen.Onboarding> {
                     OnboardingScreen(

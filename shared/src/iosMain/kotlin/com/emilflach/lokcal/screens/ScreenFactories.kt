@@ -255,7 +255,8 @@ fun SettingsViewController(
     onOpenWeightList: () -> Unit,
     onOpenFoodManage: () -> Unit,
     onOpenExerciseManage: () -> Unit,
-    onOpenSourcePreferences: () -> Unit
+    onOpenSourcePreferences: () -> Unit,
+    onOpenLicenses: () -> Unit,
 ) = ComposeUIViewController {
     AppTheme {
         CompositionLocalProvider(LocalImageCache provides globalImageCacheRepo) {
@@ -266,6 +267,7 @@ fun SettingsViewController(
                 onOpenFoodManage = onOpenFoodManage,
                 onOpenExerciseManage = onOpenExerciseManage,
                 onOpenSourcePreferences = onOpenSourcePreferences,
+                onOpenLicenses = onOpenLicenses,
                 onRequestHealthPermissions = { HealthManager.requestPermissions() },
                 settingsRepo = globalSettingsRepo
             )
@@ -486,6 +488,15 @@ fun StatisticsDemoViewController(
         CompositionLocalProvider(LocalImageCache provides globalImageCacheRepo) {
             StatisticsDemoScreen(onBack = onBack)
         }
+    }
+}
+
+// Licenses Screen
+fun LicensesViewController(
+    onBack: () -> Unit,
+) = ComposeUIViewController {
+    AppTheme {
+        LicensesScreen(onBack = onBack)
     }
 }
 
