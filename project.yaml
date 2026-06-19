@@ -1,9 +1,8 @@
 modules:
+  - desktopApp
   - plugins/secrets
   - plugins/sqldelight
-  - secrets-demo
   - shared
-  - sqldelight-demo
 
 plugins:
   - ./plugins/secrets

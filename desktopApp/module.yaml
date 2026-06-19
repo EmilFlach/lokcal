@@ -1,0 +1,12 @@
+product: jvm/app
+
+settings:
+  compose: enabled
+  jvm:
+    mainClass: MainKt
+
+dependencies:
+  - ../shared
+  - $compose.desktop.currentOs
+  - $libs.kotlinx.coroutines.swing
+  - $libs.filekit.core

@@ -3,6 +3,83 @@ product:
   platforms: [android, jvm, wasmJs, iosArm64, iosSimulatorArm64, iosX64]
 
 settings:
-  compose: enabled
+  compose:
+    enabled: true
+    resources:
+      packageName: lokcal.shared.generated.resources
+      exposedAccessors: true
   kotlin:
     serialization: json
+    freeCompilerArgs: [-Xexpect-actual-classes]
+  android:
+    namespace: com.emilflach.lokcal
+    compileSdk: 36
+    minSdk: 26
+
+plugins:
+  secrets: enabled
+  sqldelight:
+    enabled: true
+    packageName: com.emilflach.lokcal
+    databaseName: Database
+    generateAsync: true
+
+dependencies:
+  - $compose.runtime
+  - $compose.ui
+  - $compose.foundation
+  - $compose.material3
+  - $compose.components.resources
+  - $libs.compose.material.icons.extended
+  - $libs.ui.backhandler
+  - $libs.kotlinx.coroutines.core
+  - $libs.ktor.client.core
+  - $libs.ktor.client.content.negotiation
+  - $libs.ktor.client.serialization
+  - $libs.ktor.serialization.json
+  - $libs.ktor.client.logging
+  - $libs.androidx.navigation.compose
+  - $libs.kotlinx.serialization.json
+  - $libs.coil
+  - $libs.coil.network.ktor
+  - $libs.kotlinx.datetime
+  - $libs.sqlDelight.primitive.adapters
+  - $libs.sqlDelight.async.extensions
+  - $libs.filekit.core
+  - $libs.filekit.dialogs
+  - $libs.filekit.dialogs.compose
+  - $libs.compose.charts
+  - $libs.kscan
+  - $libs.haze
+  - $libs.aboutlibraries.compose.m3
+
+dependencies@android:
+  - $libs.androidx.activityCompose
+  - $libs.kotlinx.coroutines.android
+  - $libs.ktor.client.okhttp
+  - $libs.sqlDelight.driver.android
+  - $libs.slf4j.api
+  - $libs.slf4j.simple
+  - $libs.androidx.documentfile
+  - $libs.androidx.work.runtime
+  - $libs.androidx.connect.client
+
+dependencies@jvm:
+  - $libs.ktor.client.okhttp
+  - $libs.sqlDelight.driver.sqlite
+  - $libs.slf4j.api
+  - $libs.slf4j.simple
+
+dependencies@native:
+  - $libs.sqlDelight.driver.native
+
+dependencies@ios:
+  - $libs.ktor.client.darwin
+
+dependencies@wasmJs:
+  - $libs.sqlDelight.driver.js
+  - $libs.navigation3.browser
+
+test-dependencies:
+  - $compose.uiTest
+  - $libs.kotlinx.coroutines.test

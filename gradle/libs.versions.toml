@@ -24,6 +24,9 @@ uiBackhandler = "1.10.2"
 workRuntimeKtx = "2.11.1"
 haze = "1.7.2"
 aboutLibraries = "14.0.1"
+# Compose Multiplatform stopped publishing material-icons-extended after 1.7.3;
+# the Gradle CMP `compose.materialIconsExtended` accessor pinned this version implicitly.
+composeMaterialIconsExtended = "1.7.3"
 
 [libraries]
 
@@ -54,6 +57,7 @@ sqlDelight-driver-sqlite = { module = "app.cash.sqldelight:sqlite-driver", versi
 sqlDelight-driver-android = { module = "app.cash.sqldelight:android-driver", version.ref = "sqlDelight" }
 sqlDelight-driver-native = { module = "app.cash.sqldelight:native-driver", version.ref = "sqlDelight" }
 sqlDelight-driver-js = { module = "app.cash.sqldelight:web-worker-driver", version.ref = "sqlDelight" }
+sqlDelight-async-extensions = { module = "app.cash.sqldelight:async-extensions", version.ref = "sqlDelight" }
 sqlDelight-primitive-adapters = { module = "app.cash.sqldelight:primitive-adapters", version.ref = "sqlDelight" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
@@ -66,6 +70,7 @@ ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", version.r
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 aboutlibraries-core = { module = "com.mikepenz:aboutlibraries-core", version.ref = "aboutLibraries" }
 aboutlibraries-compose-m3 = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutLibraries" }
+compose-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "composeMaterialIconsExtended" }
 
 [plugins]
 

@@ -15,7 +15,7 @@ import com.emilflach.lokcal.viewmodel.MealsListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
+fun App(sqlDriverFactory: SqlDriverFactory) = AppTheme {
     var seedingProgress by remember { mutableStateOf<Float?>(null) }
     val database by produceState<Database?>(null) {
         value = createDatabase(sqlDriverFactory, onProgress = { seedingProgress = it })
