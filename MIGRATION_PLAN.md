@@ -121,7 +121,7 @@ All four targets build under `./kotlin`, plus the JVM test suite:
 |---|---|---|
 | Desktop | `./kotlin build -m desktopApp` | ✅ Build successful |
 | Android | `ANDROID_HOME=… ./kotlin build -m androidApp` | ✅ Build successful (embedded AGP) |
-| Web | `./kotlin do runWeb` | ✅ via hand-rolled assembler (`plugins/webdist` wraps `scripts/assemble-web.sh`). Toolchain only links `webApp.{mjs,wasm}`, so the assembler gathers skiko + sql.js + worker + Compose resources + a `js-joda.mjs` import-map + wired index into `build/web-dist`; all assets serve 200. See TOOLCHAIN_FEEDBACK.md §12. |
+| Web | `./kotlin do runWeb` | ✅ via hand-rolled assembler (`plugins/webdist` wraps `webApp/scripts/assemble-web.sh`). Toolchain only links `webApp.{mjs,wasm}`, so the assembler gathers skiko + sql.js + worker + Compose resources + a `js-joda.mjs` import-map + wired index into `build/web-dist`; all assets serve 200. See TOOLCHAIN_FEEDBACK.md §12. |
 | iOS | `./kotlin run -m iosApp` | ✅ Builds, installs, **runs** on iosSimulatorArm64 (home screen renders, DB seeds) |
 | Tests | `./kotlin test -m shared -p jvm` | ✅ 132/133 (1 Skiko native-lib load failure) |
 
@@ -146,7 +146,7 @@ Business-logic source (only `App()` widened `internal`→`public`), `gradle/libs
 - **Compose Hot Reload** and Compose Desktop **native installers** (Dmg/Msi/Deb) — no Toolchain equivalent; dropped from MVP.
 - **aboutlibraries** plugin dropped; `shared/composeResources/files/aboutlibraries.json` is the committed input, regenerate out-of-band when deps change.
 - **`ComposeTest.simpleCheck()`** fails locally on Skiko native-lib load (`libskiko-macos-arm64.dylib.sha256`); test-runtime provisioning quirk, runs on CI/other hosts.
-- **`deploy.sh`** points at the Toolchain dev wasm bundle (`build/wasm/packages/Lokcal-shared/kotlin`); confirm the production-optimized path before the next deploy.
+- **Web deploy** is `webApp/scripts/deploy-web.sh` — it runs the assembler (`build/web-dist`) and rsyncs that. Sanity-check the live site after the next deploy.
 - **iOS runtime, fixed during validation**: (1) Amper's generated `Info.plist` needs the standard `CFBundle*` keys (added) or the app won't install ("Missing bundle ID"); (2) the `ios/app` module needs `settings.compose: enabled` or the dependency's Compose resources aren't bundled (`Res.*` → `MissingResourceException`). Both committed. Note `./kotlin build` doesn't reinstall — use `./kotlin run` (or `simctl install` the fresh `.app`) when iterating on the simulator.
 - No `.github` CI exists; if added later, drop `setup-java` and call `./kotlin build`/`check` (the wrapper provisions its own JDK).
 

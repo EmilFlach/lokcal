@@ -6,23 +6,24 @@ import org.jetbrains.amper.plugins.TaskAction
 import java.nio.file.Path
 
 /**
- * Runs a repo script, streaming its output, failing the task on a non-zero exit.
- * The web bundle is a side effect (and `serveWeb` blocks), so these tasks have no
- * `@Output` and disable execution avoidance — they always run on demand.
+ * Runs a script from the given working dir, streaming its output, failing the task
+ * on a non-zero exit. The web bundle is a side effect (and `runWeb` blocks), so these
+ * tasks have no `@Output` and disable execution avoidance — they always run on demand.
  */
-private fun runScript(repoRoot: Path, vararg command: String) {
+private fun runScript(workingDir: Path, vararg command: String) {
     val exit = ProcessBuilder(*command)
-        .directory(repoRoot.toFile())
+        .directory(workingDir.toFile())
         .inheritIO()
         .start()
         .waitFor()
     if (exit != 0) error("webdist: `${command.joinToString(" ")}` failed with exit code $exit")
 }
 
+// moduleRootDir is <repo>/webApp; the scripts live alongside it at webApp/scripts/
+// (each script resolves the repo root itself, so CWD only needs to make the path valid).
 @TaskAction(executionAvoidance = ExecutionAvoidance.Disabled)
 fun assembleWeb(@Input(inferTaskDependency = false) moduleRootDir: Path) {
-    // moduleRootDir is <repo>/webApp; the scripts live at <repo>/scripts.
-    runScript(moduleRootDir.parent, "bash", "scripts/assemble-web.sh")
+    runScript(moduleRootDir, "bash", "scripts/assemble-web.sh")
 }
 
 @TaskAction(executionAvoidance = ExecutionAvoidance.Disabled)
@@ -30,5 +31,5 @@ fun runWeb(
     @Input(inferTaskDependency = false) moduleRootDir: Path,
     settings: WebDistSettings,
 ) {
-    runScript(moduleRootDir.parent, "bash", "scripts/run-web.sh", settings.port.toString())
+    runScript(moduleRootDir, "bash", "scripts/run-web.sh", settings.port.toString())
 }

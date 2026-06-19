@@ -3,15 +3,16 @@ set -e
 
 SERVER="emil@emilflach.com"
 REMOTE_ROOT="/var/www/lokcal.app"
+# This script lives at webApp/scripts/; operate from the repo root.
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-cd "$SCRIPT_DIR"
+cd "$SCRIPT_DIR/../.."
 
 # Kotlin Toolchain 0.11.0 does not assemble a servable wasm bundle (see
-# TOOLCHAIN_FEEDBACK.md §12), so we assemble it ourselves. scripts/assemble-web.sh
+# TOOLCHAIN_FEEDBACK.md §12), so we assemble it ourselves. assemble-web.sh
 # gathers the linked module + skiko + sql.js + the SQLDelight worker + Compose
 # resources + the wired index.html into build/web-dist.
 echo "Assembling web bundle..."
-./scripts/assemble-web.sh
+"$SCRIPT_DIR/assemble-web.sh"
 
 BUILD_DIR="build/web-dist"
 

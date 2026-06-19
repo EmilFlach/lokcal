@@ -204,13 +204,13 @@ local-run story for a Compose web app.
 > never rendered in a browser. The `deploy.sh` change that copied `sql.js` into that path has been
 > reverted.
 >
-> **Workaround (now in the repo):** `scripts/assemble-web.sh` reproduces the missing
+> **Workaround (now in the repo):** `webApp/scripts/assemble-web.sh` reproduces the missing
 > distribution step by hand — it gathers the linked `webApp.*`, extracts version-matched
 > `skiko.mjs/.wasm` from `skiko-js-wasm-runtime-<resolved-ver>.jar` in the Toolchain m2
 > cache, `npm pack`s `sql.js`, copies `webApp/resources/*` (incl. the committed
 > `sqljs.worker.js` + wired `index.html`), and lays Compose resources at
 > `composeResources/lokcal.shared.generated.resources/…` — into `build/web-dist`.
-> `scripts/run-web.sh` serves it; `deploy.sh` uses it. Verified: every asset the
+> `webApp/scripts/run-web.sh` serves it; `webApp/scripts/deploy-web.sh` uses it. Verified: every asset the
 > compiled app requests returns `200` (entry, skiko, sql.js engine+worker, drawables,
 > `.cvr` strings, seed CSVs). This is ~50 lines of glue that the toolchain should own.
 > Also wrapped as Toolchain commands via a local plugin (`plugins/webdist`):
@@ -254,6 +254,17 @@ duplicate `platform-tools-2` location on this machine.
 
 ---
 
+### 14. 🐞 Intermittent `wasm-js` compile/link failure (`DisposableZipFileSystemAccessor.dispose`)
+**No commit (flaky).** `./kotlin build -m webApp` (and `compileWasmJs`/`linkWasmJs`) occasionally fails
+with a Kotlin compiler exception during klib disposal:
+```
+:webApp:compileWasmJs … at org.jetbrains.kotlin.cli.common.DisposableZipFileSystemAccessor.dispose(klibArguments.kt:131)
+ERROR: Task ':webApp:compileWasmJs' failed: Kotlin WASM_JS compilation failed
+```
+No source changed between runs; a plain retry succeeds. Seen ~3× in this project. Looks like a
+concurrency/disposal race in the wasm klib handling rather than a project issue. **Ask:** investigate
+the disposal race; it makes wasm builds (and the `runWeb` workaround) non-deterministic.
+
 ## What worked well (worth keeping / advertising)
 
 - **WASM npm deps auto-resolved.** The web-worker SQLDelight driver pulled `sql.js` automatically
@@ -294,6 +305,6 @@ See `MIGRATION_PLAN.md` for the full before/after, what-replaces-what table, and
 
 ## Open / to revisit (may add findings here later)
 - Root-cause the Skiko `.sha256` test-runtime failure (§11).
-- WASM: no servable browser bundle is produced at all (§12) — Compose web can't run/deploy from Toolchain yet. Revisit when the `wasm-js/app` preview matures; meanwhile web deploy needs Gradle's `wasmJsBrowserDistribution` (or a future Toolchain distribution step). `deploy.sh` is intentionally disabled.
+- WASM: no servable browser bundle is produced by Toolchain (§12). Worked around by `webApp/scripts/assemble-web.sh` (run via `./kotlin do runWeb`); revisit when the `wasm-js/app` preview gains a real distribution step so the hand-rolled assembler can be retired.
 - Re-check whether `linkerOptions` is *supposed* to reach the iOS app link (§6) — if so, that's a bug to file with a minimal repro.
 - Whether dependency Compose-resource bundling on iOS (§8) is intended to require the app-module `compose` flag.
