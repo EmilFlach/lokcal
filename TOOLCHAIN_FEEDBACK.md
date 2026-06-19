@@ -213,6 +213,19 @@ local-run story for a Compose web app.
 > `scripts/serve-web.sh` serves it; `deploy.sh` uses it. Verified: every asset the
 > compiled app requests returns `200` (entry, skiko, sql.js engine+worker, drawables,
 > `.cvr` strings, seed CSVs). This is ~50 lines of glue that the toolchain should own.
+> Also wrapped as Toolchain commands via a local plugin (`plugins/webdist`):
+> `./kotlin do assembleWeb` and `./kotlin do serveWeb` (the `@TaskAction` shells the
+> scripts; the nested `./kotlin build -m webApp` inside a `./kotlin do` works fine).
+>
+> **Sub-finding — bare npm specifiers don't resolve in the browser.** Even with the
+> bundle assembled, the app threw `TypeError: Failed to resolve module specifier
+> "@js-joda/core"` at runtime: Kotlin/Wasm emits bare ESM imports (here from
+> kotlinx-datetime → `@js-joda/core`, version `3.2.0` per the kotlinx-datetime klib),
+> which browsers can't resolve without a bundler or an **import map**. The missing
+> distribution step is what would normally handle this. Fix in the assembler: stage
+> `@js-joda/core`'s ESM as `js-joda.mjs` and add `<script type="importmap">` mapping
+> `@js-joda/core` → `./js-joda.mjs` in `index.html`. A real distribution step must
+> emit an import map (or bundle) for every bare specifier in the linked output.
 
 ### 13. 🐞🧩 Android: `run` provisions its own emulator (downloading a system image already installed) instead of using a running device — ~8 min first run
 **No commit (tooling behavior).** `./kotlin run -m androidApp` took ~8 minutes. The build itself was

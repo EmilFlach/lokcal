@@ -8,3 +8,8 @@ dependencies:
   - $compose.runtime
   - $compose.ui
   - $libs.kotlinx.browser
+
+plugins:
+  webdist:
+    enabled: true
+    port: 8099

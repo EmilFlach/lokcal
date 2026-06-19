@@ -17,7 +17,7 @@ This project is built with the **Kotlin Toolchain** (Amper engine) via the `./ko
 | `shared/src/` (common) or `shared/src@jvm/`<br>(util, data, viewmodel, UI) | `./kotlin build -m desktopApp` | `./kotlin test -m shared -p jvm` | **Default — use for 95% of changes** |
 | `shared/src@android/` or `androidApp/` | `ANDROID_HOME=… ./kotlin build -m androidApp` | `./kotlin test -m shared -p android` | Embedded Gradle for AGP |
 | `shared/src@ios/`, `shared/src@native/`, or `iosApp/` | `./kotlin build -m shared -p iosSimulatorArm64`<br>(full app: `./kotlin build -m iosApp`) | `./kotlin test -m shared -p iosSimulatorArm64` | Needs Xcode |
-| `shared/src@wasmJs/` (web) | `scripts/assemble-web.sh` (build links only) | `./kotlin test -m shared -p wasmJs` | Toolchain only links wasm; `scripts/serve-web.sh` assembles+serves the real bundle (see TOOLCHAIN_FEEDBACK.md §12) |
+| `shared/src@wasmJs/` (web) | `./kotlin do assembleWeb` | `./kotlin test -m shared -p wasmJs` | Toolchain only links wasm; `./kotlin do serveWeb` assembles (skiko/sql.js/resources/import-map) + serves via the `webdist` plugin (see TOOLCHAIN_FEEDBACK.md §12) |
 | Pre-release verification | `./kotlin build` (all targets) | `./kotlin check` (tests + checks) | |
 
 ### Test Files in `shared/test/` (+ `shared/test@jvm/`)

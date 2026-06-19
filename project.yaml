@@ -4,9 +4,11 @@ modules:
   - iosApp
   - plugins/secrets
   - plugins/sqldelight
+  - plugins/webdist
   - shared
   - webApp
 
 plugins:
   - ./plugins/secrets
   - ./plugins/sqldelight
+  - ./plugins/webdist

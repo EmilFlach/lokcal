@@ -121,7 +121,7 @@ All four targets build under `./kotlin`, plus the JVM test suite:
 |---|---|---|
 | Desktop | `./kotlin build -m desktopApp` | ✅ Build successful |
 | Android | `ANDROID_HOME=… ./kotlin build -m androidApp` | ✅ Build successful (embedded AGP) |
-| Web | `scripts/serve-web.sh` | ✅ via hand-rolled assembler. Toolchain only links `webApp.{mjs,wasm}` (no bundle), so `scripts/assemble-web.sh` gathers skiko + sql.js + worker + Compose resources + wired index into `build/web-dist`; all assets serve 200. (`./kotlin build -m webApp` alone is link-only — see TOOLCHAIN_FEEDBACK.md §12.) |
+| Web | `./kotlin do serveWeb` | ✅ via hand-rolled assembler (`plugins/webdist` wraps `scripts/assemble-web.sh`). Toolchain only links `webApp.{mjs,wasm}`, so the assembler gathers skiko + sql.js + worker + Compose resources + a `js-joda.mjs` import-map + wired index into `build/web-dist`; all assets serve 200. See TOOLCHAIN_FEEDBACK.md §12. |
 | iOS | `./kotlin run -m iosApp` | ✅ Builds, installs, **runs** on iosSimulatorArm64 (home screen renders, DB seeds) |
 | Tests | `./kotlin test -m shared -p jvm` | ✅ 132/133 (1 Skiko native-lib load failure) |
 

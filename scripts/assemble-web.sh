@@ -24,6 +24,9 @@ RES="build/artifacts/PreparedComposeResourcesDirArtifact/sharedcommon"
 ASSETS="build/web-assets"
 RES_PKG="lokcal.shared.generated.resources"
 SQLJS_VER="1.12.0"
+# @js-joda/core: bare specifier imported by kotlinx-datetime on wasm. Version is the
+# one kotlinx-datetime-wasm-js declares in its klib manifest (npm dep "@js-joda/core").
+JSJODA_VER="3.2.0"
 
 echo "[1/6] Linking webApp..."
 ./kotlin build -m webApp >/dev/null
@@ -37,18 +40,22 @@ SKIKO_JAR="$(find "$HOME/Library/Caches/JetBrains/Kotlin/.m2.cache" \
 [ -n "$SKIKO_JAR" ] || { echo "ERROR: skiko-js-wasm-runtime ${SKIKO_VER} jar not found in the Toolchain cache."; exit 1; }
 echo "      skiko ${SKIKO_VER}"
 
-echo "[3/6] Fetching sql.js ${SQLJS_VER} (cached)..."
+echo "[3/6] Fetching npm assets (sql.js ${SQLJS_VER}, @js-joda/core ${JSJODA_VER}; cached)..."
 mkdir -p "$ASSETS"
 if [ ! -f "$ASSETS/sql-wasm.wasm" ] || [ ! -f "$ASSETS/sql-wasm.js" ]; then
-  ( cd "$ASSETS" && npm pack "sql.js@${SQLJS_VER}" >/dev/null && tar -xzf "sql.js-${SQLJS_VER}.tgz" )
+  ( cd "$ASSETS" && rm -rf package && npm pack "sql.js@${SQLJS_VER}" >/dev/null && tar -xzf "sql.js-${SQLJS_VER}.tgz" )
   cp "$ASSETS/package/dist/sql-wasm.js" "$ASSETS/package/dist/sql-wasm.wasm" "$ASSETS/"
+fi
+if [ ! -f "$ASSETS/js-joda.mjs" ]; then
+  ( cd "$ASSETS" && rm -rf package && npm pack "@js-joda/core@${JSJODA_VER}" >/dev/null && tar -xzf "js-joda-core-${JSJODA_VER}.tgz" )
+  cp "$ASSETS/package/dist/js-joda.esm.js" "$ASSETS/js-joda.mjs"
 fi
 
 echo "[4/6] Assembling ${OUT}..."
 rm -rf "$OUT"; mkdir -p "$OUT/composeResources/${RES_PKG}"
 cp "$LINK"/webApp.mjs "$LINK"/webApp.import-object.mjs "$LINK"/webApp.js-builtins.mjs "$LINK"/webApp.wasm "$OUT/"
 unzip -o -j "$SKIKO_JAR" 'skiko.mjs' 'skiko.wasm' -d "$OUT" >/dev/null
-cp "$ASSETS/sql-wasm.js" "$ASSETS/sql-wasm.wasm" "$OUT/"
+cp "$ASSETS/sql-wasm.js" "$ASSETS/sql-wasm.wasm" "$ASSETS/js-joda.mjs" "$OUT/"
 cp -R webApp/resources/. "$OUT/"
 cp -R "$RES"/. "$OUT/composeResources/${RES_PKG}/"
 

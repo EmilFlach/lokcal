@@ -8,6 +8,12 @@
         <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
         <link rel="manifest" href="./manifest.json">
         <title>Lokcal</title>
+        <!-- Kotlin/Wasm emits bare npm specifiers (e.g. kotlinx-datetime -> '@js-joda/core').
+             Browsers need an import map to resolve them; the bundler step that would
+             normally do this is missing from Kotlin Toolchain 0.11.0. See assemble-web.sh. -->
+        <script type="importmap">
+            { "imports": { "@js-joda/core": "./js-joda.mjs" } }
+        </script>
         <style>
             html,
             body {

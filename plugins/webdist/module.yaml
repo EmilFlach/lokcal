@@ -1,0 +1,7 @@
+product: jvm/amper-plugin
+
+description: Assembles and serves the wasm-js browser bundle (workaround for the missing Toolchain wasm distribution step — see TOOLCHAIN_FEEDBACK.md §12). Wraps scripts/assemble-web.sh + serve-web.sh as ./kotlin do commands.
+
+pluginInfo:
+  id: webdist
+  settingsClass: com.emilflach.lokcal.plugins.webdist.WebDistSettings
