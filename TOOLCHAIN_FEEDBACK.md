@@ -202,7 +202,17 @@ local-run story for a Compose web app.
 > serveable. That directory was a **stale artifact** from an earlier broad build; it is **not**
 > reproduced by a clean `build -m webApp`. The web app has only ever compiled/linked under Toolchain,
 > never rendered in a browser. The `deploy.sh` change that copied `sql.js` into that path has been
-> reverted — `deploy.sh` now aborts with an explanation rather than deploying a broken/empty site.
+> reverted.
+>
+> **Workaround (now in the repo):** `scripts/assemble-web.sh` reproduces the missing
+> distribution step by hand — it gathers the linked `webApp.*`, extracts version-matched
+> `skiko.mjs/.wasm` from `skiko-js-wasm-runtime-<resolved-ver>.jar` in the Toolchain m2
+> cache, `npm pack`s `sql.js`, copies `webApp/resources/*` (incl. the committed
+> `sqljs.worker.js` + wired `index.html`), and lays Compose resources at
+> `composeResources/lokcal.shared.generated.resources/…` — into `build/web-dist`.
+> `scripts/serve-web.sh` serves it; `deploy.sh` uses it. Verified: every asset the
+> compiled app requests returns `200` (entry, skiko, sql.js engine+worker, drawables,
+> `.cvr` strings, seed CSVs). This is ~50 lines of glue that the toolchain should own.
 
 ### 13. 🐞🧩 Android: `run` provisions its own emulator (downloading a system image already installed) instead of using a running device — ~8 min first run
 **No commit (tooling behavior).** `./kotlin run -m androidApp` took ~8 minutes. The build itself was
