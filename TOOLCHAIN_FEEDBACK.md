@@ -289,8 +289,8 @@ supported by Toolchain 0.11.0 via `--compose-hot-reload-mode`; it was not "dropp
   from klib npm metadata — **no manual `npm()`/`devNpm()` declarations** (Gradle required them).
   Pleasant surprise. (Caveat: there's no browser bundle to put them in yet — see §12.) (`191bb6b`)
 - **Android "just worked"** via the embedded Gradle/AGP, only needing `ANDROID_HOME`. (`55ea88d`)
-- **Version-catalog reuse**: `gradle/libs.versions.toml` consumed verbatim as `$libs.*`; only a stub
-  `build.gradle.kts` is needed for Dependabot. (`487ed07`)
+- **Version-catalog reuse**: the Gradle `libs.versions.toml` is consumed verbatim as `$libs.*`, and
+  Toolchain finds it at the **project root** (no `gradle/` folder, no build script needed). (`487ed07`)
 - **Local-plugin codegen pipeline** (`@TaskAction` → `generated.sources`) is clean and worked
   first-try for both a from-scratch plugin (secrets, `d6d755b`) and the vendored SQLDelight one
   (`e82c68a`).

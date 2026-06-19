@@ -6,7 +6,7 @@ Targets: Android, iOS, Desktop (JVM), Web (WASM).
 
 ## Build & Test Strategy
 
-This project is built with the **Kotlin Toolchain** (Amper engine) via the `./kotlin` wrapper — **not Gradle**. There is no `build.gradle.kts` (the root one is an empty Dependabot stub); modules are declared in `module.yaml` + `project.yaml`. `gradle/libs.versions.toml` remains the dependency catalog, consumed natively as `$libs.*`.
+This project is built with the **Kotlin Toolchain** (Amper engine) via the `./kotlin` wrapper — **not Gradle**. There are no Gradle build files; modules are declared in `module.yaml` + `project.yaml`. The dependency catalog is `libs.versions.toml` at the **project root**, consumed natively as `$libs.*`.
 
 **Rules:** Compile the JVM/desktop target first (fastest) to catch errors. Build per-module (`-m`); avoid bare `./kotlin build` (builds every target). Always build → test → fix. Android builds need `ANDROID_HOME` set.
 

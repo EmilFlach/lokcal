@@ -82,7 +82,7 @@ Toolchain KMP layout uses `src/` + `src@<platform>/` (no `srcDirs` remapping). M
 Toolchain equivalent. Out of MVP — `jvm/app` produces a runnable app; native installers
 are a follow-up.
 
-### Catalog (`gradle/libs.versions.toml`)
+### Catalog (`libs.versions.toml`)
 
 Reused verbatim as the `$libs.*` catalog. Post-migration cleanup: drop the `[plugins]`
 block and `[versions]` keys that only fed Gradle plugins (`agp`, `hotReload`,
@@ -139,7 +139,7 @@ All four targets build under `./kotlin`, plus the JVM test suite:
 | `compose.materialIconsExtended` accessor | `$libs.compose.material.icons.extended` (pinned 1.7.3) |
 
 ### Preserved
-Business-logic source (only `App()` widened `internal`→`public`), `gradle/libs.versions.toml`
+Business-logic source (only `App()` widened `internal`→`public`), `libs.versions.toml`
 (now the `$libs.*` catalog), the committed `aboutlibraries.json`, all SwiftUI/Compose UI.
 
 ### Deferred / follow-ups
@@ -154,7 +154,7 @@ Business-logic source (only `App()` widened `internal`→`public`), `gradle/libs
 
 > **build: migrate from Gradle to Kotlin Toolchain**
 >
-> Replaces the Gradle build with the Kotlin Toolchain (Amper engine, CLI 0.11.0) driven by `./kotlin`. KMP layout: `shared` (`kmp/lib`) + per-target app modules (`androidApp`, `desktopApp`, `webApp`, `iosApp`) + two local plugins (`plugins/secrets`, `plugins/sqldelight`). `gradle/libs.versions.toml` is reused verbatim as the `$libs.*` catalog; a stub `build.gradle.kts` remains for Dependabot.
+> Replaces the Gradle build with the Kotlin Toolchain (Amper engine, CLI 0.11.0) driven by `./kotlin`. KMP layout: `shared` (`kmp/lib`) + per-target app modules (`androidApp`, `desktopApp`, `webApp`, `iosApp`) + two local plugins (`plugins/secrets`, `plugins/sqldelight`). `libs.versions.toml` (at the project root) is reused verbatim as the `$libs.*` catalog. No Gradle files remain.
 >
 > See the "What replaces what", "Preserved", and "Deferred / follow-ups" tables above. Test plan = the Results table (all four targets build; JVM tests 132/133).
 </content>
