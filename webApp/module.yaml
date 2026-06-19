@@ -1,0 +1,10 @@
+product: wasm-js/app
+
+settings:
+  compose: enabled
+
+dependencies:
+  - ../shared
+  - $compose.runtime
+  - $compose.ui
+  - $libs.kotlinx.browser

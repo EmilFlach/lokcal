@@ -27,6 +27,7 @@ aboutLibraries = "14.0.1"
 # Compose Multiplatform stopped publishing material-icons-extended after 1.7.3;
 # the Gradle CMP `compose.materialIconsExtended` accessor pinned this version implicitly.
 composeMaterialIconsExtended = "1.7.3"
+kotlinxBrowser = "0.3"
 
 [libraries]
 
@@ -71,6 +72,7 @@ haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 aboutlibraries-core = { module = "com.mikepenz:aboutlibraries-core", version.ref = "aboutLibraries" }
 aboutlibraries-compose-m3 = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutLibraries" }
 compose-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "composeMaterialIconsExtended" }
+kotlinx-browser = { module = "org.jetbrains.kotlinx:kotlinx-browser", version.ref = "kotlinxBrowser" }
 
 [plugins]
 
