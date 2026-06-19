@@ -121,7 +121,7 @@ All four targets build under `./kotlin`, plus the JVM test suite:
 |---|---|---|
 | Desktop | `./kotlin build -m desktopApp` | ✅ Build successful |
 | Android | `ANDROID_HOME=… ./kotlin build -m androidApp` | ✅ Build successful (embedded AGP) |
-| Web | `./kotlin build -m webApp` | ✅ Build successful (sql.js npm auto-resolved) |
+| Web | `./kotlin build -m webApp` | ⚠️ Compiles/links only (`webApp.{mjs,wasm}`). **No servable browser bundle** — Toolchain 0.11.0 doesn't assemble skiko/npm/resources/index, and there's no run/serve/package for `wasm-js/app`. Cannot run or deploy yet. See TOOLCHAIN_FEEDBACK.md §12. |
 | iOS | `./kotlin run -m iosApp` | ✅ Builds, installs, **runs** on iosSimulatorArm64 (home screen renders, DB seeds) |
 | Tests | `./kotlin test -m shared -p jvm` | ✅ 132/133 (1 Skiko native-lib load failure) |
 
