@@ -3,6 +3,12 @@ product: ios/app
 dependencies:
   - ../shared
 
+settings:
+  # Required so Amper packages the (dependency) Compose resources into the .app
+  # bundle under compose-resources/ — without it, Res.* throws MissingResourceException
+  # at runtime (e.g. GradientBackground's drawable/noise.png).
+  compose: enabled
+
 # NOTE: the generated module.xcodeproj sets OTHER_LDFLAGS = -lsqlite3 on the app
 # target so the static KotlinModules framework resolves the SQLDelight native
 # driver's sqlite symbols. Amper does not regenerate an existing project, so that
