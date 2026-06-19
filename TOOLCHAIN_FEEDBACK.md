@@ -210,11 +210,11 @@ local-run story for a Compose web app.
 > cache, `npm pack`s `sql.js`, copies `webApp/resources/*` (incl. the committed
 > `sqljs.worker.js` + wired `index.html`), and lays Compose resources at
 > `composeResources/lokcal.shared.generated.resources/…` — into `build/web-dist`.
-> `scripts/serve-web.sh` serves it; `deploy.sh` uses it. Verified: every asset the
+> `scripts/run-web.sh` serves it; `deploy.sh` uses it. Verified: every asset the
 > compiled app requests returns `200` (entry, skiko, sql.js engine+worker, drawables,
 > `.cvr` strings, seed CSVs). This is ~50 lines of glue that the toolchain should own.
 > Also wrapped as Toolchain commands via a local plugin (`plugins/webdist`):
-> `./kotlin do assembleWeb` and `./kotlin do serveWeb` (the `@TaskAction` shells the
+> `./kotlin do assembleWeb` and `./kotlin do runWeb` (the `@TaskAction` shells the
 > scripts; the nested `./kotlin build -m webApp` inside a `./kotlin do` works fine).
 >
 > **Sub-finding — bare npm specifiers don't resolve in the browser.** Even with the

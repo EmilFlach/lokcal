@@ -26,9 +26,9 @@ fun assembleWeb(@Input(inferTaskDependency = false) moduleRootDir: Path) {
 }
 
 @TaskAction(executionAvoidance = ExecutionAvoidance.Disabled)
-fun serveWeb(
+fun runWeb(
     @Input(inferTaskDependency = false) moduleRootDir: Path,
     settings: WebDistSettings,
 ) {
-    runScript(moduleRootDir.parent, "bash", "scripts/serve-web.sh", settings.port.toString())
+    runScript(moduleRootDir.parent, "bash", "scripts/run-web.sh", settings.port.toString())
 }

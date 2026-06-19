@@ -2,11 +2,11 @@ tasks:
   assembleWeb:
     action: !com.emilflach.lokcal.plugins.webdist.assembleWeb
       moduleRootDir: ${module.rootDir}
-  serveWeb:
-    action: !com.emilflach.lokcal.plugins.webdist.serveWeb
+  runWeb:
+    action: !com.emilflach.lokcal.plugins.webdist.runWeb
       moduleRootDir: ${module.rootDir}
       settings: ${pluginSettings}
 
 commands:
   - assembleWeb
-  - serveWeb
+  - runWeb

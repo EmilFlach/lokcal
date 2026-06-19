@@ -121,7 +121,7 @@ All four targets build under `./kotlin`, plus the JVM test suite:
 |---|---|---|
 | Desktop | `./kotlin build -m desktopApp` | ✅ Build successful |
 | Android | `ANDROID_HOME=… ./kotlin build -m androidApp` | ✅ Build successful (embedded AGP) |
-| Web | `./kotlin do serveWeb` | ✅ via hand-rolled assembler (`plugins/webdist` wraps `scripts/assemble-web.sh`). Toolchain only links `webApp.{mjs,wasm}`, so the assembler gathers skiko + sql.js + worker + Compose resources + a `js-joda.mjs` import-map + wired index into `build/web-dist`; all assets serve 200. See TOOLCHAIN_FEEDBACK.md §12. |
+| Web | `./kotlin do runWeb` | ✅ via hand-rolled assembler (`plugins/webdist` wraps `scripts/assemble-web.sh`). Toolchain only links `webApp.{mjs,wasm}`, so the assembler gathers skiko + sql.js + worker + Compose resources + a `js-joda.mjs` import-map + wired index into `build/web-dist`; all assets serve 200. See TOOLCHAIN_FEEDBACK.md §12. |
 | iOS | `./kotlin run -m iosApp` | ✅ Builds, installs, **runs** on iosSimulatorArm64 (home screen renders, DB seeds) |
 | Tests | `./kotlin test -m shared -p jvm` | ✅ 132/133 (1 Skiko native-lib load failure) |
 
@@ -131,7 +131,7 @@ All four targets build under `./kotlin`, plus the JVM test suite:
 |---|---|
 | `./gradlew :shared:compileKotlinJvm` | `./kotlin build -m desktopApp` |
 | `./gradlew :androidApp:assembleDebug` | `./kotlin build -m androidApp` |
-| `./gradlew :shared:wasmJsBrowserDistribution` | `./kotlin build -m webApp` |
+| `./gradlew :shared:wasmJsBrowserDistribution` | `./kotlin do runWeb` (assembler; `build -m webApp` only links) |
 | iOS framework via `embedAndSignAppleFrameworkForXcode` | `./kotlin build -m iosApp` (Amper xcode-integration) |
 | `./gradlew :shared:jvmTest` | `./kotlin test -m shared -p jvm` |
 | `app.cash.sqldelight` plugin | `plugins/sqldelight` (vendored + `generateAsync`) |

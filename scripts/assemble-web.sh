@@ -14,7 +14,7 @@
 #   - Compose resources at the fetch path        (PreparedComposeResourcesDirArtifact)
 #     composeResources/lokcal.shared.generated.resources/...
 #
-# Output: build/web-dist/  (serve it with any static server; see scripts/serve-web.sh)
+# Output: build/web-dist/  (serve it with any static server; see scripts/run-web.sh)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -60,4 +60,4 @@ cp -R webApp/resources/. "$OUT/"
 cp -R "$RES"/. "$OUT/composeResources/${RES_PKG}/"
 
 echo "[5/6] Bundle ready: ${OUT}"
-echo "[6/6] Serve it with:  scripts/serve-web.sh   (or: cd ${OUT} && python3 -m http.server 8099)"
+echo "[6/6] Serve it with:  scripts/run-web.sh   (or: cd ${OUT} && python3 -m http.server 8099)"

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Assemble the wasm browser bundle (scripts/assemble-web.sh) and serve it locally.
-# Usage: scripts/serve-web.sh [port]   (default 8099)
+# Usage: scripts/run-web.sh [port]   (default 8099)
 #
 # Kotlin Toolchain 0.11.0 cannot run/serve a wasm-js/app itself (see
 # TOOLCHAIN_FEEDBACK.md §12); this is the stand-in for `kotlin run -m webApp`.
