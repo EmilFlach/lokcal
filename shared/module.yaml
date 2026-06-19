@@ -1,0 +1,8 @@
+product:
+  type: kmp/lib
+  platforms: [android, jvm, wasmJs, iosArm64, iosSimulatorArm64, iosX64]
+
+settings:
+  compose: enabled
+  kotlin:
+    serialization: json
