@@ -254,16 +254,18 @@ duplicate `platform-tools-2` location on this machine.
 
 ---
 
-### 14. 🐞 Intermittent `wasm-js` compile/link failure (`DisposableZipFileSystemAccessor.dispose`)
-**No commit (flaky).** `./kotlin build -m webApp` (and `compileWasmJs`/`linkWasmJs`) occasionally fails
-with a Kotlin compiler exception during klib disposal:
+### 14. ⚠️ Concurrent `./kotlin` invocations clash with an opaque klib-disposal error
+**No commit.** Running two `./kotlin` builds against the same project at the same time (here:
+`./kotlin do assembleWeb`, which builds `webApp`, while a second `./kotlin build -m webApp` ran
+manually) fails the wasm compile with:
 ```
 :webApp:compileWasmJs … at org.jetbrains.kotlin.cli.common.DisposableZipFileSystemAccessor.dispose(klibArguments.kt:131)
 ERROR: Task ':webApp:compileWasmJs' failed: Kotlin WASM_JS compilation failed
 ```
-No source changed between runs; a plain retry succeeds. Seen ~3× in this project. Looks like a
-concurrency/disposal race in the wasm klib handling rather than a project issue. **Ask:** investigate
-the disposal race; it makes wasm builds (and the `runWeb` workaround) non-deterministic.
+**This is self-inflicted, not a spontaneous flake** — the two invocations contend on the same build
+outputs/klibs. A retry (single invocation) always succeeds. **Ask:** a cross-process build lock with a
+clear "another `./kotlin` build is already running for this project" message would beat the current
+opaque compiler stacktrace. Minor / expected; noted only because the failure mode is confusing.
 
 ## What worked well (worth keeping / advertising)
 
