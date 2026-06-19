@@ -110,5 +110,52 @@ plugin → JVM/desktop compile (fast target first) → android/ios/wasm → test
    `Shared` framework `baseName`.
 5. `commonMain/resources` `srcDirs` trick (bundling a big JSON, excluding `.kt`) — replicate
    by placing the JSON directly under `resources/`.
+
+---
+
+## Results (migration complete)
+
+All four targets build under `./kotlin`, plus the JVM test suite:
+
+| Target | Command | Result |
+|---|---|---|
+| Desktop | `./kotlin build -m desktopApp` | ✅ Build successful |
+| Android | `ANDROID_HOME=… ./kotlin build -m androidApp` | ✅ Build successful (embedded AGP) |
+| Web | `./kotlin build -m webApp` | ✅ Build successful (sql.js npm auto-resolved) |
+| iOS | `./kotlin build -m iosApp` | ✅ Build Succeeded (iosSimulatorArm64, signed .app) |
+| Tests | `./kotlin test -m shared -p jvm` | ✅ 132/133 (1 Skiko native-lib load failure) |
+
+### What replaces what
+
+| Gradle | Kotlin Toolchain |
+|---|---|
+| `./gradlew :shared:compileKotlinJvm` | `./kotlin build -m desktopApp` |
+| `./gradlew :androidApp:assembleDebug` | `./kotlin build -m androidApp` |
+| `./gradlew :shared:wasmJsBrowserDistribution` | `./kotlin build -m webApp` |
+| iOS framework via `embedAndSignAppleFrameworkForXcode` | `./kotlin build -m iosApp` (Amper xcode-integration) |
+| `./gradlew :shared:jvmTest` | `./kotlin test -m shared -p jvm` |
+| `app.cash.sqldelight` plugin | `plugins/sqldelight` (vendored + `generateAsync`) |
+| buildSrc `GenerateSecretsTask` | `plugins/secrets` |
+| `compose.materialIconsExtended` accessor | `$libs.compose.material.icons.extended` (pinned 1.7.3) |
+
+### Preserved
+Business-logic source (only `App()` widened `internal`→`public`), `gradle/libs.versions.toml`
+(now the `$libs.*` catalog), the committed `aboutlibraries.json`, all SwiftUI/Compose UI.
+
+### Deferred / follow-ups
+- **Compose Hot Reload** and Compose Desktop **native installers** (Dmg/Msi/Deb) — no Toolchain equivalent; dropped from MVP.
+- **aboutlibraries** plugin dropped; `shared/composeResources/files/aboutlibraries.json` is the committed input, regenerate out-of-band when deps change.
+- **`ComposeTest.simpleCheck()`** fails locally on Skiko native-lib load (`libskiko-macos-arm64.dylib.sha256`); test-runtime provisioning quirk, runs on CI/other hosts.
+- **`deploy.sh`** points at the Toolchain dev wasm bundle (`build/wasm/packages/Lokcal-shared/kotlin`); confirm the production-optimized path before the next deploy.
+- **iOS app icons / launch screen** carried into `iosApp/src` (Assets.xcassets, Launch Screen.storyboard); verify they render on a booted simulator.
+- No `.github` CI exists; if added later, drop `setup-java` and call `./kotlin build`/`check` (the wrapper provisions its own JDK).
+
+### PR description (for `migrate/kotlin-toolchain` → `main`)
+
+> **build: migrate from Gradle to Kotlin Toolchain**
+>
+> Replaces the Gradle build with the Kotlin Toolchain (Amper engine, CLI 0.11.0) driven by `./kotlin`. KMP layout: `shared` (`kmp/lib`) + per-target app modules (`androidApp`, `desktopApp`, `webApp`, `iosApp`) + two local plugins (`plugins/secrets`, `plugins/sqldelight`). `gradle/libs.versions.toml` is reused verbatim as the `$libs.*` catalog; a stub `build.gradle.kts` remains for Dependabot.
+>
+> See the "What replaces what", "Preserved", and "Deferred / follow-ups" tables above. Test plan = the Results table (all four targets build; JVM tests 132/133).
 </content>
 </invoke>

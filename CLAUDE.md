@@ -6,33 +6,40 @@ Targets: Android, iOS, Desktop (JVM), Web (WASM).
 
 ## Build & Test Strategy
 
-**Rules:** Compile fast targets (JVM) first to catch errors. Never run `:build` (builds all platforms). Always compile → test → fix.
+This project is built with the **Kotlin Toolchain** (Amper engine) via the `./kotlin` wrapper — **not Gradle**. There is no `build.gradle.kts` (the root one is an empty Dependabot stub); modules are declared in `module.yaml` + `project.yaml`. `gradle/libs.versions.toml` remains the dependency catalog, consumed natively as `$libs.*`.
+
+**Rules:** Compile the JVM/desktop target first (fastest) to catch errors. Build per-module (`-m`); avoid bare `./kotlin build` (builds every target). Always build → test → fix. Android builds need `ANDROID_HOME` set.
 
 ### Platform Commands
 
-| Changed | Compile | Test | Speed |
-|---------|---------|------|-------|
-| `commonMain/` or `jvmMain/`<br>(util, data, viewmodel, UI) | `:shared:compileKotlinJvm` | `:shared:jvmTest` | 5-30s<br>**Default — use for 95% of changes** |
-| `androidMain/` or `androidApp/`<br>(platform actuals, wrapper) | `:androidApp:compileDebugKotlin` | `:androidApp:connectedDebugAndroidTest` | 15s-3m<br>Requires device |
-| `iosMain/` or `iosApp/`<br>(iOS platform actuals, wrapper) | `:shared:compileKotlinIosSimulatorArm64`<br>`:shared:compileKotlinIosX64` (Intel) | `:shared:iosSimulatorArm64Test`<br>`:shared:iosX64Test` (Intel) | 20-60s |
-| `wasmJsMain/`<br>(web platform actuals) | `:shared:compileKotlinWasmJs` | `:shared:wasmJsTest` | 20-80s<br>Requires Node.js |
-| Pre-release verification | `:androidApp:assembleDebug` (APK) | `:shared:allTests` (all platforms) | 30s-10m<br>❌ Avoid `:build` |
+| Changed | Build | Test | Notes |
+|---------|-------|------|-------|
+| `shared/src/` (common) or `shared/src@jvm/`<br>(util, data, viewmodel, UI) | `./kotlin build -m desktopApp` | `./kotlin test -m shared -p jvm` | **Default — use for 95% of changes** |
+| `shared/src@android/` or `androidApp/` | `ANDROID_HOME=… ./kotlin build -m androidApp` | `./kotlin test -m shared -p android` | Embedded Gradle for AGP |
+| `shared/src@ios/`, `shared/src@native/`, or `iosApp/` | `./kotlin build -m shared -p iosSimulatorArm64`<br>(full app: `./kotlin build -m iosApp`) | `./kotlin test -m shared -p iosSimulatorArm64` | Needs Xcode |
+| `shared/src@wasmJs/` (web) | `./kotlin build -m webApp` | `./kotlin test -m shared -p wasmJs` | |
+| Pre-release verification | `./kotlin build` (all targets) | `./kotlin check` (tests + checks) | |
 
-### Test Files in `shared/src/commonTest/`
-Utils: `NumberUtilsTest`, `ExerciseMathTest` • Repos: `FoodRepositoryTest`, `IntakeRepositoryTest`, `MealRepositoryTest`, `ExerciseRepositoryTest`, `WeightRepositoryTest` • Scrapers: `AlbertHeijnWebFetcherTest`, `EsselungaWebFetcherTest`, `EsselungaSearchTest`, `KrogerSearchTest` • UI: `ComposeTest`
+### Test Files in `shared/test/` (+ `shared/test@jvm/`)
+Utils: `NumberUtilsTest`, `ExerciseMathTest` • Repos: `FoodRepositoryTest`, `IntakeRepositoryTest`, `MealRepositoryTest`, `ExerciseRepositoryTest`, `WeightRepositoryTest` • Scrapers: `AlbertHeijnWebFetcherTest`, `EsselungaWebFetcherTest`, `EsselungaSearchTest`, `KrogerSearchTest` • UI: `ComposeTest` (Skiko native-lib load currently fails locally — known follow-up)
 
-Run specific: `./gradlew :shared:jvmTest --tests "com.emilflach.lokcal.data.FoodRepositoryTest"`
+Run JVM tests: `./kotlin test -m shared -p jvm`
 
 ## Code Structure
-**Modules:** `:androidApp` (Android wrapper), `:shared` (KMP code: commonMain, androidMain, jvmMain, iosMain, wasmJsMain)
+**Modules** (one product each; `project.yaml` lists them): `shared` (`kmp/lib`), `androidApp` (`android/app`), `desktopApp` (`jvm/app`), `webApp` (`wasm-js/app`), `iosApp` (`ios/app`), plus local plugins `plugins/secrets` and `plugins/sqldelight`.
 
-**Key paths in `shared/src/commonMain/kotlin/com/emilflach/lokcal/`:**
+**`shared` uses the amper layout** (no `commonMain/kotlin`): common code in `shared/src/`, platform actuals in `shared/src@android/`, `src@jvm/`, `src@ios/`, `src@native/`, `src@wasmJs/`; tests in `shared/test/` (+ `test@jvm/`).
+
+**Key paths under `shared/src/com/emilflach/lokcal/`:**
 - `data/` — Repositories + food sources
 - `viewmodel/` — StateFlow ViewModels
 - `ui/screens/`, `ui/components/`, `ui/dialogs/` — Compose UI
 - `util/` — SearchUtils, ExerciseMath, DateUtils, NumberUtils
-- `App.kt` — Navigation (sealed Screen + NavDisplay)
-- `../sqldelight/` — Database schema
+- `../../App.kt` — root `App()` composable (public; consumed by every app module)
+- `shared/sqldelight/` — `.sq` schema (codegen via `plugins/sqldelight`, `generateAsync=true`)
+- `shared/composeResources/` — Compose resources (`Res` accessors → `lokcal.shared.generated.resources`)
+
+The desktop/web entry points live in `desktopApp/src/main.kt` and `webApp/src/main.kt`; the Android `AppActivity` is in `shared/src@android/`.
 
 ## Stack
 - Kotlin 2.2.21, Compose Multiplatform 1.9.3
@@ -47,6 +54,8 @@ Repository pattern • ViewModels (StateFlow) • `expect`/`actual` for platform
 ## iOS — What Needs Implementing Twice
 
 When adding a **new screen**, also update:
-1. `shared/src/iosMain/.../screens/ScreenFactories.kt` — add a `*ViewController()` factory function
-2. `iosApp/iosApp/NativeNavigationView.swift` — add a case to `NavigationDestination` and route it
-3. `iosApp/iosApp/*View.swift` — create a SwiftUI `UIViewControllerRepresentable` wrapper
+1. `shared/src@ios/com/emilflach/lokcal/screens/ScreenFactories.kt` — add a `*ViewController()` factory function
+2. `iosApp/src/NativeNavigationView.swift` — add a case to `NavigationDestination` and route it
+3. `iosApp/src/*View.swift` — create a SwiftUI `UIViewControllerRepresentable` wrapper
+
+Swift sources live in `iosApp/src/` and `import KotlinModules` (Amper's framework name). Amper generates `iosApp/module.xcodeproj` on first build; the app target sets `OTHER_LDFLAGS = -lsqlite3` (committed) so the static framework resolves the SQLDelight native driver.
