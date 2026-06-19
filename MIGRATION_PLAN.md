@@ -61,7 +61,7 @@ Toolchain KMP layout uses `src/` + `src@<platform>/` (no `srcDirs` remapping). M
 | `org.jetbrains.kotlin.plugin.serialization` | **Native** | `settings.kotlin.serialization: json` |
 | `app.cash.sqldelight` | **Local plugin** | `plugins/sqldelight` — codegen + native `linkSqlite` + JS sql.js worker. **Long pole.** |
 | `com.mikepenz.aboutlibraries.plugin` | **Drop (regen out-of-band)** | Output `aboutlibraries.json` is already committed under `composeResources/files`. Regenerate manually; don't gate the build. |
-| `org.jetbrains.compose.hot-reload` | **Drop (deferred)** | Dev convenience, no Toolchain equivalent. |
+| `org.jetbrains.compose.hot-reload` | **Native** | Toolchain has built-in Compose Hot Reload: `./kotlin run -m desktopApp --compose-hot-reload-mode`. The Gradle plugin + `hotRunJvm`/`ComposeHotRun` task are no longer needed. |
 | buildSrc `GenerateSecretsTask` | **Local plugin** | `plugins/secrets` — generates `KrogerConfig.kt` from `local.properties`/env into `generated.sources`. |
 
 ### Custom tasks / codegen / generated-artifact consumers
@@ -143,7 +143,7 @@ Business-logic source (only `App()` widened `internal`→`public`), `gradle/libs
 (now the `$libs.*` catalog), the committed `aboutlibraries.json`, all SwiftUI/Compose UI.
 
 ### Deferred / follow-ups
-- **Compose Hot Reload** and Compose Desktop **native installers** (Dmg/Msi/Deb) — no Toolchain equivalent; dropped from MVP.
+- **Compose Hot Reload** — actually **supported natively**: `./kotlin run -m desktopApp --compose-hot-reload-mode` (corrected; earlier notes wrongly said it was dropped). Compose Desktop **native installers** (Dmg/Msi/Deb) remain deferred — no Toolchain equivalent.
 - **aboutlibraries** plugin dropped; `shared/composeResources/files/aboutlibraries.json` is the committed input, regenerate out-of-band when deps change.
 - **`ComposeTest.simpleCheck()`** fails locally on Skiko native-lib load (`libskiko-macos-arm64.dylib.sha256`); test-runtime provisioning quirk, runs on CI/other hosts.
 - **Web deploy** is `webApp/scripts/deploy-web.sh` — it runs the assembler (`build/web-dist`) and rsyncs that. Sanity-check the live site after the next deploy.

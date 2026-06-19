@@ -267,6 +267,22 @@ outputs/klibs. A retry (single invocation) always succeeds. **Ask:** a cross-pro
 clear "another `./kotlin` build is already running for this project" message would beat the current
 opaque compiler stacktrace. Minor / expected; noted only because the failure mode is confusing.
 
+### 15. 🐞 Compose Hot Reload DevTools windows are orphaned across runs
+**No commit (Toolchain/CHR runtime).** `./kotlin run -m desktopApp --compose-hot-reload-mode` starts a
+**persistent** reload session: the app window + a DevTools sidecar (a separate JBR JVM launched with
+`-Dapple.awt.UIElement=true -Dapple.awt.application.name=Compose`) + the recompiler. Closing the
+**app window** does not end the `./kotlin run` session, and re-running hot reload spins up a fresh
+DevTools sidecar without reaping the previous one — so the reload/DevTools windows accumulate (seen
+as multiple lingering "reload tool windows"). They persist until the underlying JVMs are killed.
+**Repro:** run with `--compose-hot-reload-mode`, close the app window, run again → two DevTools
+windows. **Ask:** tie the DevTools sidecar lifecycle to its session and reap it on app-window-close /
+session restart (and/or detect an existing session). **Workaround:** stop the run itself (Ctrl-C in
+the launching terminal / stop button) rather than closing the window; clear stragglers with
+`pkill -f 'apple.awt.application.name=Compose'`.
+
+(Aside: this corrects an earlier inaccuracy in the migration notes — Compose Hot Reload **is**
+supported by Toolchain 0.11.0 via `--compose-hot-reload-mode`; it was not "dropped".)
+
 ## What worked well (worth keeping / advertising)
 
 - **WASM npm deps auto-resolved.** The web-worker SQLDelight driver pulled `sql.js` automatically

@@ -10,6 +10,8 @@ This project is built with the **Kotlin Toolchain** (Amper engine) via the `./ko
 
 **Rules:** Compile the JVM/desktop target first (fastest) to catch errors. Build per-module (`-m`); avoid bare `./kotlin build` (builds every target). Always build → test → fix. Android builds need `ANDROID_HOME` set.
 
+**Compose Hot Reload (desktop):** `./kotlin run -m desktopApp --compose-hot-reload-mode` (Toolchain-native). It's a persistent session — **stop it with Ctrl-C in the launching terminal**, not by closing the app window, or the DevTools sidecar window orphans and piles up across runs (clear stragglers: `pkill -f 'apple.awt.application.name=Compose'`). See TOOLCHAIN_FEEDBACK.md §15.
+
 ### Platform Commands
 
 | Changed | Build | Test | Notes |
