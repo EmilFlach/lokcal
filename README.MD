@@ -37,52 +37,61 @@ Also included: barcode scanner · "same as yesterday" shortcut · weekly dashboa
 
 ## Building from Source
 
-### Prerequisites
-- JDK 17+
-- [KDoctor](https://github.com/Kotlin/kdoctor) to verify your environment
-- `local.properties` in the project root with `sdk.dir=/path/to/android/sdk`
+Built with the **Kotlin Toolchain** (Amper engine) via the bundled `./kotlin` wrapper — there is no Gradle. The wrapper auto-provisions its own JDK on first run.
 
-### Android
-```bash
-./gradlew :androidApp:assembleDebug
-# APK: androidApp/build/outputs/apk/debug/androidApp-debug.apk
-```
+### Prerequisites
+- The bundled `./kotlin` wrapper (no separate JDK needed — it provisions one)
+- For Android: `ANDROID_HOME` set, or `local.properties` with `sdk.dir=/path/to/android/sdk`
+- For iOS: Xcode
+- Optional: `local.properties` with `kroger.clientId` / `kroger.clientSecret` for the Kroger food source
 
 ### Desktop (JVM)
 ```bash
-./gradlew :shared:run
-# Hot reload:
-./gradlew :shared:hotRunJvm
+./kotlin run -m desktopApp
+```
+
+### Android
+```bash
+ANDROID_HOME=/path/to/sdk ./kotlin run -m androidApp
+# Or build the APK and install on a running device/emulator (faster):
+./kotlin build -m androidApp
+adb install -r build/tasks/_androidApp_buildAndroidDebug/gradle-project-debug.apk
 ```
 
 ### iOS
-Open `iosApp/iosApp.xcodeproj` in Xcode and run, or use the [Kotlin Multiplatform plugin](https://plugins.jetbrains.com/plugin/14936-kotlin-multiplatform-mobile) in Android Studio.
+```bash
+./kotlin run -m iosApp   # builds the framework + Swift app, runs on the simulator
+```
+Amper generates `iosApp/module.xcodeproj` on first build; you can also open it in Xcode.
 
 ### Web (Wasm)
 ```bash
-./gradlew :shared:wasmJsBrowserDevelopmentRun --continue
+./kotlin do runWeb       # assembles the browser bundle and serves it at http://localhost:8099
 ```
+(The Toolchain only links wasm; `runWeb` assembles the full bundle — see [TOOLCHAIN_FEEDBACK.md](TOOLCHAIN_FEEDBACK.md) §12.)
 
 ### Tests
 ```bash
-./gradlew :shared:jvmTest                          # fast — use for most changes
-./gradlew :androidApp:connectedDebugAndroidTest    # requires connected device
-./gradlew :shared:iosSimulatorArm64Test            # iOS simulator
+./kotlin test -m shared -p jvm                 # fast — use for most changes
+./kotlin test -m shared -p android             # Android unit tests
+./kotlin test -m shared -p iosSimulatorArm64   # iOS simulator
 ```
 
 ---
 
 ## Architecture
 
-Built with [Kotlin Multiplatform](https://kotlinlang.org/docs/multiplatform.html) and [Compose Multiplatform](https://www.jetbrains.com/compose-multiplatform/). All business logic, UI, and data storage live in `:shared/commonMain` and compile to all four targets.
+Built with [Kotlin Multiplatform](https://kotlinlang.org/docs/multiplatform.html) and [Compose Multiplatform](https://www.jetbrains.com/compose-multiplatform/). All business logic, UI, and data storage live in `shared` (common code) and compile to all four targets; each platform has a thin app module.
 
 ```
-:androidApp          — Android wrapper
-:shared/commonMain   — All shared Kotlin: UI (Compose), ViewModels, Repositories, SQLDelight schema
-:shared/androidMain  — Android platform actuals (HealthConnect, BackupManager, DriverFactory)
-:shared/iosMain      — iOS platform actuals
-:shared/jvmMain      — Desktop platform actuals
-:shared/wasmJsMain   — Web platform actuals + landing page
+shared/src/          — All shared Kotlin: UI (Compose), ViewModels, Repositories
+shared/sqldelight/   — SQLDelight schema (.sq)
+shared/src@android/  — Android platform actuals (HealthConnect, BackupManager, DriverFactory) + AppActivity
+shared/src@ios/      — iOS platform actuals + framework entry
+shared/src@jvm/      — Desktop platform actuals
+shared/src@wasmJs/   — Web platform actuals
+androidApp/ desktopApp/ webApp/ iosApp/   — per-platform app modules
+plugins/             — local Toolchain plugins: secrets, sqldelight, webdist
 ```
 
 **Stack:** Kotlin 2.2, Compose Multiplatform 1.9, SQLDelight 2.2, Ktor 3.3, kotlinx-coroutines/serialization/datetime, Coil, KScan (barcode)
