@@ -1,6 +1,6 @@
 import SwiftUI
 import UIKit
-import Shared
+import KotlinModules
 
 // MARK: - Search Bar Barcode Button
 

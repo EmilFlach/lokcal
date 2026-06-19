@@ -1,0 +1,9 @@
+product: ios/app
+
+dependencies:
+  - ../shared
+
+# NOTE: the generated module.xcodeproj sets OTHER_LDFLAGS = -lsqlite3 on the app
+# target so the static KotlinModules framework resolves the SQLDelight native
+# driver's sqlite symbols. Amper does not regenerate an existing project, so that
+# edit persists. (Amper's settings.kotlin.linkerOptions does not reach the app link.)

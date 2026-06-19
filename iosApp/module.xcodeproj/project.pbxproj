@@ -1,0 +1,225 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXFileReference section */
+		2F8FC2EBAEA6C7295B0D07FE /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.info; name = Info.plist; path = src/Info.plist; sourceTree = "<group>"; };
+		2F8FC5B23985C449F8A32FB7 /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		2F8FC818C65E6980E76383AB /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 2F8FC9D8639E44840D2098F8 /* app */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		2F8FC1884FF1A703B665B675 /* src */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				2F8FC818C65E6980E76383AB /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
+			);
+			path = src;
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		2F8FC209D4708F0ABB731321 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2F8FC1D35B167C81E6F07EAF /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				2F8FC5B23985C449F8A32FB7 /* iosApp.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		2F8FC711525ABBB53764FED7 = {
+			isa = PBXGroup;
+			children = (
+				2F8FC1D35B167C81E6F07EAF /* Products */,
+				2F8FC2EBAEA6C7295B0D07FE /* Info.plist */,
+				2F8FC1884FF1A703B665B675 /* src */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		2F8FC9D8639E44840D2098F8 /* app */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2F8FC50D7CCEC8AD53C9CD5A /* Build configuration list for PBXNativeTarget "app" */;
+			buildPhases = (
+				2F8FCF19F68C95CAE2333503 /* Build Kotlin with Amper */,
+				2F8FC4D73434BABAF68C7E17 /* Sources */,
+				2F8FC209D4708F0ABB731321 /* Frameworks */,
+				2F8FCDC2C17403C00D4E921C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				2F8FC1884FF1A703B665B675 /* src */,
+			);
+			name = app;
+			productName = app;
+			productReference = 2F8FC5B23985C449F8A32FB7 /* iosApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		2F8FCBEBD38655C46FD9554D /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 2F8FC675C7491EB362C28663 /* Build configuration list for PBXProject "module" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 2F8FC711525ABBB53764FED7;
+			productRefGroup = 2F8FC1D35B167C81E6F07EAF /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				2F8FC9D8639E44840D2098F8 /* app */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		2F8FCDC2C17403C00D4E921C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		2F8FCF19F68C95CAE2333503 /* Build Kotlin with Amper */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			inputPaths = (
+			);
+			name = "Build Kotlin with Amper";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# !AMPER KMP INTEGRATION STEP!\n# This script is managed by the Kotlin Toolchain, do not edit manually!\n\"${KOTLIN_CLI_WRAPPER_PATH}\" tool xcode-integration\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2F8FC4D73434BABAF68C7E17 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		2F8FC102C0FBBA50C2065B08 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				OTHER_LDFLAGS = "-lsqlite3";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				FRAMEWORK_SEARCH_PATHS = "$(inherited) $(TARGET_BUILD_DIR)/AmperFrameworks";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				INFOPLIST_FILE = src/Info.plist;
+				KOTLIN_CLI_WRAPPER_PATH = ../kotlin;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = iosApp;
+				PRODUCT_MODULE_NAME = app;
+				PRODUCT_NAME = iosApp;
+				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = (
+					1,
+					2,
+				);
+			};
+			name = Debug;
+		};
+		2F8FC578D5106EDF0461F8BF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Release;
+		};
+		2F8FCE679EAD7233834FB508 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		2F8FCFC22BDEE0EF1096A359 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				OTHER_LDFLAGS = "-lsqlite3";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				FRAMEWORK_SEARCH_PATHS = "$(inherited) $(TARGET_BUILD_DIR)/AmperFrameworks";
+				INFOPLIST_FILE = src/Info.plist;
+				KOTLIN_CLI_WRAPPER_PATH = ../kotlin;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = iosApp;
+				PRODUCT_MODULE_NAME = app;
+				PRODUCT_NAME = iosApp;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = (
+					1,
+					2,
+				);
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2F8FC50D7CCEC8AD53C9CD5A /* Build configuration list for PBXNativeTarget "app" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2F8FC102C0FBBA50C2065B08 /* Debug */,
+				2F8FCFC22BDEE0EF1096A359 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		2F8FC675C7491EB362C28663 /* Build configuration list for PBXProject "module" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2F8FCE679EAD7233834FB508 /* Debug */,
+				2F8FC578D5106EDF0461F8BF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 2F8FCBEBD38655C46FD9554D /* Project object */;
+}

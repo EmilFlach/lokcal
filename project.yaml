@@ -1,6 +1,7 @@
 modules:
   - androidApp
   - desktopApp
+  - iosApp
   - plugins/secrets
   - plugins/sqldelight
   - shared

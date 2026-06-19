@@ -1,5 +1,5 @@
 import SwiftUI
-import Shared
+import KotlinModules
 
 // MARK: - Settings Screen (navigation destination)
 

@@ -16,6 +16,12 @@ settings:
     compileSdk: 36
     minSdk: 26
 
+# Link the system SQLite for the SQLDelight native driver (sqliter), matching the
+# Gradle build's `sqldelight { linkSqlite.set(true) }`.
+settings@ios:
+  kotlin:
+    linkerOptions: [-lsqlite3]
+
 plugins:
   secrets: enabled
   sqldelight:
