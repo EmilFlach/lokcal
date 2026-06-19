@@ -3,12 +3,14 @@ set -e
 
 SERVER="emil@emilflach.com"
 REMOTE_ROOT="/var/www/lokcal.app"
-BUILD_DIR="shared/build/dist/wasmJs/productionExecutable"
+# Kotlin Toolchain emits the wasm browser bundle here (project name "Lokcal").
+# If a production-optimized bundle command lands in a newer Toolchain, update this.
+BUILD_DIR="build/wasm/packages/Lokcal-shared/kotlin"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 echo "Building wasm..."
 cd "$SCRIPT_DIR"
-./gradlew shared:wasmJsBrowserDistribution
+./kotlin build -m webApp
 
 echo "Deploying app to $SERVER:$REMOTE_ROOT/lokcal/..."
 rsync -az --delete "$BUILD_DIR/" "$SERVER:$REMOTE_ROOT/lokcal/"

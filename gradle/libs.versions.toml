@@ -2,12 +2,8 @@
 
 composeCharts = "0.2.5"
 connectClient = "1.2.0-alpha02"
-kotlin = "2.3.20"
-compose = "1.10.2"
-agp = "9.0.1"
 androidx-activityCompose = "1.13.0"
 androidx-uiTest = "1.10.5"
-hotReload = "1.1.0-beta01"
 kotlinx-coroutines = "1.10.2"
 kscan = "0.4.0"
 ktor = "3.4.1"
@@ -74,14 +70,3 @@ aboutlibraries-compose-m3 = { module = "com.mikepenz:aboutlibraries-compose-m3",
 compose-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "composeMaterialIconsExtended" }
 kotlinx-browser = { module = "org.jetbrains.kotlinx:kotlinx-browser", version.ref = "kotlinxBrowser" }
 
-[plugins]
-
-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-compose = { id = "org.jetbrains.compose", version.ref = "compose" }
-android-application = { id = "com.android.application", version.ref = "agp" }
-hotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "hotReload" }
-kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-sqlDelight = { id = "app.cash.sqldelight", version.ref = "sqlDelight" }
-android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
-aboutlibraries = { id = "com.mikepenz.aboutlibraries.plugin", version.ref = "aboutLibraries" }
