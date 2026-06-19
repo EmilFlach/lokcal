@@ -200,6 +200,31 @@ npm-shipped runtime assets into the wasm bundle.
 > Verification: after staging, a static server over the bundle returns `200` for `index.html`,
 > `Lokcal-shared.wasm`, `sqljs.worker.js`, `sql-wasm.js`, and `sql-wasm.wasm`.
 
+### 14. 🐞🧩 Android: `run` provisions its own emulator (downloading a system image already installed) instead of using a running device — ~8 min first run
+**No commit (tooling behavior).** `./kotlin run -m androidApp` took ~8 minutes. The build itself was
+~14s; the rest was `:androidApp:installSystemImageAndroid` downloading
+`sys-img/google_apis/arm64-v8a-35_r09.zip` into Amper's **private** cache
+(`~/Library/Caches/JetBrains/Kotlin/download.cache/`, now 2.5 GB) and booting a fresh AVD — even though:
+- the user's SDK **already has** `system-images;android-35;google_apis;arm64-v8a` installed, and
+- a device was **already running** (`adb devices` → `emulator-5554 device`).
+
+So `run` neither reused the installed system image nor the running emulator. It's a one-time download
+(cached now), but it's a rough first impression and wasteful. **Ask:** reuse the configured Android
+SDK's system images, and/or target an already-running device/emulator (an `adb`-visible device) rather
+than always provisioning a managed AVD; at minimum make the managed-emulator path opt-in.
+
+**Fast workaround** (seconds, uses your running emulator):
+```sh
+./kotlin build -m androidApp
+adb install -r build/tasks/_androidApp_buildAndroidDebug/gradle-project-debug.apk
+adb shell am start -n com.emilflach.lokcal.androidApp/com.emilflach.lokcal.AppActivity
+```
+(Verified: installs to `emulator-5554`, `topResumedActivity` = the app's `AppActivity`.)
+
+Minor co-occurring warnings (mostly host-side, noted for completeness): `SDK XML versions up to 3 but
+… version 4 was encountered` (embedded SDK tooling older than installed cmdline-tools), and a
+duplicate `platform-tools-2` location on this machine.
+
 ---
 
 ## What worked well (worth keeping / advertising)
