@@ -171,13 +171,42 @@ proper native dependency missing.
 The `.dylib` resolves but its `.sha256` sidecar doesn't — looks like a Toolchain test-runtime/skiko
 provisioning gap rather than a test bug. Not yet root-caused.
 
+### 12. 🧩 `wasm-js/app` cannot be run/served by the CLI (incomplete preview)
+**No commit (tooling limitation).** `./kotlin run -m webApp` errors:
+```
+Module 'webApp' of type 'wasm-js/app' cannot be run directly by the Kotlin Toolchain at the moment.
+```
+Per the docs the product type is an "incomplete preview": no `run`, no `package`, no dev server. You
+`./kotlin build` and serve the output yourself. The link output (`.wasm`+`.mjs`) is under
+`build/tasks/_webApp_linkWasmJs`; the **servable browser bundle** (index.html, app `.wasm`, skiko,
+worker, resources) is under `build/wasm/packages/<project>-shared/kotlin/`. For a browser Compose app
+(not a Node script) the practical loop is: build → serve that dir with any static server. **Ask:** a
+`run`/dev-server (or at least a documented `serve` recipe) for browser `wasm-js/app` — running the
+`.mjs` under Node, as the docs suggest, doesn't apply to a Compose/browser app.
+
+### 13. 🐞 WASM: npm assets that a driver's worker loads at runtime aren't staged into the bundle
+**Commit:** `deploy.sh` updated; see below.
+Although npm **dependencies** resolve automatically (§"worked well"), the runtime **assets** they ship
+are not copied into the servable bundle. Concretely: the SQLDelight web-worker driver's
+`sqljs.worker.js` does `importScripts("./sql-wasm.js")` and `locateFile`s `sql-wasm.wasm`, but neither
+`sql-wasm.js` nor `sql-wasm.wasm` is placed next to the worker — they exist only under
+`build/wasm/node_modules/sql.js/dist/`. Under Gradle this was handled by `copy-webpack-plugin`
+(declared via `devNpm(...)` + a `webpack.config.d` snippet); the Toolchain doesn't apply that, so the
+served app 404s on those files and the DB never initializes. Workaround: copy
+`sql-wasm.{js,wasm}` into the bundle dir before serving/deploying (now done in `deploy.sh`).
+**Ask:** honor `copy-webpack-plugin` / `webpack.config.d`, or provide a supported way to stage
+npm-shipped runtime assets into the wasm bundle.
+
+> Verification: after staging, a static server over the bundle returns `200` for `index.html`,
+> `Lokcal-shared.wasm`, `sqljs.worker.js`, `sql-wasm.js`, and `sql-wasm.wasm`.
+
 ---
 
 ## What worked well (worth keeping / advertising)
 
-- **WASM npm deps auto-resolved.** The web-worker SQLDelight driver pulled `sql.js` (and
-  `copy-webpack-plugin`) automatically from klib npm metadata — **no manual `npm()`/`devNpm()`
-  declarations** (Gradle required them). Pleasant surprise. (`191bb6b`)
+- **WASM npm deps auto-resolved.** The web-worker SQLDelight driver pulled `sql.js` automatically
+  from klib npm metadata — **no manual `npm()`/`devNpm()` declarations** (Gradle required them).
+  Pleasant surprise. (Caveat: the npm **assets** still need manual staging into the bundle — see §13.) (`191bb6b`)
 - **Android "just worked"** via the embedded Gradle/AGP, only needing `ANDROID_HOME`. (`55ea88d`)
 - **Version-catalog reuse**: `gradle/libs.versions.toml` consumed verbatim as `$libs.*`; only a stub
   `build.gradle.kts` is needed for Dependabot. (`487ed07`)
@@ -213,6 +242,6 @@ See `MIGRATION_PLAN.md` for the full before/after, what-replaces-what table, and
 
 ## Open / to revisit (may add findings here later)
 - Root-cause the Skiko `.sha256` test-runtime failure (§11).
-- Confirm the production WASM bundle path/command for deploy (currently using the dev bundle dir).
+- WASM: no `run`/dev-server and npm assets aren't staged (§12, §13). Revisit when the `wasm-js/app` preview matures; for now `deploy.sh` stages `sql.js` and serves the bundle dir manually.
 - Re-check whether `linkerOptions` is *supposed* to reach the iOS app link (§6) — if so, that's a bug to file with a minimal repro.
 - Whether dependency Compose-resource bundling on iOS (§8) is intended to require the app-module `compose` flag.
