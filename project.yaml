@@ -1,2 +1,7 @@
 modules:
+  - plugins/secrets
+  - secrets-demo
   - shared
+
+plugins:
+  - ./plugins/secrets

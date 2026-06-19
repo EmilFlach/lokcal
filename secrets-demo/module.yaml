@@ -1,0 +1,11 @@
+product: jvm/app
+
+settings:
+  jvm:
+    mainClass: MainKt
+
+plugins:
+  secrets:
+    enabled: true
+    objectName: KrogerConfig
+    packageName: com.emilflach.lokcal.data
