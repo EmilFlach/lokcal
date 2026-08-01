@@ -38,6 +38,10 @@ class EditMealViewModel(
         val showStealDialog: Boolean = false,
         val stealSearchQuery: String = "",
         val stealResults: List<StealImageItem> = emptyList(),
+        // Add food state
+        val showAddFoodDialog: Boolean = false,
+        val addFoodQuery: String = "",
+        val addFoodResults: List<Food> = emptyList(),
     )
 
     private val _state = MutableStateFlow(UiState())
@@ -149,5 +153,32 @@ class EditMealViewModel(
     fun stealImage(item: StealImageItem) {
         updateState { copy(imageUrl = item.imageUrl ?: "", showStealDialog = false) }
         persistMeta()
+    }
+
+    // Add food logic
+    private var addFoodSearchJob: Job? = null
+    fun openAddFoodDialog() {
+        updateState { copy(showAddFoodDialog = true, addFoodQuery = "", addFoodResults = emptyList()) }
+    }
+    fun closeAddFoodDialog() { updateState { copy(showAddFoodDialog = false) } }
+    fun setAddFoodQuery(q: String) {
+        updateState { copy(addFoodQuery = q) }
+        addFoodSearchJob?.cancel()
+        addFoodSearchJob = scope.launch {
+            val query = q.trim()
+            if (query.length < 2) {
+                updateState { copy(addFoodResults = emptyList()) }
+                return@launch
+            }
+            val foods = foodRepo.search(query)
+            updateState { copy(addFoodResults = foods) }
+        }
+    }
+    fun addFood(food: Food) {
+        updateState { copy(showAddFoodDialog = false) }
+        scope.launch {
+            repo.addMealItem(mealId, food.id, defaultPortionGrams(food))
+            reload()
+        }
     }
 }

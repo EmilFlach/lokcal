@@ -82,6 +82,11 @@ class MealRepository(database: Database) {
     suspend fun updateMealMeta(id: Long, name: String, imageUrl: String?, totalPortions: Double) =
         mealQ.updateMealMeta(name, imageUrl, totalPortions, id)
 
+    suspend fun addMealItem(mealId: Long, foodId: Long, grams: Double) {
+        require(grams >= 0.0) { "grams must be >= 0" }
+        mealQ.mealItemInsert(meal_id = mealId, food_id = foodId, quantity_g = grams)
+    }
+
     suspend fun updateMealItemQuantity(itemId: Long, grams: Double) {
         require(grams >= 0.0) { "grams must be >= 0" }
         mealQ.updateMealItemQuantity(grams, itemId)

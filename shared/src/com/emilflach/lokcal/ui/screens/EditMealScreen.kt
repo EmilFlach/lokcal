@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ImageSearch
 import androidx.compose.material.icons.outlined.Delete
@@ -23,6 +24,7 @@ import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.GramQuantityControls
 import com.emilflach.lokcal.ui.components.MealTimeItem
 import com.emilflach.lokcal.ui.components.PlatformScaffold
+import com.emilflach.lokcal.ui.dialogs.AddFoodDialog
 import com.emilflach.lokcal.ui.dialogs.StealImageDialog
 import com.emilflach.lokcal.ui.util.EntityImageData
 import com.emilflach.lokcal.viewmodel.EditMealViewModel
@@ -144,6 +146,28 @@ fun EditMealScreen(
                 )
                 Spacer(Modifier.height(2.dp))
             }
+            item {
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = { viewModel.openAddFoodDialog() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Add food")
+                }
+            }
+        }
+
+        if (state.showAddFoodDialog) {
+            AddFoodDialog(
+                onDismissRequest = { viewModel.closeAddFoodDialog() },
+                searchQuery = state.addFoodQuery,
+                onSearchQueryChange = { viewModel.setAddFoodQuery(it) },
+                results = state.addFoodResults,
+                subtitleForFood = { food -> viewModel.subtitleForFood(food, viewModel.defaultPortionGrams(food)) },
+                onFoodSelected = { viewModel.addFood(it) }
+            )
         }
 
         if (state.showStealDialog) {

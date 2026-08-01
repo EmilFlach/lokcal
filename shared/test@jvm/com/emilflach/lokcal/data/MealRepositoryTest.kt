@@ -89,6 +89,22 @@ class MealRepositoryTest {
     }
 
     @Test
+    fun testAddMealItem() = runTest {
+        val food1 = foodRepository.insertManual("Rice", 130.0, null, null, null, null, null)
+        val food2 = foodRepository.insertManual("Beans", 80.0, null, null, null, null, null)
+
+        val mealId = intakeRepository.createMeal("Meal", 1.0, listOf(food1 to 100.0))
+        assertEquals(1, repository.getMealItemsWithFood(mealId).size)
+
+        repository.addMealItem(mealId, food2, 150.0)
+
+        val items = repository.getMealItemsWithFood(mealId)
+        assertEquals(2, items.size)
+        val added = items.single { it.food.name == "Beans" }
+        assertEquals(150.0, added.quantityG)
+    }
+
+    @Test
     fun testDeleteMeal() = runTest {
         val food1 = foodRepository.insertManual("Food", 100.0, null, null, null, null, null)
         val mealId = intakeRepository.createMeal("Meal to Delete", 1.0, listOf(food1 to 100.0))
