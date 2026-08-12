@@ -5,5 +5,7 @@ actual fun allowAutomaticExerciseLogging(): Boolean {
 }
 
 internal actual suspend fun getStepsData(
-    healthClient: Any?
-): Int = -1
+    healthClient: Any?,
+    startInclusiveMillis: Long,
+    endExclusiveMillis: Long,
+): Int? = null

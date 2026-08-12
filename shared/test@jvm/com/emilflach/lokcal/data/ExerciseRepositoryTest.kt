@@ -4,7 +4,10 @@ import app.cash.sqldelight.async.coroutines.synchronous
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emilflach.lokcal.Database
 import kotlinx.coroutines.test.runTest
-import kotlin.test.*
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class ExerciseRepositoryTest {
     private lateinit var driver: JdbcSqliteDriver
@@ -61,7 +64,7 @@ class ExerciseRepositoryTest {
 
     @Test
     fun testLogAutomaticSteps() = runTest {
-        repository.logAutomaticSteps(10000)
+        repository.logAutomaticSteps("2025-01-15", 10000)
 
         val exercises = repository.getByDateRange("2020-01-01T00:00:00", "2030-12-31T23:59:59")
         assertEquals(1, exercises.size)
@@ -71,8 +74,8 @@ class ExerciseRepositoryTest {
 
     @Test
     fun testLogAutomaticStepsUpdatesExisting() = runTest {
-        repository.logAutomaticSteps(5000)
-        repository.logAutomaticSteps(8000)
+        repository.logAutomaticSteps("2025-01-15", 5000)
+        repository.logAutomaticSteps("2025-01-15", 8000)
 
         val exercises = repository.getByDateRange("2020-01-01T00:00:00", "2030-12-31T23:59:59")
         assertEquals(1, exercises.size) // Should update, not create new

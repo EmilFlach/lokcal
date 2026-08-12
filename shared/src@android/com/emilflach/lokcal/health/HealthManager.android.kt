@@ -3,47 +3,42 @@ package com.emilflach.lokcal.health
 import android.util.Log
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.records.StepsRecord
-import androidx.health.connect.client.request.ReadRecordsRequest
+import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.time.TimeRangeFilter
-import com.emilflach.lokcal.util.getTodayMillisRange
 import java.time.Instant
 
 actual fun allowAutomaticExerciseLogging(): Boolean {
     return true
 }
 
-internal actual suspend fun getStepsData(healthClient: Any?): Int {
-
-    val (startTime, endTime) = getTodayMillisRange()
-    Log.d("HealthConnect", "Attempting to read steps from $startTime to $endTime")
+internal actual suspend fun getStepsData(
+    healthClient: Any?,
+    startInclusiveMillis: Long,
+    endExclusiveMillis: Long,
+): Int? {
+    val start = Instant.ofEpochMilli(startInclusiveMillis)
+    val end = Instant.ofEpochMilli(endExclusiveMillis)
+    Log.d("HealthConnect", "Aggregating steps from $start (inclusive) to $end (exclusive)")
     return if (healthClient is HealthConnectClient) {
         try {
-            var total = 0L
-            val response = healthClient.readRecords(
-                ReadRecordsRequest(
-                    StepsRecord::class,
+            val response = healthClient.aggregate(
+                AggregateRequest(
+                    metrics = setOf(StepsRecord.COUNT_TOTAL),
                     timeRangeFilter = TimeRangeFilter.between(
-                        Instant.ofEpochMilli(startTime),
-                        Instant.ofEpochMilli(endTime)
+                        start,
+                        end,
                     )
                 )
             )
-            Log.d("HealthConnect", "Response received: ${response.records.size} records found")
-            if (response.records.isEmpty()) {
-                -1
-            } else {
-                response.records.forEach {
-                    total += it.count
-                }
-                Log.d("HealthConnect", "Total steps: $total")
-                total.toInt()
-            }
+            val total = response[StepsRecord.COUNT_TOTAL] ?: 0L
+            Log.d("HealthConnect", "Aggregated steps: $total")
+            total.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
         } catch (e: Exception) {
             Log.e("HealthConnect", "Error reading steps data", e)
-            -1
+            null
         }
     } else {
         Log.e("HealthConnect", "Health Connect client is null or invalid type: ${healthClient?.javaClass?.name}")
-        -1
+        null
     }
 }

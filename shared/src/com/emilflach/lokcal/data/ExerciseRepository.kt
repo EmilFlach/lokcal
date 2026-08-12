@@ -3,7 +3,6 @@ package com.emilflach.lokcal.data
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import com.emilflach.lokcal.Database
 import com.emilflach.lokcal.Exercise
-import com.emilflach.lokcal.util.currentDateIso
 
 class ExerciseRepository(private val db: Database) {
     private val q get() = db.exerciseQueries
@@ -29,9 +28,9 @@ class ExerciseRepository(private val db: Database) {
         q.updateExercise(exercise_type = typeName, duration_min = minutes, energy_kcal_total = total, notes = notes, id = id)
     }
 
-    suspend fun logAutomaticSteps(steps: Int) {
+    suspend fun logAutomaticSteps(dateIso: String, steps: Int) {
         val minutes = if (steps > 0) steps / 100.0 else 0.0
-        val timestamp = currentDateIso() + "T12:00:00"
+        val timestamp = dateIso + "T12:00:00"
         val existing = getByDateRange(timestamp, timestamp).firstOrNull { it.exercise_type == AUTOMATIC_STEPS_KEY }
         if (existing == null) {
             logExercise(typeName = AUTOMATIC_STEPS_KEY, kcalPerHour = AUTOMATIC_STEPS_KCAL_PER_HOUR, minutes = minutes, timestamp = timestamp)

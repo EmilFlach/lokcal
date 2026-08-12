@@ -11,16 +11,13 @@ import com.emilflach.lokcal.data.ExerciseRepository
 import com.emilflach.lokcal.data.IntakeRepository
 import com.emilflach.lokcal.data.SettingsRepository
 import com.emilflach.lokcal.data.WeightRepository
+import com.emilflach.lokcal.health.AutomaticStepsSyncManager
 import com.emilflach.lokcal.health.HealthManager
 import com.emilflach.lokcal.util.currentDateIso
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
@@ -49,7 +46,7 @@ class MainViewModel(
     val animationTrigger: StateFlow<Int> = _animationTrigger.asStateFlow()
 
     private val viewModelScope = CoroutineScope(Dispatchers.Main)
-
+    private val automaticStepsSyncManager = AutomaticStepsSyncManager(exerciseRepo, settingsRepo)
 
     init {
         loadFor(_uiState.value.selectedDate)
@@ -59,21 +56,14 @@ class MainViewModel(
     private fun startPeriodicUpdates() {
         viewModelScope.launch {
             while (isActive) {
-                fetchAndLogHealthData()
-                delay(10000.milliseconds)
-                _animationTrigger.value++
-            }
-        }
-    }
-
-    fun fetchAndLogHealthData() {
-        if(HealthManager.arePermissionsGranted()) {
-            viewModelScope.launch {
-                val steps = HealthManager.readSteps()
-                if (steps > -1) {
-                    exerciseRepo.logAutomaticSteps(steps)
+                if (
+                    HealthManager.arePermissionsGranted() &&
+                    automaticStepsSyncManager.sync()
+                ) {
                     loadFor(_uiState.value.selectedDate)
                 }
+                delay(10000.milliseconds)
+                _animationTrigger.value++
             }
         }
     }

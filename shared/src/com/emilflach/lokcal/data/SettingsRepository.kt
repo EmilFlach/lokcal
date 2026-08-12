@@ -15,6 +15,7 @@ class SettingsRepository(database: Database) {
         private const val KEY_STARTING_KCAL = "starting_kcal"
         private const val DEFAULT_STARTING_KCAL = 1690.0
         private const val KEY_ONBOARDING_COMPLETE = "onboarding_complete"
+        private const val KEY_AUTOMATIC_STEPS_DAY = "automatic_steps_day_v1"
     }
 
     suspend fun getStartingKcal(): Double {
@@ -44,6 +45,24 @@ class SettingsRepository(database: Database) {
         }
     }
 
+    suspend fun getAutomaticStepsDayState(): AutomaticStepsDayState? {
+        val encoded = try {
+            meta.getMeta(KEY_AUTOMATIC_STEPS_DAY).awaitAsOneOrNull()
+        } catch (_: Throwable) {
+            null
+        }
+        return encoded?.let(AutomaticStepsDayState::decode)
+    }
+
+    suspend fun setAutomaticStepsDayState(state: AutomaticStepsDayState): Boolean {
+        return try {
+            meta.setMeta(KEY_AUTOMATIC_STEPS_DAY, state.encode())
+            true
+        } catch (_: Throwable) {
+            false
+        }
+    }
+
     // Source preference methods
     suspend fun getSourcePreferences(): List<String> {
         return try {
@@ -69,6 +88,25 @@ class SettingsRepository(database: Database) {
             sourcePref.clearAllPreferences()
         } catch (_: Throwable) {
             // ignore
+        }
+    }
+}
+
+data class AutomaticStepsDayState(
+    val dateIso: String,
+    val startEpochMillis: Long,
+) {
+    fun encode(): String = listOf("1", dateIso, startEpochMillis).joinToString("|")
+
+    companion object {
+        fun decode(value: String): AutomaticStepsDayState? {
+            val parts = value.split('|')
+            if (parts.size < 3 || parts[0] != "1") return null
+            val startEpochMillis = parts[2].toLongOrNull() ?: return null
+            return AutomaticStepsDayState(
+                dateIso = parts[1],
+                startEpochMillis = startEpochMillis,
+            )
         }
     }
 }

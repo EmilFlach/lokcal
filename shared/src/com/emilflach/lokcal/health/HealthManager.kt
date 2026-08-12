@@ -18,7 +18,8 @@ object HealthManager {
         healthProvider = provider
     }
 
-    suspend fun readSteps(): Int = getStepsData(healthProvider)
+    suspend fun readSteps(startInclusiveMillis: Long, endExclusiveMillis: Long): Int? =
+        getStepsData(healthProvider, startInclusiveMillis, endExclusiveMillis)
 
     fun setPermissionsGranted(bool: Boolean) {
         _permissionsGranted.value = bool
@@ -35,7 +36,10 @@ object HealthManager {
     }
 }
 
-
 expect fun allowAutomaticExerciseLogging(): Boolean
 
-internal expect suspend fun getStepsData(healthClient: Any?): Int
+internal expect suspend fun getStepsData(
+    healthClient: Any?,
+    startInclusiveMillis: Long,
+    endExclusiveMillis: Long,
+): Int?
