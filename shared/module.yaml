@@ -89,3 +89,6 @@ dependencies@wasmJs:
 test-dependencies:
   - $compose.uiTest
   - $libs.kotlinx.coroutines.test
+
+test-dependencies@jvm:
+  - $compose.desktop.currentOs
