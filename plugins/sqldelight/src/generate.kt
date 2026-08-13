@@ -10,13 +10,11 @@ import org.jetbrains.amper.plugins.Input
 import org.jetbrains.amper.plugins.Output
 import org.jetbrains.amper.plugins.TaskAction
 import java.nio.file.Path
-import java.util.ServiceLoader
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.deleteRecursively
-import kotlin.io.path.isDirectory
-import kotlin.io.path.readText
-import kotlin.io.path.walk
-import kotlin.io.path.writeText
+import java.security.MessageDigest
+import java.util.*
+import kotlin.io.path.*
+
+private const val INPUT_FINGERPRINT_FILE = ".sqldelight-inputs.sha256"
 
 @OptIn(ExperimentalPathApi::class)
 @TaskAction
@@ -27,12 +25,20 @@ fun generateSqlDelight(
     databaseName: String,
     generateAsync: Boolean,
 ) {
-    generatedSourceDir.deleteRecursively()
-
     if (!sqlSourceDir.isDirectory()) {
         println("SQLDelight: source directory $sqlSourceDir does not exist, skipping")
         return
     }
+
+    val fingerprint = inputFingerprint(sqlSourceDir)
+    val fingerprintFile = generatedSourceDir.resolve(INPUT_FINGERPRINT_FILE)
+    val generatedSourcesExist = generatedSourceDir.isDirectory() &&
+        generatedSourceDir.walk().any { it.isRegularFile() && it.name.endsWith(".kt") }
+    if (generatedSourcesExist && fingerprintFile.isRegularFile() && fingerprintFile.readText() == fingerprint) {
+        return
+    }
+
+    generatedSourceDir.deleteRecursively()
 
     val dialect = ServiceLoader
         .load(SqlDelightDialect::class.java, SqlDelightDialect::class.java.classLoader)
@@ -67,11 +73,35 @@ fun generateSqlDelight(
         is CompilationStatus.Success -> {
             println("SQLDelight: code generation successful")
             fixImplPackageConflict(generatedSourceDir, packageName, databaseName)
+            fingerprintFile.writeText(fingerprint)
         }
         is CompilationStatus.Failure -> error(
             "SQLDelight: code generation failed:\n${status.errors.joinToString("\n")}"
         )
     }
+}
+
+@OptIn(ExperimentalPathApi::class)
+private fun inputFingerprint(
+    sqlSourceDir: Path,
+): String {
+    val digest = MessageDigest.getInstance("SHA-256")
+
+    fun update(value: ByteArray) {
+        digest.update(value.size.toString().toByteArray())
+        digest.update(0.toByte())
+        digest.update(value)
+    }
+
+    sqlSourceDir.walk()
+        .filter { it.isRegularFile() && it.name.endsWith(".sq") }
+        .sortedBy { sqlSourceDir.relativize(it).toString() }
+        .forEach { file ->
+            update(sqlSourceDir.relativize(file).toString().toByteArray())
+            update(file.readBytes())
+        }
+
+    return digest.digest().joinToString("") { "%02x".format(it) }
 }
 
 // SQLDelight puts the impl class in package `$packageName.$databaseName`, which conflicts with

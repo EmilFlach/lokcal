@@ -17,9 +17,9 @@
 set -e -u
 
 # The version of the Kotlin Toolchain (and CLI) distribution to provision and use
-kotlin_cli_version=0.11.0
+kotlin_cli_version=0.12.0-dev-4186
 # Establish chain of trust from here by specifying exact checksum of Kotlin Toolchain (and CLI) distribution to be run
-kotlin_cli_sha256=ff872a5bf42ad1a8fac90ccca6ac38a4d4a6aafefc39167860f66a77b1653d74
+kotlin_cli_sha256=1a5486f79da7fd1e1566dd9ccd6bc374d6cfe6ff94d766681731fec6b6d0dac5
 
 KOTLIN_CLI_DOWNLOAD_ROOT="${KOTLIN_CLI_DOWNLOAD_ROOT:-https://packages.jetbrains.team/maven/p/amper/amper}"
 
@@ -282,5 +282,39 @@ download_and_extract "Kotlin Toolchain distribution v$kotlin_cli_version" "$kotl
 
 launcher_script="$kotlin_cli_target_dir/bin/launcher.sh"
 
-KOTLIN_CLI_WRAPPER_PATH="$(realpath "$0")" \
-exec /bin/sh "$launcher_script" "$@"
+# Kotlin Toolchain currently prints the complete Android SDK package inventory on every
+# Android launch. Filter only that upstream diagnostic while preserving all other output
+# and the Toolchain's exit status.
+is_run_command=false
+for arg in "$@"; do
+  if [ "$arg" = "run" ]; then
+    is_run_command=true
+    break
+  fi
+done
+
+if [ "$is_run_command" = "false" ]; then
+  KOTLIN_CLI_WRAPPER_PATH="$(realpath "$0")" \
+  exec /bin/sh "$launcher_script" "$@"
+fi
+
+status_file=$(mktemp "${TMPDIR:-/tmp}/kotlin-cli-status.XXXXXX")
+trap 'rm -f "$status_file"' EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+(
+  set +e
+  KOTLIN_CLI_WRAPPER_PATH="$(realpath "$0")" /bin/sh "$launcher_script" "$@"
+  printf '%s\n' "$?" >"$status_file"
+) | awk '
+  index($0, "Info: SDK Manager found the following installed packages:") == 0 {
+    print
+    fflush()
+  }
+'
+
+launcher_status=$(cat "$status_file")
+rm -f "$status_file"
+trap - EXIT HUP INT TERM
+exit "$launcher_status"
