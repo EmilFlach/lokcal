@@ -15,12 +15,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.components.AppBackHandler
 import com.emilflach.lokcal.ui.components.GramQuantityControls
 import com.emilflach.lokcal.ui.components.MealTimeItem
 import com.emilflach.lokcal.ui.components.PlatformScaffold
@@ -30,7 +29,7 @@ import com.emilflach.lokcal.ui.util.EntityImageData
 import com.emilflach.lokcal.viewmodel.EditMealViewModel
 import io.ktor.http.*
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditMealScreen(
     viewModel: EditMealViewModel,
@@ -42,9 +41,9 @@ fun EditMealScreen(
     val uriHandler = LocalUriHandler.current
     val listState = rememberLazyListState()
 
-    BackHandler {
+    AppBackHandler(onBackCompleted = {
         onBack()
-    }
+    })
 
     PlatformScaffold(
         topBar = {
@@ -181,4 +180,3 @@ fun EditMealScreen(
         }
     }
 }
-

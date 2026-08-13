@@ -12,19 +12,18 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ImageSearch
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.components.AppBackHandler
 import com.emilflach.lokcal.ui.components.PlatformScaffold
 import com.emilflach.lokcal.ui.components.SingleInputAlertDialog
 import com.emilflach.lokcal.ui.dialogs.StealImageDialog
 import io.ktor.http.*
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FoodEditScreen(
     viewModel: com.emilflach.lokcal.viewmodel.FoodEditViewModel,
@@ -35,9 +34,9 @@ fun FoodEditScreen(
     val colors = LocalRecipesColors.current
     val uriHandler = LocalUriHandler.current
 
-    BackHandler {
+    AppBackHandler(onBackCompleted = {
         onBack()
-    }
+    })
 
     // Initialize edit state when entering screen
     LaunchedEffect(foodId) {

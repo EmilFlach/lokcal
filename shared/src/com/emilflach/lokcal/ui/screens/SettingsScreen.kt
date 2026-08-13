@@ -11,9 +11,7 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.input.KeyboardType
@@ -22,12 +20,13 @@ import com.emilflach.lokcal.backup.BackupManager
 import com.emilflach.lokcal.data.SettingsRepository
 import com.emilflach.lokcal.health.HealthManager
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.components.AppBackHandler
 import com.emilflach.lokcal.ui.components.PlatformScaffold
 import com.emilflach.lokcal.ui.components.SingleInputAlertDialog
 import com.emilflach.lokcal.ui.components.getRoundedCornerShape
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
@@ -44,9 +43,9 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
-    BackHandler {
+    AppBackHandler(onBackCompleted = {
         onBack()
-    }
+    })
 
     PlatformScaffold(
         topBar = {

@@ -14,9 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.data.ExerciseRepository
@@ -27,7 +25,7 @@ import com.emilflach.lokcal.ui.util.EntityImageData
 import com.emilflach.lokcal.viewmodel.ExerciseListViewModel
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExerciseListScreen(
     viewModel: ExerciseListViewModel,
@@ -48,9 +46,9 @@ fun ExerciseListScreen(
         state.items.filter { it.exercise_type != ExerciseRepository.AUTOMATIC_STEPS_KEY }
     }
 
-    BackHandler {
+    AppBackHandler(onBackCompleted = {
         onBack()
-    }
+    })
 
     PlatformScaffold(
         topBar = {

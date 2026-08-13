@@ -5,11 +5,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.backhandler.BackHandler
 import com.emilflach.lokcal.StatsMostEatenByKcal
 import com.emilflach.lokcal.WeightLog
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.components.AppBackHandler
 import com.emilflach.lokcal.ui.components.PlatformScaffold
 import com.emilflach.lokcal.viewmodel.StatisticsViewModel
 
@@ -18,10 +17,10 @@ private const val DEMO_END = "2026-04-09"
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatisticsDemoScreen(onBack: () -> Unit) {
-    BackHandler { onBack() }
+    AppBackHandler(onBackCompleted = { onBack() })
 
     val scenario = remember { buildDemoScenario() }
     var period by remember { mutableStateOf(StatisticsViewModel.Period.MONTH) }

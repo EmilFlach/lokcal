@@ -12,9 +12,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.camera.CameraManager
@@ -27,7 +25,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IntakeScreen(
     viewModel: IntakeViewModel,
@@ -41,9 +39,9 @@ fun IntakeScreen(
     val listState = rememberLazyListState()
     val state by viewModel.state.collectAsState()
 
-    BackHandler {
+    AppBackHandler(onBackCompleted = {
         onDone(false)
-    }
+    })
 
     var waitingForCameraPermission by remember { mutableStateOf(false) }
     var showItems by remember { mutableStateOf(false) }
@@ -157,7 +155,7 @@ fun IntakeScreen(
     )
 
     if (state.showScanner) {
-        BackHandler { viewModel.setShowScanner(false) }
+        AppBackHandler(onBackCompleted = { viewModel.setShowScanner(false) })
     }
 }
 

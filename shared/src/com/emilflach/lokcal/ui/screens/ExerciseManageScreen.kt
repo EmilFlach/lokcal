@@ -15,9 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
@@ -25,6 +23,7 @@ import coil3.compose.AsyncImage
 import com.emilflach.lokcal.data.ExerciseRepository
 import com.emilflach.lokcal.health.HealthManager
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.components.AppBackHandler
 import com.emilflach.lokcal.ui.components.MealTopBar
 import com.emilflach.lokcal.ui.components.PlatformScaffold
 import com.emilflach.lokcal.ui.components.getRoundedCornerShape
@@ -33,7 +32,7 @@ import com.emilflach.lokcal.ui.util.LocalImageCache
 import com.emilflach.lokcal.ui.util.rememberKtorImageLoader
 import com.emilflach.lokcal.viewmodel.ExerciseManageViewModel
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExerciseManageScreen(
     viewModel: ExerciseManageViewModel,
@@ -48,7 +47,7 @@ fun ExerciseManageScreen(
         else types.filter { it.name != ExerciseRepository.AUTOMATIC_STEPS_KEY }
     val listState = rememberLazyListState()
 
-    BackHandler { onBack() }
+    AppBackHandler(onBackCompleted = { onBack() })
 
     PlatformScaffold(
         topBar = {

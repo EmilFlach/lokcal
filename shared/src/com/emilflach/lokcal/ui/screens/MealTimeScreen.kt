@@ -6,9 +6,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.runtime.*
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.input.KeyboardType
@@ -18,7 +16,7 @@ import com.emilflach.lokcal.util.NumberUtils.sanitizeDecimalInput
 import com.emilflach.lokcal.viewmodel.MealTimeViewModel
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MealTimeScreen(
     viewModel: MealTimeViewModel,
@@ -29,9 +27,9 @@ fun MealTimeScreen(
     val color = LocalRecipesColors.current
     val haptic = LocalHapticFeedback.current
 
-    BackHandler {
+    AppBackHandler(onBackCompleted = {
         onBack()
-    }
+    })
     val state by viewModel.state.collectAsState()
     val showSaveMealDialog by viewModel.showSaveMealDialog.collectAsState()
 

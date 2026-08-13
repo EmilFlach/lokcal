@@ -13,12 +13,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.components.AppBackHandler
 import com.emilflach.lokcal.ui.components.PlatformScaffold
 import com.emilflach.lokcal.ui.components.getRoundedCornerShape
 import com.mikepenz.aboutlibraries.entity.Library
@@ -26,13 +25,13 @@ import com.mikepenz.aboutlibraries.ui.compose.produceLibraries
 import lokcal.shared.generated.resources.Res
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class, ExperimentalResourceApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalResourceApi::class)
 @Composable
 fun LicensesScreen(onBack: () -> Unit) {
     val colors = LocalRecipesColors.current
     val listState = rememberLazyListState()
 
-    BackHandler { onBack() }
+    AppBackHandler(onBackCompleted = { onBack() })
 
     val libraries by produceLibraries {
         Res.readBytes("files/aboutlibraries.json").decodeToString()

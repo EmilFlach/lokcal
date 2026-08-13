@@ -37,7 +37,7 @@ dependencies:
   - $compose.material3
   - $compose.components.resources
   - $libs.compose.material.icons.extended
-  - $libs.ui.backhandler
+  - $libs.androidx.navigationevent.compose
   - $libs.kotlinx.coroutines.core
   - $libs.ktor.client.core
   - $libs.ktor.client.content.negotiation

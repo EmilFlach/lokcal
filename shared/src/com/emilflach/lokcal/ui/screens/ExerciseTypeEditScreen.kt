@@ -15,17 +15,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.data.ExerciseRepository
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import com.emilflach.lokcal.ui.components.AppBackHandler
 import com.emilflach.lokcal.ui.components.PlatformScaffold
 import com.emilflach.lokcal.viewmodel.ExerciseManageViewModel
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExerciseTypeEditScreen(
     viewModel: ExerciseManageViewModel,
@@ -35,7 +34,7 @@ fun ExerciseTypeEditScreen(
 ) {
     val colors = LocalRecipesColors.current
 
-    BackHandler { onBack() }
+    AppBackHandler(onBackCompleted = { onBack() })
 
     LaunchedEffect(exerciseTypeId) {
         viewModel.startEditing(exerciseTypeId)

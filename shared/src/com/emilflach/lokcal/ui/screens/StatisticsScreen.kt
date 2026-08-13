@@ -16,9 +16,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -28,23 +26,20 @@ import com.emilflach.lokcal.StatsMostEatenByKcal
 import com.emilflach.lokcal.WeightLog
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.theme.RecipesColors
-import com.emilflach.lokcal.ui.components.InfoAlertDialog
-import com.emilflach.lokcal.ui.components.PlatformPadding
-import com.emilflach.lokcal.ui.components.PlatformScaffold
-import com.emilflach.lokcal.ui.components.getRoundedCornerShape
+import com.emilflach.lokcal.ui.components.*
 import com.emilflach.lokcal.viewmodel.StatisticsViewModel
 import ir.ehsannarmani.compose_charts.LineChart
 import ir.ehsannarmani.compose_charts.models.*
 import ir.ehsannarmani.compose_charts.models.DrawStyle.Stroke
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatisticsScreen(
     viewModel: StatisticsViewModel,
     onBack: () -> Unit,
     onOpenDemo: (() -> Unit)? = null
 ) {
-    BackHandler { onBack() }
+    AppBackHandler(onBackCompleted = { onBack() })
 
     val isLoading by viewModel.isLoading.collectAsState()
     val topFoods by viewModel.topFoods.collectAsState()

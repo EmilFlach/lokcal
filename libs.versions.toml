@@ -8,6 +8,7 @@ kotlinx-coroutines = "1.10.2"
 kscan = "0.4.0"
 ktor = "3.4.1"
 androidx-navigation = "1.0.0-alpha06"
+androidx-navigationEvent = "1.0.1"
 compose-multiplatform-navigation3-browser = "0.3.1"
 kotlinx-serialization = "1.10.0"
 coil = "3.4.0"
@@ -16,7 +17,6 @@ sqlDelight = "2.2.1"
 slf4j = "2.0.17"
 filekit = "0.13.0"
 documentfile = "1.1.0"
-uiBackhandler = "1.10.2"
 workRuntimeKtx = "2.11.1"
 haze = "1.7.2"
 aboutLibraries = "14.0.1"
@@ -45,6 +45,7 @@ ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "k
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 androidx-navigation-compose = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "androidx-navigation" }
+androidx-navigationevent-compose = { module = "org.jetbrains.androidx.navigationevent:navigationevent-compose", version.ref = "androidx-navigationEvent" }
 navigation3-browser = { module = "com.github.terrakok:navigation3-browser", version.ref = "compose-multiplatform-navigation3-browser" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 coil = { module = "io.coil-kt.coil3:coil-compose-core", version.ref = "coil" }
@@ -63,10 +64,8 @@ filekit-dialogs = { module = "io.github.vinceglb:filekit-dialogs", version.ref =
 filekit-dialogs-compose = { module = "io.github.vinceglb:filekit-dialogs-compose", version.ref = "filekit" }
 androidx-documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "documentfile" }
 androidx-work-runtime = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
-ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", version.ref = "uiBackhandler" }
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 aboutlibraries-core = { module = "com.mikepenz:aboutlibraries-core", version.ref = "aboutLibraries" }
 aboutlibraries-compose-m3 = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutLibraries" }
 compose-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "composeMaterialIconsExtended" }
 kotlinx-browser = { module = "org.jetbrains.kotlinx:kotlinx-browser", version.ref = "kotlinxBrowser" }
-
