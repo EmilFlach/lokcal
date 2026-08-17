@@ -21,6 +21,22 @@ object HealthManager {
     suspend fun readSteps(startInclusiveMillis: Long, endExclusiveMillis: Long): Int? =
         getStepsData(healthProvider, startInclusiveMillis, endExclusiveMillis)
 
+    /** Reads elapsed-hour buckets; callers map each instant back to the local clock hour. */
+    internal suspend fun readStepsByHour(
+        startInclusiveMillis: Long,
+        endExclusiveMillis: Long,
+    ): List<TimedSteps>? {
+        val result = mutableListOf<TimedSteps>()
+        var start = startInclusiveMillis
+        while (start < endExclusiveMillis) {
+            val end = minOf(start + MILLIS_PER_HOUR, endExclusiveMillis)
+            val steps = getStepsData(healthProvider, start, end) ?: return null
+            result += TimedSteps(startEpochMillis = start, count = steps)
+            start = end
+        }
+        return result
+    }
+
     fun setPermissionsGranted(bool: Boolean) {
         _permissionsGranted.value = bool
     }
@@ -35,6 +51,10 @@ object HealthManager {
         requestPermissionsCallback?.invoke()
     }
 }
+
+internal data class TimedSteps(val startEpochMillis: Long, val count: Int)
+
+private const val MILLIS_PER_HOUR = 60L * 60L * 1_000L
 
 expect fun allowAutomaticExerciseLogging(): Boolean
 

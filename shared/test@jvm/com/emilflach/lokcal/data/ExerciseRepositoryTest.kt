@@ -83,6 +83,19 @@ class ExerciseRepositoryTest {
     }
 
     @Test
+    fun testHourlyAutomaticStepsReplaceDailyNoonTotal() = runTest {
+        repository.logAutomaticSteps("2025-01-15", 8_000)
+        repository.logAutomaticStepsByHour(
+            dateIso = "2025-01-15",
+            stepsByHour = mapOf(8 to 1_000, 17 to 2_500),
+        )
+
+        val exercises = repository.getByDateRange("2025-01-15T00:00:00", "2025-01-15T23:59:59")
+        assertEquals(listOf("2025-01-15T17:00:00", "2025-01-15T08:00:00"), exercises.map { it.timestamp })
+        assertEquals(35.0, exercises.sumOf { it.duration_min })
+    }
+
+    @Test
     fun testUpdateExercise() = runTest {
         repository.logExercise(
             typeName = "Walking",

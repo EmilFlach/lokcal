@@ -19,6 +19,9 @@ SELECT * FROM Exercise WHERE timestamp BETWEEN ? AND ? ORDER BY timestamp DESC;
 updateExercise:
 UPDATE Exercise SET exercise_type = ?, duration_min = ?, energy_kcal_total = ?, notes = ? WHERE id = ?;
 
+updateExerciseTimestamp:
+UPDATE Exercise SET timestamp = ? WHERE id = ?;
+
 deleteExerciseById:
 DELETE FROM Exercise WHERE id = ?;
 

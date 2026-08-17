@@ -23,7 +23,6 @@ import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.*
 import com.emilflach.lokcal.ui.util.EntityImageData
 import com.emilflach.lokcal.viewmodel.ExerciseListViewModel
-import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,7 +66,11 @@ fun ExerciseListScreen(
             state = listState
         ) {
             item {
-                MealTimeTotalKcal(state.totalKcal.roundToInt())
+                DailyBurnChart(
+                    bucketKcal = state.bucketKcal,
+                    totalKcal = state.totalKcal,
+                    modifier = Modifier.padding(bottom = 20.dp),
+                )
             }
 
             if (showHealthBanner) {
@@ -137,9 +140,13 @@ fun ExerciseListScreen(
 
                 MealTimeItem(
                     title = label,
-                    subtitle = if (e.exercise_type == ExerciseRepository.AUTOMATIC_STEPS_KEY)
-                        "${e.duration_min.toInt()} min · ${e.energy_kcal_total.toInt()} kcal"
-                    else "${e.energy_kcal_total.toInt()} kcal",
+                    subtitle = when {
+                        e.exercise_type == ExerciseRepository.AUTOMATIC_STEPS_KEY ->
+                            "${e.duration_min.toInt()} min · ${e.energy_kcal_total.toInt()} kcal"
+                        e.energy_kcal_total > 0 ->
+                            "${e.energy_kcal_total.toInt()} kcal · ${e.timestamp.toDisplayTime()}"
+                        else -> "${e.energy_kcal_total.toInt()} kcal"
+                    },
                     index = actualIndex,
                     size = totalSize,
                     imageUrl = imageUrl,
@@ -160,3 +167,6 @@ fun ExerciseListScreen(
         }
     }
 }
+
+private fun String.toDisplayTime(): String =
+    substringAfter('T', "").take(5).takeIf { it.length == 5 } ?: "--:--"

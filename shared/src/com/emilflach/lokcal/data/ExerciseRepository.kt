@@ -28,6 +28,9 @@ class ExerciseRepository(private val db: Database) {
         q.updateExercise(exercise_type = typeName, duration_min = minutes, energy_kcal_total = total, notes = notes, id = id)
     }
 
+    suspend fun updateTimestamp(id: Long, timestamp: String) =
+        q.updateExerciseTimestamp(timestamp = timestamp, id = id)
+
     suspend fun logAutomaticSteps(dateIso: String, steps: Int) {
         val minutes = if (steps > 0) steps / 100.0 else 0.0
         val timestamp = dateIso + "T12:00:00"
@@ -36,6 +39,36 @@ class ExerciseRepository(private val db: Database) {
             logExercise(typeName = AUTOMATIC_STEPS_KEY, kcalPerHour = AUTOMATIC_STEPS_KCAL_PER_HOUR, minutes = minutes, timestamp = timestamp)
         } else {
             updateExercise(id = existing.id, typeName = AUTOMATIC_STEPS_KEY, kcalPerHour = AUTOMATIC_STEPS_KCAL_PER_HOUR, minutes = minutes, notes = existing.notes)
+        }
+    }
+
+    /** Replaces the daily automatic-step total with records at their actual local hours. */
+    suspend fun logAutomaticStepsByHour(dateIso: String, stepsByHour: Map<Int, Int>) {
+        val start = "${dateIso}T00:00:00"
+        val end = "${dateIso}T23:59:59"
+        val existing = getByDateRange(start, end)
+            .filter { it.exercise_type == AUTOMATIC_STEPS_KEY }
+
+        for (hour in 0..23) {
+            val timestamp = dateIso + "T" + hour.toString().padStart(2, '0') + ":00:00"
+            val row = existing.firstOrNull { it.timestamp == timestamp }
+            val steps = stepsByHour[hour] ?: 0
+            when {
+                steps > 0 && row == null -> logExercise(
+                    typeName = AUTOMATIC_STEPS_KEY,
+                    kcalPerHour = AUTOMATIC_STEPS_KCAL_PER_HOUR,
+                    minutes = steps / 100.0,
+                    timestamp = timestamp,
+                )
+                steps > 0 && row != null -> updateExercise(
+                    id = row.id,
+                    typeName = AUTOMATIC_STEPS_KEY,
+                    kcalPerHour = AUTOMATIC_STEPS_KCAL_PER_HOUR,
+                    minutes = steps / 100.0,
+                    notes = row.notes,
+                )
+                row != null -> deleteById(row.id)
+            }
         }
     }
 

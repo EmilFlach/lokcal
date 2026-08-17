@@ -109,6 +109,29 @@ class AutomaticStepsSyncManagerTest {
     }
 
     @Test
+    fun hourlyReadsAreStoredAtTheirLocalClockHours() = runTest {
+        val zone = TimeZone.of("Europe/Amsterdam")
+        val eight = instant("2025-07-12T08:00:00", zone.id).toEpochMilliseconds()
+        val nine = instant("2025-07-12T09:00:00", zone.id).toEpochMilliseconds()
+
+        assertTrue(
+            manager().sync(
+                now = instant("2025-07-12T10:00:00", zone.id),
+                timeZone = zone,
+                readSteps = { _, _ -> error("Daily reader should not be used") },
+                readHourlySteps = { _, _ ->
+                    listOf(TimedSteps(eight, 1_000), TimedSteps(nine, 2_000))
+                },
+            )
+        )
+
+        val exercises = exerciseRepository
+            .getByDateRange("2025-07-12T00:00:00", "2025-07-12T23:59:59")
+        assertEquals(setOf("2025-07-12T08:00:00", "2025-07-12T09:00:00"), exercises.map { it.timestamp }.toSet())
+        assertEquals(30.0, exercises.sumOf { it.duration_min })
+    }
+
+    @Test
     fun rolloverUsesDstAwareLocalMidnights() = runTest {
         val amsterdam = TimeZone.of("Europe/Amsterdam")
         suspend fun assertDayLength(dateIso: String, nextDateIso: String, expectedHours: Long) {

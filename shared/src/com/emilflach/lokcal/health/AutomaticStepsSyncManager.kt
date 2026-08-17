@@ -22,12 +22,14 @@ class AutomaticStepsSyncManager(
         now = Clock.System.now(),
         timeZone = TimeZone.currentSystemDefault(),
         readSteps = HealthManager::readSteps,
+        readHourlySteps = HealthManager::readStepsByHour,
     )
 
     internal suspend fun sync(
         now: Instant,
         timeZone: TimeZone,
         readSteps: suspend (Long, Long) -> Int?,
+        readHourlySteps: (suspend (Long, Long) -> List<TimedSteps>?)? = null,
     ): Boolean {
         val nowMillis = now.toEpochMilliseconds()
         val localDate = now.toLocalDateTime(timeZone).date
@@ -43,8 +45,14 @@ class AutomaticStepsSyncManager(
                 val dayDifference = localDate.toEpochDays() - storedDate.toEpochDays()
                 val boundary = localDate.atStartOfDayIn(timeZone).toEpochMilliseconds()
                 if (dayDifference == 1L && boundary > state.startEpochMillis) {
-                    val previousCount = readSteps(state.startEpochMillis, boundary) ?: return false
-                    exerciseRepository.logAutomaticSteps(state.dateIso, previousCount)
+                    if (!readAndStoreSteps(
+                            dateIso = state.dateIso,
+                            startMillis = state.startEpochMillis,
+                            endMillis = boundary,
+                            timeZone = timeZone,
+                            readSteps = readSteps,
+                            readHourlySteps = readHourlySteps,
+                        )) return false
                 }
 
                 state = newState(localDate, timeZone)
@@ -53,8 +61,35 @@ class AutomaticStepsSyncManager(
         }
 
         if (nowMillis <= state.startEpochMillis) return false
-        val count = readSteps(state.startEpochMillis, nowMillis) ?: return false
-        exerciseRepository.logAutomaticSteps(state.dateIso, count)
+        return readAndStoreSteps(
+            dateIso = state.dateIso,
+            startMillis = state.startEpochMillis,
+            endMillis = nowMillis,
+            timeZone = timeZone,
+            readSteps = readSteps,
+            readHourlySteps = readHourlySteps,
+        )
+    }
+
+    private suspend fun readAndStoreSteps(
+        dateIso: String,
+        startMillis: Long,
+        endMillis: Long,
+        timeZone: TimeZone,
+        readSteps: suspend (Long, Long) -> Int?,
+        readHourlySteps: (suspend (Long, Long) -> List<TimedSteps>?)?,
+    ): Boolean {
+        if (readHourlySteps == null) {
+            val count = readSteps(startMillis, endMillis) ?: return false
+            exerciseRepository.logAutomaticSteps(dateIso, count)
+            return true
+        }
+
+        val timedSteps = readHourlySteps(startMillis, endMillis) ?: return false
+        val stepsByHour = timedSteps
+            .groupBy { Instant.fromEpochMilliseconds(it.startEpochMillis).toLocalDateTime(timeZone).hour }
+            .mapValues { (_, buckets) -> buckets.sumOf { it.count } }
+        exerciseRepository.logAutomaticStepsByHour(dateIso, stepsByHour)
         return true
     }
 
