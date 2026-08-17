@@ -282,39 +282,178 @@ download_and_extract "Kotlin Toolchain distribution v$kotlin_cli_version" "$kotl
 
 launcher_script="$kotlin_cli_target_dir/bin/launcher.sh"
 
-# Kotlin Toolchain currently prints the complete Android SDK package inventory on every
-# Android launch. Filter only that upstream diagnostic while preserving all other output
-# and the Toolchain's exit status.
+# Keep normal CLI commands untouched. Interactive app runs get a compact progress display;
+# redirected runs stay line-based for logs and CI, with the Toolchain exit status preserved.
 is_run_command=false
+is_help_request=false
+parsing_cli_options=true
 for arg in "$@"; do
+  if [ "$arg" = "--" ]; then
+    parsing_cli_options=false
+    continue
+  fi
   if [ "$arg" = "run" ]; then
     is_run_command=true
-    break
+  fi
+  if [ "$parsing_cli_options" = "true" ] && { [ "$arg" = "-h" ] || [ "$arg" = "--help" ]; }; then
+    is_help_request=true
   fi
 done
 
-if [ "$is_run_command" = "false" ]; then
+if [ "$is_run_command" = "false" ] || [ "$is_help_request" = "true" ]; then
   KOTLIN_CLI_WRAPPER_PATH="$(realpath "$0")" \
   exec /bin/sh "$launcher_script" "$@"
 fi
 
 status_file=$(mktemp "${TMPDIR:-/tmp}/kotlin-cli-status.XXXXXX")
-trap 'rm -f "$status_file"' EXIT
+latest_status_file=$(mktemp "${TMPDIR:-/tmp}/kotlin-cli-progress.XXXXXX")
+progress_enabled=false
+progress_columns=100
+progress_pid=""
+run_started_at=$(date +%s)
+
+if [ -t 1 ]; then
+  progress_enabled=true
+  detected_columns=$(tput cols 2>/dev/null || true)
+  case "$detected_columns" in
+    ''|*[!0-9]*) ;;
+    *) progress_columns=$detected_columns ;;
+  esac
+fi
+
+progress_renderer() {
+  progress_position=0
+  progress_direction=1
+  progress_status="Starting Kotlin Toolchain..."
+  progress_status_width=$((progress_columns - 26))
+  if [ "$progress_status_width" -lt 12 ]; then
+    progress_status_width=12
+  fi
+
+  # Prevent a long status from wrapping onto another row while this line is active.
+  printf '\033[?7l'
+  while :; do
+    updated_progress_status=""
+    if IFS= read -r updated_progress_status <"$latest_status_file" && [ -n "$updated_progress_status" ]; then
+      progress_status=$updated_progress_status
+    fi
+
+    progress_right_width=$((13 - progress_position))
+    printf '\r\033[2K\033[36m[%*s=====%*s]\033[0m %.*s' \
+      "$progress_position" "" \
+      "$progress_right_width" "" \
+      "$progress_status_width" "$progress_status"
+
+    if [ "$progress_position" -ge 13 ]; then
+      progress_direction=-1
+    elif [ "$progress_position" -le 0 ]; then
+      progress_direction=1
+    fi
+    progress_position=$((progress_position + progress_direction))
+    sleep 0.12
+  done
+}
+
+stop_progress_renderer() {
+  if [ -n "$progress_pid" ]; then
+    kill "$progress_pid" 2>/dev/null || true
+    wait "$progress_pid" 2>/dev/null || true
+    progress_pid=""
+  fi
+  if [ "$progress_enabled" = "true" ]; then
+    printf '\r\033[2K\033[?7h'
+  fi
+}
+
+cleanup_run() {
+  stop_progress_renderer
+  rm -f "$status_file" "$latest_status_file"
+}
+
+trap cleanup_run EXIT
 trap 'exit 129' HUP
 trap 'exit 130' INT
 trap 'exit 143' TERM
+
+if [ "$progress_enabled" = "true" ]; then
+  printf '%s\n' 'Starting Kotlin Toolchain...' >"$latest_status_file"
+  progress_renderer &
+  progress_pid=$!
+fi
+
 (
   set +e
   KOTLIN_CLI_WRAPPER_PATH="$(realpath "$0")" /bin/sh "$launcher_script" "$@"
   printf '%s\n' "$?" >"$status_file"
-) | awk '
-  index($0, "Info: SDK Manager found the following installed packages:") == 0 {
+) | awk -v progress_enabled="$progress_enabled" -v latest_status_file="$latest_status_file" '
+  function clean_status(line) {
+    sub(/^INFO  /, "", line)
+    sub(/^✓ /, "", line)
+    return line
+  }
+
+  function is_important(line, lower_line) {
+    lower_line = tolower(line)
+    return index(lower_line, "error:") != 0 || \
+           index(lower_line, "warning:") != 0 || \
+           index(lower_line, "failed:") != 0
+  }
+
+  function is_error(line, lower_line) {
+    lower_line = tolower(line)
+    return index(lower_line, "error:") != 0 || \
+           index(lower_line, "failed:") != 0
+  }
+
+  # Hide known non-actionable upstream chatter while preserving warnings and errors.
+  index($0, "Info: SDK Manager found the following installed packages:") != 0 { next }
+  index($0, "INFO  note: ") == 1 { next }
+  index($0, "Metadata extraction skipped. No AppIntents.framework dependency found.") != 0 { next }
+
+  # xcbeautify can report the same summarized action twice for distinct debug binaries.
+  $0 == previous_line { next }
+
+  {
+    previous_line = $0
+
+    if (progress_enabled == "true") {
+      status = clean_status($0)
+      if (is_important($0)) {
+        if (is_error($0)) {
+          failure_context = 1
+        }
+        printf "\r\033[2K\033[?7h%s\n\033[?7l", $0
+        fflush()
+      } else if (failure_context && $0 !~ /^INFO  / && $0 !~ /^✓ /) {
+        printf "\r\033[2K\033[?7h%s\n\033[?7l", $0
+        fflush()
+      } else {
+        failure_context = 0
+        print status > latest_status_file
+        close(latest_status_file)
+      }
+      next
+    }
+
     print
     fflush()
   }
 '
 
 launcher_status=$(cat "$status_file")
-rm -f "$status_file"
+latest_status=$(cat "$latest_status_file")
+run_finished_at=$(date +%s)
+run_elapsed=$((run_finished_at - run_started_at))
+
+if [ "$progress_enabled" = "true" ]; then
+  stop_progress_renderer
+  if [ "$launcher_status" -eq 0 ]; then
+    printf '\033[32m✓\033[0m %s (%ss)\n' "${latest_status:-App launched}" "$run_elapsed"
+  else
+    printf '\033[31m✗\033[0m Run failed (%ss)\n' "$run_elapsed"
+  fi
+fi
+
+rm -f "$status_file" "$latest_status_file"
 trap - EXIT HUP INT TERM
 exit "$launcher_status"
