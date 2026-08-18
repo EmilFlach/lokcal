@@ -1,98 +1,50 @@
 package com.emilflach.lokcal.data
 
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.logging.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import kotlinx.serialization.json.Json
-
 /**
- * Searches the Albert Heijn website and returns up to the top 3 product results as OffItem models.
- * For each result, we fetch the product page using the existing AlbertHeijnWebFetcher to obtain
- * detailed fields (name, kcal/100g, serving size, image, gtin13).
+ * Searches Albert Heijn and returns the top results as [OnlineFoodItem]s.
+ *
+ * Two requests per search: one relevance search for candidate ids, then one batched GraphQL call
+ * that fetches nutrition, GTIN and imagery for all of them at once.
  */
 open class AlbertHeijnSearch(
-    private val fetcher: AlbertHeijnWebFetcher = AlbertHeijnWebFetcher(),
-    private val client: HttpClient = defaultClient,
+    private val api: AlbertHeijnApi = AlbertHeijnApi(),
+    private val parser: AlbertHeijnProductParser = AlbertHeijnProductParser(),
 ) {
     companion object {
-        private const val BASE = "https://www.ah.nl"
-        private val defaultClient by lazy {
-            HttpClient {
-                install(ContentNegotiation) {
-                    json(Json { ignoreUnknownKeys = true })
-                }
-                install(Logging) { level = LogLevel.INFO }
-                install(HttpTimeout) {
-                    requestTimeoutMillis = 10000
-                    connectTimeoutMillis = 10000
-                    socketTimeoutMillis = 10000
-                }
-            }
-        }
+        /** How many results to surface. */
+        private const val MAX_RESULTS = 5
+
+        /**
+         * How many to ask Albert Heijn for. Deliberately larger than [MAX_RESULTS]: virtual bundles
+         * get filtered out, and for staples like "melk" they can crowd out most of a small page.
+         */
+        private const val SEARCH_SIZE = 20
     }
 
     open suspend fun search(query: String): List<OnlineFoodItem> {
         if (query.isBlank()) return emptyList()
-        val url = "$BASE/zoeken?query=" + query.encodeURLParameter()
-        val html = fetchSearchHtml(url)
 
-        val links = extractTopProductLinks(html)
-        if (links.isEmpty()) return emptyList()
+        val hits = api.searchProducts(query, SEARCH_SIZE).take(MAX_RESULTS)
+        if (hits.isEmpty()) return emptyList()
 
-        return coroutineScope {
-            // scrape in parallel but keep ordering of top results
-            links.map { link ->
-                async {
-                    val abs = if (link.startsWith("http")) link else BASE + link
-                    runCatching { fetcher.fetchProduct(abs) }.getOrNull()?.let { s ->
-                        OnlineFoodItem(
-                            name = s.name ?: abs,
-                            gtin13 = s.gtin13,
-                            energyKcalPer100g = s.kcalPer100g,
-                            servingSize = s.servingSizeGrams,
-                            productUrl = s.productUrl,
-                            imageUrl = s.imageUrl,
-                            dutchName = s.name,
-                        )
-                    }
-                }
-            }.mapNotNull { it.await() }
+        val products = api.fetchProducts(hits.map { it.webshopId })
+
+        // Keep Albert Heijn's relevance order rather than the map's.
+        return hits.mapNotNull { hit ->
+            products[hit.webshopId]?.let { toOnlineFoodItem(parser.parse(it), fallbackName = hit.title) }
         }
     }
 
-    protected open suspend fun fetchSearchHtml(url: String): String {
-        return client.get(url) {
-            accept(ContentType.Text.Html)
-            header(HttpHeaders.Referrer, BASE)
-        }.body<String>()
-    }
-
-    private fun extractTopProductLinks(html: String, max: Int = 5): List<String> {
-        // AH embeds product data as escaped JSON in the HTML
-        // Format: \\"webPath\\":\\"/producten/product/wi194759/remia-friteslijn\\"
-        val pattern = """\\\"webPath\\\":\\\"/producten/product/wi\d+/[^\\\"]+\\\""""
-        val results = mutableListOf<String>()
-
-        for (match in Regex(pattern).findAll(html)) {
-            // Extract the path: /producten/product/wi123/name
-            val path = Regex("""/producten/product/wi\d+/[^\\\"]+""").find(match.value)?.value
-            if (path != null && !results.contains(path)) {
-                results.add(path)
-                if (results.size >= max) break
-            }
-        }
-
-        if (results.isEmpty() && html.length > 500) {
-            println("[DEBUG_LOG] No product links found in AH search results (HTML length: ${html.length})")
-        }
-
-        return results
-    }
+    private fun toOnlineFoodItem(
+        result: AlbertHeijnProductParser.FoodFetchResult,
+        fallbackName: String,
+    ) = OnlineFoodItem(
+        name = result.name ?: fallbackName,
+        gtin13 = result.gtin13,
+        energyKcalPer100g = result.kcalPer100g,
+        servingSize = result.servingSizeGrams,
+        productUrl = result.productUrl,
+        imageUrl = result.imageUrl,
+        dutchName = result.name,
+    )
 }
