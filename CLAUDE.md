@@ -1,63 +1,57 @@
 # Lokcal — Claude Code Instructions
 
-## Project
-Privacy-first calorie tracking app built with Kotlin Multiplatform (KMP) + Compose Multiplatform.
-Targets: Android, iOS, Desktop (JVM), Web (WASM).
+Privacy-first calorie tracking app (no telemetry). KMP + Compose Multiplatform → Android, iOS, Desktop (JVM), Web (Wasm).
 
-## Build & Test Strategy
+## Build & Test
 
-This project is built with the **Kotlin Toolchain** (Amper engine) via the `./kotlin` wrapper — **not Gradle**. There are no Gradle build files; modules are declared in `module.yaml` + `project.yaml`. The dependency catalog is `libs.versions.toml` at the **project root**, consumed natively as `$libs.*`.
+Built with the **Kotlin Toolchain** (Amper engine) via `./kotlin` — **not Gradle**. Modules are declared in `module.yaml` + `project.yaml`; the catalog is `libs.versions.toml` at the **project root**, used as `$libs.*`. **Never write versions into this file** — read them there, or `kotlin_cli_version` in `./kotlin` for Kotlin/Compose MP.
 
-**Rules:** Compile the JVM/desktop target first (fastest) to catch errors. Build per-module (`-m`); avoid bare `./kotlin build` (builds every target). Always build → test → fix. Android builds need `ANDROID_HOME` set.
+**Adding or upgrading a KMP library:** use the **klibs** MCP server (`getLatestVersion`, `searchProjects`) as the source of truth, never a README. `latestStableVersion` is `null` for pre-1.0 libraries — use `latestVersion`; its `kotlinVersion` is the library's own build, not a constraint on ours.
 
-**Compose Hot Reload (desktop):** `./kotlin run -m desktopApp --compose-hot-reload-mode` (Toolchain-native). It's a persistent session — **stop it with Ctrl-C in the launching terminal**, not by closing the app window, or the DevTools sidecar window orphans and piles up across runs (clear stragglers: `pkill -f 'apple.awt.application.name=Compose'`). See TOOLCHAIN_FEEDBACK.md §15.
+### Validate with Compose Hot Reload first
 
-### Platform Commands
+For common or `src@jvm/` changes — especially UI — start the app **once** and validate through the **Compose Hot Reload** MCP server instead of rebuilding per edit. One session gives compile errors, composable exceptions *and* pixels. (Both MCP servers are registered in `.mcp.json`.)
 
-| Changed | Build | Test | Notes |
-|---------|-------|------|-------|
-| `shared/src/` (common) or `shared/src@jvm/`<br>(util, data, viewmodel, UI) | `./kotlin build -m desktopApp` | `./kotlin test -m shared -p jvm` | **Default — use for 95% of changes** |
-| `shared/src@android/` or `androidApp/` | `ANDROID_HOME=… ./kotlin build -m androidApp` | `./kotlin test -m shared -p android` | Embedded Gradle for AGP |
-| `shared/src@ios/`, `shared/src@native/`, or `iosApp/` | `./kotlin build -m shared -p iosSimulatorArm64`<br>(full app: `./kotlin build -m iosApp`) | `./kotlin test -m shared -p iosSimulatorArm64` | Needs Xcode |
-| `shared/src@wasmJs/` (web) | `./kotlin do assembleWeb` | `./kotlin test -m shared -p wasmJs` | Toolchain only links wasm; `./kotlin do runWeb` assembles (skiko/sql.js/resources/import-map) + serves via the `webdist` plugin (see TOOLCHAIN_FEEDBACK.md §12) |
-| Pre-release verification | `./kotlin build` (all targets) | `./kotlin check` (tests + checks) | |
+1. Background-start (~1 min first boot): `./kotlin run -m desktopApp --compose-hot-reload-mode`
+2. `status` until connected, then edit and call `reload` to recompile and hot-swap into the live app. (Not `await_reload` — that's for continuous mode, and here `buildContinuous:false`. A file watcher may already have a reload in flight.)
+3. **On failure** `status` returns `reloadState:"failed"` with `lastErrorDetails` carrying the compiler diagnostics (`…/Foo.kt:119:28 Unresolved reference …`) — what `./kotlin build` would say, without losing the session.
+4. Verify with `take_screenshot`, `get_semantic_tree`, `get_ui_error`, `get_logs`; drive the UI with the click/type/scroll tools.
 
-### Test Files in `shared/test/` (+ `shared/test@jvm/`)
-Utils: `NumberUtilsTest`, `ExerciseMathTest` • Repos: `FoodRepositoryTest`, `IntakeRepositoryTest`, `MealRepositoryTest`, `ExerciseRepositoryTest`, `WeightRepositoryTest` • Scrapers: `AlbertHeijnWebFetcherTest`, `EsselungaWebFetcherTest`, `EsselungaSearchTest`, `KrogerSearchTest` • UI: `ComposeTest` (Skiko native-lib load currently fails locally — known follow-up)
+**Stopping:** SIGINT does **not** reliably stop it, and the DevTools sidecar then orphans and piles up across runs. Pid + port are in `build/hot-reload-app.pid`; kill both `compose-hot-reload-mode` and `org.jetbrains.compose.devtools.Main`.
 
-Run JVM tests: `./kotlin test -m shared -p jvm`
+**Limits:** desktop/JVM only; doesn't replace `./kotlin test`; other targets need their own build.
+
+### Builds and tests
+
+Build the JVM/desktop target first (fastest). Always build per-module (`-m`) — bare `./kotlin build` builds every target. Always build → test → fix.
+
+| Changed | Build | Test |
+|---|---|---|
+| `shared/src/` (common) or `shared/src@jvm/` | `./kotlin build -m desktopApp` | `./kotlin test -m shared -p jvm` |
+| `shared/src@android/`, `androidApp/` | `ANDROID_HOME=… ./kotlin build -m androidApp` | `./kotlin test -m shared -p android` |
+| `shared/src@ios/`, `src@native/`, `iosApp/` | `./kotlin build -m shared -p iosSimulatorArm64` (full app: `./kotlin build -m iosApp`) | `./kotlin test -m shared -p iosSimulatorArm64` |
+| `shared/src@wasmJs/` | `./kotlin do assembleWeb` | `./kotlin test -m shared -p wasmJs` |
+| Pre-release | `./kotlin build` (all targets) | `./kotlin check` |
+
+**Release (`-v release`) minifies with R8 full mode; debug does not** — so R8 breakage (e.g. ML Kit's reflective lookup behind KScan) only shows up in release. Keep rules go in `androidApp/proguard-rules.pro`. Two traps: editing that file does **not** invalidate the task, so `rm -rf build/tasks/_androidApp_buildAndroidRelease` or R8 won't re-run; and the live mapping is `build/tasks/_androidApp_buildAndroidRelease/gradle-project/build/_androidApp/outputs/mapping/release/mapping.txt` (check its `pg_map_id` matches the crash's `r8-map-id-…`), *not* the stale `androidApp/build/outputs/mapping/`. Retrace with `$ANDROID_HOME/cmdline-tools/latest/bin/retrace`.
+
+Row 1 covers ~95% of changes. Android uses embedded Gradle (AGP); iOS needs Xcode. The Toolchain only *links* wasm — `./kotlin do runWeb` assembles and serves it via the `webdist` plugin.
 
 ## Code Structure
-**Modules** (one product each; `project.yaml` lists them): `shared` (`kmp/lib`), `androidApp` (`android/app`), `desktopApp` (`jvm/app`), `webApp` (`wasm-js/app`), `iosApp` (`ios/app`), plus local plugins `plugins/secrets` and `plugins/sqldelight`.
 
-**`shared` uses the amper layout** (no `commonMain/kotlin`): common code in `shared/src/`, platform actuals in `shared/src@android/`, `src@jvm/`, `src@ios/`, `src@native/`, `src@wasmJs/`; tests in `shared/test/` (+ `test@jvm/`).
+**Modules** (`project.yaml`): `shared` (`kmp/lib`), `androidApp` (`android/app`), `desktopApp` (`jvm/app`), `webApp` (`wasm-js/app`), `iosApp` (`ios/app`), plus `plugins/{secrets,sqldelight,webdist}`.
 
-**Key paths under `shared/src/com/emilflach/lokcal/`:**
-- `data/` — Repositories + food sources
-- `viewmodel/` — StateFlow ViewModels
-- `ui/screens/`, `ui/components/`, `ui/dialogs/` — Compose UI
-- `util/` — SearchUtils, ExerciseMath, DateUtils, NumberUtils
-- `../../App.kt` — root `App()` composable (public; consumed by every app module)
-- `shared/sqldelight/` — `.sq` schema (codegen via `plugins/sqldelight`, `generateAsync=true`)
-- `shared/composeResources/` — Compose resources (`Res` accessors → `lokcal.shared.generated.resources`)
+**`shared` uses the amper layout** (no `commonMain/kotlin`): common code in `shared/src/`, platform actuals in `src@android/`, `src@jvm/`, `src@ios/`, `src@native/`, `src@wasmJs/`; tests in `shared/test/` (+ `test@jvm/`), mirroring source packages.
 
-The desktop/web entry points live in `desktopApp/src/main.kt` and `webApp/src/main.kt`; the Android `AppActivity` is in `shared/src@android/`.
+Code lives under `shared/src/com/emilflach/lokcal/`, with `App.kt` the root `App()` composable every app module consumes. Also: `shared/sqldelight/` — `.sq` schema (codegen via `plugins/sqldelight`, `generateAsync=true`) • `shared/composeResources/` — `Res` → `lokcal.shared.generated.resources` • entry points `desktopApp/src/main.kt` and `webApp/src/main.kt`, Android `AppActivity` in `shared/src@android/`.
 
-## Stack
-- Kotlin 2.2.21, Compose Multiplatform 1.9.3
-- SQLDelight 2.2.1, Ktor 3.3.2
-- kotlinx-coroutines, kotlinx-serialization, kotlinx-datetime
-- Coil (images), Health Connect, KScan (barcode)
-- Navigation: `androidx.navigation3` with `NavDisplay` + `rememberNavBackStack`
+Repository pattern • ViewModels (StateFlow) • Navigation `androidx.navigation3` (`NavDisplay` + `rememberNavBackStack`) • `expect`/`actual` for platform code (11 files — `grep -rl 'expect ' shared/src`).
 
-## Architecture
-Repository pattern • ViewModels (StateFlow) • `expect`/`actual` for platform code (BackupManager, HealthManager, CameraManager, DriverFactory)
+## iOS — implement twice
 
-## iOS — What Needs Implementing Twice
+A **new screen** also needs:
+1. `shared/src@ios/com/emilflach/lokcal/screens/ScreenFactories.kt` — a `*ViewController()` factory
+2. `iosApp/src/NativeNavigationView.swift` — a `NavigationDestination` case + routing
+3. `iosApp/src/*View.swift` — a SwiftUI `UIViewControllerRepresentable` wrapper
 
-When adding a **new screen**, also update:
-1. `shared/src@ios/com/emilflach/lokcal/screens/ScreenFactories.kt` — add a `*ViewController()` factory function
-2. `iosApp/src/NativeNavigationView.swift` — add a case to `NavigationDestination` and route it
-3. `iosApp/src/*View.swift` — create a SwiftUI `UIViewControllerRepresentable` wrapper
-
-Swift sources live in `iosApp/src/` and `import KotlinModules` (Amper's framework name). Amper generates `iosApp/module.xcodeproj` on first build; the app target sets `OTHER_LDFLAGS = -lsqlite3` (committed) so the static framework resolves the SQLDelight native driver.
+Swift sources are in `iosApp/src/` and `import KotlinModules` (Amper's framework name). Amper generates `iosApp/module.xcodeproj` on first build; the app target needs `OTHER_LDFLAGS = -lsqlite3` (committed) for the SQLDelight native driver.
