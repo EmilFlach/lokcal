@@ -49,10 +49,17 @@ private class EntityImageKeyer : Keyer<EntityImageData> {
         "${data.entityType.lowercase()}:${data.entityId}"
 }
 
+/**
+ * Routes an image through the wsrv.nl resizing proxy.
+ *
+ * `bg=white` matters: the output is JPEG, which has no alpha channel, and supermarket product shots
+ * are transparent cut-outs. Without it the proxy flattens transparency onto black and every product
+ * arrives with a black box baked into the pixels — no amount of theming behind the image can undo it.
+ */
 private fun String.toWsrvUrl(): String {
     if (startsWith("https://wsrv.nl/") || startsWith("http://wsrv.nl/")) return this
     val encoded = encodeURLParameter()
-    return "https://wsrv.nl/?url=$encoded&w=200&h=200&fit=cover&output=jpg&q=75"
+    return "https://wsrv.nl/?url=$encoded&w=200&h=200&fit=cover&output=jpg&q=75&bg=white"
 }
 
 private class DatabaseImageFetcher(
@@ -65,12 +72,15 @@ private class DatabaseImageFetcher(
     override suspend fun fetch(): FetchResult? {
         val isPersistent = data.entityId > 0
         val url = data.fallbackUrl.takeIf { it.isNotBlank() }
+        // Cache against the proxied URL, not the source one, so changing the proxy parameters
+        // (size, format, background) invalidates stale entries by itself.
+        val fetchUrl = url?.toWsrvUrl()
 
         // SQLite cache (persistent entities only)
         if (isPersistent) {
             val cached = imageCache.getImage(data.entityType, data.entityId)
             if (cached != null) {
-                val urlChanged = url != null && (cached.sourceUrl == null || cached.sourceUrl != url)
+                val urlChanged = fetchUrl != null && cached.sourceUrl != fetchUrl
                 if (urlChanged) {
                     imageCache.deleteImage(data.entityType, data.entityId)
                 } else {
@@ -84,9 +94,9 @@ private class DatabaseImageFetcher(
         }
 
         // Network fetch via wsrv.nl proxy
-        if (url == null) return null
+        if (fetchUrl == null) return null
         val response = try {
-            httpClient.get(url.toWsrvUrl())
+            httpClient.get(fetchUrl)
         } catch (_: Exception) {
             return null
         }
@@ -98,7 +108,7 @@ private class DatabaseImageFetcher(
             return null
         }
         if (isPersistent) {
-            imageCache.saveImage(data.entityType, data.entityId, bytes, "image/jpeg", url)
+            imageCache.saveImage(data.entityType, data.entityId, bytes, "image/jpeg", fetchUrl)
         }
 
         return SourceFetchResult(
