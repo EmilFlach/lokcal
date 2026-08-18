@@ -1,0 +1,12 @@
+{
+    "mcpServers": {
+        "Compose Hot Reload": {
+            "command": "./kotlin",
+            "args": ["compose-hot-reload-mcp-server"]
+        },
+        "klibs": {
+            "type": "http",
+            "url": "https://api.klibs.io/mcp"
+        }
+    }
+}
