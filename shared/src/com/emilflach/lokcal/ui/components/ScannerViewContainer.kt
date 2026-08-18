@@ -2,7 +2,7 @@ package com.emilflach.lokcal.ui.components
 
 import androidx.compose.runtime.Composable
 import com.emilflach.lokcal.theme.LocalRecipesColors
-import org.ncgroup.kscan.BarcodeFormats
+import org.ncgroup.kscan.BarcodeFormat
 import org.ncgroup.kscan.BarcodeResult
 import org.ncgroup.kscan.ScannerUiOptions
 import org.ncgroup.kscan.ScannerView
@@ -16,7 +16,9 @@ fun ScannerViewContainer(
     val color = LocalRecipesColors.current
     ScannerView(
         codeTypes = listOf(
-            BarcodeFormats.FORMAT_EAN_13,
+            BarcodeFormat.FORMAT_EAN_8,
+            BarcodeFormat.FORMAT_UPC_A,
+            BarcodeFormat.FORMAT_EAN_13,
         ),
         scannerUiOptions = ScannerUiOptions(
             headerTitle = "Scan barcode",
@@ -29,13 +31,7 @@ fun ScannerViewContainer(
     ) { result ->
         when (result) {
             is BarcodeResult.OnSuccess -> {
-                val raw = result.barcode.data
-                val digits = raw.filter { it.isDigit() }
-                if (digits.length == 13) {
-                    onScan(digits)
-                } else {
-                    onScan(raw)
-                }
+                onScan(result.barcode.data.trim())
                 onClose()
             }
             else -> {

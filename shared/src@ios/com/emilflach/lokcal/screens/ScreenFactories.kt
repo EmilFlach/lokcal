@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
-import org.ncgroup.kscan.BarcodeFormats
+import org.ncgroup.kscan.BarcodeFormat
 import org.ncgroup.kscan.BarcodeResult
 import org.ncgroup.kscan.ScannerController
 import org.ncgroup.kscan.ScannerView
@@ -211,15 +211,17 @@ fun ScannerViewController(
         }
 
         ScannerView(
-            codeTypes = listOf(BarcodeFormats.FORMAT_EAN_13),
+            codeTypes = listOf(
+                BarcodeFormat.FORMAT_EAN_8,
+                BarcodeFormat.FORMAT_UPC_A,
+                BarcodeFormat.FORMAT_EAN_13,
+            ),
             scannerUiOptions = null,
             scannerController = scannerController,
         ) { result ->
             when (result) {
                 is BarcodeResult.OnSuccess -> {
-                    val raw = result.barcode.data
-                    val digits = raw.filter { it.isDigit() }
-                    onScan(if (digits.length == 13) digits else raw)
+                    onScan(result.barcode.data.trim())
                     onClose()
                 }
                 else -> onClose()
