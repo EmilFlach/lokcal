@@ -3,7 +3,6 @@
 composeCharts = "0.2.5"
 connectClient = "1.2.0-alpha02"
 androidx-activityCompose = "1.13.0"
-androidx-uiTest = "1.10.5"
 kotlinx-coroutines = "1.10.2"
 kscan = "0.9.2"
 ktor = "3.4.1"
@@ -29,8 +28,6 @@ kotlinxBrowser = "0.3"
 
 androidx-activityCompose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
 androidx-connect-client = { module = "androidx.health.connect:connect-client", version.ref = "connectClient" }
-androidx-uitest-testManifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "androidx-uiTest" }
-androidx-uitest-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "androidx-uiTest" }
 compose-charts = { module = "io.github.ehsannarmani:compose-charts", version.ref = "composeCharts" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
@@ -56,7 +53,6 @@ sqlDelight-driver-android = { module = "app.cash.sqldelight:android-driver", ver
 sqlDelight-driver-native = { module = "app.cash.sqldelight:native-driver", version.ref = "sqlDelight" }
 sqlDelight-driver-js = { module = "app.cash.sqldelight:web-worker-driver", version.ref = "sqlDelight" }
 sqlDelight-async-extensions = { module = "app.cash.sqldelight:async-extensions", version.ref = "sqlDelight" }
-sqlDelight-primitive-adapters = { module = "app.cash.sqldelight:primitive-adapters", version.ref = "sqlDelight" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekit" }
@@ -65,7 +61,6 @@ filekit-dialogs-compose = { module = "io.github.vinceglb:filekit-dialogs-compose
 androidx-documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "documentfile" }
 androidx-work-runtime = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
-aboutlibraries-core = { module = "com.mikepenz:aboutlibraries-core", version.ref = "aboutLibraries" }
 aboutlibraries-compose-m3 = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutLibraries" }
 compose-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "composeMaterialIconsExtended" }
 kotlinx-browser = { module = "org.jetbrains.kotlinx:kotlinx-browser", version.ref = "kotlinxBrowser" }

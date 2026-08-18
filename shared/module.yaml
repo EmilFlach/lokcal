@@ -49,7 +49,6 @@ dependencies:
   - $libs.coil
   - $libs.coil.network.ktor
   - $libs.kotlinx.datetime
-  - $libs.sqlDelight.primitive.adapters
   - $libs.sqlDelight.async.extensions
   - $libs.filekit.core
   - $libs.filekit.dialogs
