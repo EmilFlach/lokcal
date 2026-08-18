@@ -6,6 +6,7 @@ import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import com.emilflach.lokcal.Database
 import com.emilflach.lokcal.Food
 import com.emilflach.lokcal.FoodAlias
+import com.emilflach.lokcal.util.BarcodeUtils
 import com.emilflach.lokcal.util.levenshtein
 import com.emilflach.lokcal.util.normalize
 
@@ -91,10 +92,9 @@ class FoodRepository(database: Database) {
         val qLower = q.lowercase()
         val qNorm = normalize(qLower)
 
-        // GTIN-13 barcode: try exact match first
-        val digitsOnly = q.filter { it.isDigit() }
-        if (digitsOnly.length > 5) {
-            val byBarcode = queries.selectByGtin13(digitsOnly).awaitAsList()
+        // Barcode query: exact match on the stored code first
+        if (BarcodeUtils.isBarcode(q)) {
+            val byBarcode = queries.selectByBarcode(q).awaitAsList()
             if (byBarcode.isNotEmpty()) return byBarcode.map { Pair(it, 0) }
         }
 

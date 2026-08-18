@@ -35,8 +35,15 @@ SELECT * FROM Food;
 selectById:
 SELECT * FROM Food WHERE id = ?;
 
-selectByGtin13:
-SELECT * FROM Food WHERE gtin13 = ?;
+-- Matches a scanned barcode against the stored code, tolerating the GTIN-12 leading zero.
+-- ML Kit reports UPC-A as 12 digits while AVFoundation reports the same product as a 13-digit
+-- EAN-13, so the extra '0' can sit on either side of the comparison depending on which
+-- platform stored the food and which one is scanning it.
+selectByBarcode:
+SELECT * FROM Food
+WHERE gtin13 = :code
+   OR gtin13 = '0' || :code
+   OR :code = '0' || gtin13;
 
 deleteById:
 DELETE FROM Food WHERE id = ?;

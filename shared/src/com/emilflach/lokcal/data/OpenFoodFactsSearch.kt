@@ -1,5 +1,6 @@
 package com.emilflach.lokcal.data
 
+import com.emilflach.lokcal.util.BarcodeUtils
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -19,10 +20,10 @@ class OpenFoodFactsSearch(
 ) {
     suspend fun search(query: String): List<OnlineFoodItem> {
         if (query.isBlank()) return emptyList()
-        // If the query is a GTIN-13 (EAN-13) barcode, use the product endpoint (single item)
-        val isGtin13 = query.length == 13 && query.all { it.isDigit() }
-        if (isGtin13) {
-            val productUrl = "https://world.openfoodfacts.net/api/v3/product/$query"
+        // If the query is a barcode, use the product endpoint (single item)
+        val barcode = query.trim().takeIf { BarcodeUtils.isBarcode(it) }
+        if (barcode != null) {
+            val productUrl = "https://world.openfoodfacts.net/api/v3/product/$barcode"
             val resp: OffProductResponse = client.get(productUrl) {
                 accept(ContentType.Application.Json)
                 timeout { requestTimeoutMillis = 10000 }

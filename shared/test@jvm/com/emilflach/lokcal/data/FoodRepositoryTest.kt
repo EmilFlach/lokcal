@@ -227,6 +227,58 @@ class FoodRepositoryTest {
     }
 
     @Test
+    fun testSearchFindsUpcAStoredAsGtin13() = runTest {
+        // Saved from a source that canonicalises to 13 digits (or scanned on iOS, where
+        // AVFoundation reports UPC-A as EAN-13), then scanned on Android, which reports 12.
+        repository.insertManual(
+            name = "Water",
+            energyKcalPer100g = 0.0,
+            servingSize = null,
+            gtin13 = "0012000001086",
+            imageUrl = null,
+            productUrl = null,
+            source = null
+        )
+
+        val results = repository.search("012000001086")
+        assertEquals(1, results.size)
+        assertEquals("Water", results[0].name)
+    }
+
+    @Test
+    fun testSearchFindsUpcAStoredAsGtin12() = runTest {
+        // The reverse: stored with the 12-digit code, scanned on iOS as a 13-digit EAN-13.
+        repository.insertManual(
+            name = "Soda",
+            energyKcalPer100g = 42.0,
+            servingSize = null,
+            gtin13 = "012000001086",
+            imageUrl = null,
+            productUrl = null,
+            source = null
+        )
+
+        val results = repository.search("0012000001086")
+        assertEquals(1, results.size)
+        assertEquals("Soda", results[0].name)
+    }
+
+    @Test
+    fun testBarcodeSearchDoesNotMatchADifferentProduct() = runTest {
+        repository.insertManual(
+            name = "Other",
+            energyKcalPer100g = 10.0,
+            servingSize = null,
+            gtin13 = "0012000001087",
+            imageUrl = null,
+            productUrl = null,
+            source = null
+        )
+
+        assertEquals(0, repository.search("012000001086").size)
+    }
+
+    @Test
     fun testSearchMultiWord() = runTest {
         repository.insertManual("Apple Juice Organic", 46.0, null, null, null, null, null)
         repository.insertManual("Organic Apple Sauce", 68.0, null, null, null, null, null)

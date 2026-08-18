@@ -1,5 +1,6 @@
 package com.emilflach.lokcal.data
 
+import com.emilflach.lokcal.util.BarcodeUtils
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.logging.*
@@ -70,7 +71,7 @@ open class KrogerSearch(
 
     protected open suspend fun fetchSearchJson(query: String): String {
         val token = auth.getAccessToken()
-        val isBarcode = query.length == 13 && query.all { it.isDigit() }
+        val isBarcode = BarcodeUtils.isBarcode(query)
         return client.get(PRODUCTS_URL) {
             header(HttpHeaders.Authorization, "Bearer $token")
             header(HttpHeaders.Accept, "application/json")
