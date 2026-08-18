@@ -33,8 +33,6 @@ Build the JVM/desktop target first (fastest). Always build per-module (`-m`) —
 | `shared/src@wasmJs/` | `./kotlin do assembleWeb` | `./kotlin test -m shared -p wasmJs` |
 | Pre-release | `./kotlin build` (all targets) | `./kotlin check` |
 
-**Release (`-v release`) minifies with R8 full mode; debug does not** — so R8 breakage (e.g. ML Kit's reflective lookup behind KScan) only shows up in release. Keep rules go in `androidApp/proguard-rules.pro`. Two traps: editing that file does **not** invalidate the task, so `rm -rf build/tasks/_androidApp_buildAndroidRelease` or R8 won't re-run; and the live mapping is `build/tasks/_androidApp_buildAndroidRelease/gradle-project/build/_androidApp/outputs/mapping/release/mapping.txt` (check its `pg_map_id` matches the crash's `r8-map-id-…`), *not* the stale `androidApp/build/outputs/mapping/`. Retrace with `$ANDROID_HOME/cmdline-tools/latest/bin/retrace`.
-
 Row 1 covers ~95% of changes. Android uses embedded Gradle (AGP); iOS needs Xcode. The Toolchain only *links* wasm — `./kotlin do runWeb` assembles and serves it via the `webdist` plugin.
 
 ## Code Structure
