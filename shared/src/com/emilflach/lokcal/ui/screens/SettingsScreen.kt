@@ -25,6 +25,50 @@ import com.emilflach.lokcal.ui.components.PlatformScaffold
 import com.emilflach.lokcal.ui.components.SingleInputAlertDialog
 import com.emilflach.lokcal.ui.components.getRoundedCornerShape
 import kotlinx.coroutines.launch
+import lokcal.shared.generated.resources.Res
+import lokcal.shared.generated.resources.common_cancel
+import lokcal.shared.generated.resources.common_disabled
+import lokcal.shared.generated.resources.common_enabled
+import lokcal.shared.generated.resources.common_kcal_value
+import lokcal.shared.generated.resources.common_save
+import lokcal.shared.generated.resources.settings_export_database
+import lokcal.shared.generated.resources.settings_export_failed
+import lokcal.shared.generated.resources.settings_export_failed_desc
+import lokcal.shared.generated.resources.settings_export_success
+import lokcal.shared.generated.resources.settings_export_success_desc
+import lokcal.shared.generated.resources.settings_github_url
+import lokcal.shared.generated.resources.settings_health_connected
+import lokcal.shared.generated.resources.settings_health_not_connected
+import lokcal.shared.generated.resources.settings_import_database
+import lokcal.shared.generated.resources.settings_import_failed
+import lokcal.shared.generated.resources.settings_import_failed_desc
+import lokcal.shared.generated.resources.settings_import_success
+import lokcal.shared.generated.resources.settings_import_success_desc
+import lokcal.shared.generated.resources.settings_kcal_field_label
+import lokcal.shared.generated.resources.settings_manage_exercises
+import lokcal.shared.generated.resources.settings_manage_foods
+import lokcal.shared.generated.resources.settings_manage_meals
+import lokcal.shared.generated.resources.settings_nightly_backup
+import lokcal.shared.generated.resources.settings_nightly_backup_directory
+import lokcal.shared.generated.resources.settings_no_directory_set
+import lokcal.shared.generated.resources.settings_open_source_licenses
+import lokcal.shared.generated.resources.settings_search_sources_subtitle
+import lokcal.shared.generated.resources.settings_search_sources_title
+import lokcal.shared.generated.resources.settings_section_about
+import lokcal.shared.generated.resources.settings_section_backup
+import lokcal.shared.generated.resources.settings_section_data
+import lokcal.shared.generated.resources.settings_section_health
+import lokcal.shared.generated.resources.settings_section_manage
+import lokcal.shared.generated.resources.settings_section_preferences
+import lokcal.shared.generated.resources.settings_set_starting_kcal_title
+import lokcal.shared.generated.resources.settings_starting_kcal_title
+import lokcal.shared.generated.resources.settings_title
+import lokcal.shared.generated.resources.settings_view_on_github
+import lokcal.shared.generated.resources.settings_weight_log
+import lokcal.shared.generated.resources.common_back
+import lokcal.shared.generated.resources.common_enable
+import lokcal.shared.generated.resources.common_step_tracking
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,10 +94,10 @@ fun SettingsScreen(
     PlatformScaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text(stringResource(Res.string.settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.common_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -74,11 +118,11 @@ fun SettingsScreen(
             state = listState
         ) {
             // Section: Manage
-            item { SettingsSectionHeader("Manage") }
+            item { SettingsSectionHeader(stringResource(Res.string.settings_section_manage)) }
             item { Spacer(Modifier.height(4.dp)) }
             item {
                 ListItem(
-                    headlineContent = { Text("Manage meals") },
+                    headlineContent = { Text(stringResource(Res.string.settings_manage_meals)) },
                     colors = itemColors,
                     modifier = Modifier
                         .clip(getRoundedCornerShape(0, 4))
@@ -88,7 +132,7 @@ fun SettingsScreen(
             item { Spacer(Modifier.height(2.dp)) }
             item {
                 ListItem(
-                    headlineContent = { Text("Manage foods") },
+                    headlineContent = { Text(stringResource(Res.string.settings_manage_foods)) },
                     colors = itemColors,
                     modifier = Modifier
                         .clip(getRoundedCornerShape(1, 4))
@@ -98,7 +142,7 @@ fun SettingsScreen(
             item { Spacer(Modifier.height(2.dp)) }
             item {
                 ListItem(
-                    headlineContent = { Text("Manage exercises") },
+                    headlineContent = { Text(stringResource(Res.string.settings_manage_exercises)) },
                     colors = itemColors,
                     modifier = Modifier
                         .clip(getRoundedCornerShape(2, 4))
@@ -108,7 +152,7 @@ fun SettingsScreen(
             item { Spacer(Modifier.height(2.dp)) }
             item {
                 ListItem(
-                    headlineContent = { Text("Weight log") },
+                    headlineContent = { Text(stringResource(Res.string.settings_weight_log)) },
                     colors = itemColors,
                     modifier = Modifier
                         .clip(getRoundedCornerShape(3, 4))
@@ -119,7 +163,7 @@ fun SettingsScreen(
             item { Spacer(Modifier.height(16.dp)) }
 
             // Section: Preferences
-            item { SettingsSectionHeader("Preferences") }
+            item { SettingsSectionHeader(stringResource(Res.string.settings_section_preferences)) }
             item { Spacer(Modifier.height(4.dp)) }
             item {
                 var currentKcal by remember { mutableStateOf(0.0) }
@@ -131,9 +175,9 @@ fun SettingsScreen(
 
                 Column {
                     ListItem(
-                        headlineContent = { Text("Starting kcal") },
+                        headlineContent = { Text(stringResource(Res.string.settings_starting_kcal_title)) },
                         supportingContent = {
-                            Text("${currentKcal.toInt()} kcal", color = colors.foregroundSupport)
+                            Text(stringResource(Res.string.common_kcal_value, currentKcal.toInt()), color = colors.foregroundSupport)
                         },
                         colors = itemColors,
                         modifier = Modifier
@@ -145,11 +189,11 @@ fun SettingsScreen(
                     )
                     if (showKcalDialog) {
                         SingleInputAlertDialog(
-                            title = "Set starting kcal",
-                            fieldLabel = "kcal",
+                            title = stringResource(Res.string.settings_set_starting_kcal_title),
+                            fieldLabel = stringResource(Res.string.settings_kcal_field_label),
                             initialValue = kcalInput,
-                            confirmText = "Save",
-                            dismissText = "Cancel",
+                            confirmText = stringResource(Res.string.common_save),
+                            dismissText = stringResource(Res.string.common_cancel),
                             keyboardType = KeyboardType.Number,
                             error = null,
                             onConfirm = { value ->
@@ -170,9 +214,9 @@ fun SettingsScreen(
             item { Spacer(Modifier.height(2.dp)) }
             item {
                 ListItem(
-                    headlineContent = { Text("Search sources") },
+                    headlineContent = { Text(stringResource(Res.string.settings_search_sources_title)) },
                     supportingContent = {
-                        Text("Configure online food search sources", color = colors.foregroundSupport)
+                        Text(stringResource(Res.string.settings_search_sources_subtitle), color = colors.foregroundSupport)
                     },
                     colors = itemColors,
                     modifier = Modifier
@@ -184,22 +228,22 @@ fun SettingsScreen(
             // Section: Health (conditional)
             if (HealthManager.showAutomaticExerciseLogging()) {
                 item { Spacer(Modifier.height(16.dp)) }
-                item { SettingsSectionHeader("Health") }
+                item { SettingsSectionHeader(stringResource(Res.string.settings_section_health)) }
                 item { Spacer(Modifier.height(4.dp)) }
                 item {
                     val healthGranted by HealthManager.permissionsGranted.collectAsState()
                     ListItem(
-                        headlineContent = { Text("Step tracking") },
+                        headlineContent = { Text(stringResource(Res.string.common_step_tracking)) },
                         supportingContent = {
                             Text(
-                                if (healthGranted) "Connected via Health Connect" else "Not connected",
+                                if (healthGranted) stringResource(Res.string.settings_health_connected) else stringResource(Res.string.settings_health_not_connected),
                                 color = colors.foregroundSupport
                             )
                         },
                         trailingContent = {
                             if (!healthGranted) {
                                 Button(onClick = onRequestHealthPermissions) {
-                                    Text("Enable")
+                                    Text(stringResource(Res.string.common_enable))
                                 }
                             }
                         },
@@ -212,16 +256,19 @@ fun SettingsScreen(
             item { Spacer(Modifier.height(16.dp)) }
 
             // Section: Data
-            item { SettingsSectionHeader("Data") }
+            item { SettingsSectionHeader(stringResource(Res.string.settings_section_data)) }
             item { Spacer(Modifier.height(4.dp)) }
             item {
                 var exportResult by remember { mutableStateOf<Boolean?>(null) }
-                var exportText by remember { mutableStateOf("Export database") }
+                val exportDatabaseText = stringResource(Res.string.settings_export_database)
+                val exportSuccessText = stringResource(Res.string.settings_export_success)
+                val exportFailedText = stringResource(Res.string.settings_export_failed)
+                var exportText by remember { mutableStateOf(exportDatabaseText) }
                 LaunchedEffect(exportResult) {
                     exportText = when (exportResult) {
-                        null -> "Export database"
-                        true -> "Database export successful"
-                        false -> "Database export failed"
+                        null -> exportDatabaseText
+                        true -> exportSuccessText
+                        false -> exportFailedText
                     }
                 }
                 ListItem(
@@ -229,11 +276,11 @@ fun SettingsScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             when (exportResult) {
                                 true -> {
-                                    Icon(Icons.Default.DownloadDone, tint = colors.foregroundSuccess, contentDescription = "Export successful")
+                                    Icon(Icons.Default.DownloadDone, tint = colors.foregroundSuccess, contentDescription = stringResource(Res.string.settings_export_success_desc))
                                     Spacer(Modifier.width(8.dp))
                                 }
                                 false -> {
-                                    Icon(Icons.Default.Error, tint = colors.foregroundDanger, contentDescription = "Export failed")
+                                    Icon(Icons.Default.Error, tint = colors.foregroundDanger, contentDescription = stringResource(Res.string.settings_export_failed_desc))
                                     Spacer(Modifier.width(8.dp))
                                 }
                                 else -> {}
@@ -255,12 +302,15 @@ fun SettingsScreen(
             item { Spacer(Modifier.height(2.dp)) }
             item {
                 var importResult by remember { mutableStateOf<Boolean?>(null) }
-                var importText by remember { mutableStateOf("Import database") }
+                val importDatabaseText = stringResource(Res.string.settings_import_database)
+                val importSuccessText = stringResource(Res.string.settings_import_success)
+                val importFailedText = stringResource(Res.string.settings_import_failed)
+                var importText by remember { mutableStateOf(importDatabaseText) }
                 LaunchedEffect(importResult) {
                     importText = when (importResult) {
-                        null -> "Import database"
-                        true -> "Database import successful"
-                        false -> "Database import failed"
+                        null -> importDatabaseText
+                        true -> importSuccessText
+                        false -> importFailedText
                     }
                 }
                 ListItem(
@@ -268,11 +318,11 @@ fun SettingsScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             when (importResult) {
                                 true -> {
-                                    Icon(Icons.Default.DownloadDone, tint = colors.foregroundSuccess, contentDescription = "Import successful")
+                                    Icon(Icons.Default.DownloadDone, tint = colors.foregroundSuccess, contentDescription = stringResource(Res.string.settings_import_success_desc))
                                     Spacer(Modifier.width(8.dp))
                                 }
                                 false -> {
-                                    Icon(Icons.Default.Error, tint = colors.foregroundDanger, contentDescription = "Import failed")
+                                    Icon(Icons.Default.Error, tint = colors.foregroundDanger, contentDescription = stringResource(Res.string.settings_import_failed_desc))
                                     Spacer(Modifier.width(8.dp))
                                 }
                                 else -> {}
@@ -295,22 +345,23 @@ fun SettingsScreen(
             // Section: Backup (conditional)
             if (BackupManager.showNightlyBackupSettings()) {
                 item { Spacer(Modifier.height(16.dp)) }
-                item { SettingsSectionHeader("Backup") }
+                item { SettingsSectionHeader(stringResource(Res.string.settings_section_backup)) }
                 item { Spacer(Modifier.height(4.dp)) }
                 item {
                     var enabled by remember { mutableStateOf(false) }
+                    val noDirectorySetText = stringResource(Res.string.settings_no_directory_set)
                     var backupLocation by remember { mutableStateOf("Loading...") }
                     var hasBackupLocation by remember { mutableStateOf(false) }
                     LaunchedEffect(Unit) {
                         hasBackupLocation = BackupManager.getBackupDirectory() != null
-                        backupLocation = BackupManager.getBackupDirectory() ?: "No directory set"
+                        backupLocation = BackupManager.getBackupDirectory() ?: noDirectorySetText
                         enabled = BackupManager.getNightlyBackup()
                     }
                     val backupGroupSize = if (hasBackupLocation) 2 else 1
 
                     Column {
                         ListItem(
-                            headlineContent = { Text("Nightly backup directory") },
+                            headlineContent = { Text(stringResource(Res.string.settings_nightly_backup_directory)) },
                             supportingContent = {
                                 Text(backupLocation, color = colors.foregroundSupport)
                             },
@@ -321,16 +372,16 @@ fun SettingsScreen(
                                     scope.launch {
                                         BackupManager.setBackupDirectory()
                                         hasBackupLocation = BackupManager.getBackupDirectory() != null
-                                        backupLocation = BackupManager.getBackupDirectory() ?: "No directory set"
+                                        backupLocation = BackupManager.getBackupDirectory() ?: noDirectorySetText
                                     }
                                 }
                         )
                         if (hasBackupLocation) {
                             Spacer(Modifier.height(2.dp))
                             ListItem(
-                                headlineContent = { Text("Nightly backup") },
+                                headlineContent = { Text(stringResource(Res.string.settings_nightly_backup)) },
                                 supportingContent = {
-                                    Text(if (enabled) "Enabled" else "Disabled", color = colors.foregroundSupport)
+                                    Text(if (enabled) stringResource(Res.string.common_enabled) else stringResource(Res.string.common_disabled), color = colors.foregroundSupport)
                                 },
                                 trailingContent = {
                                     Switch(checked = enabled, onCheckedChange = { value ->
@@ -351,13 +402,13 @@ fun SettingsScreen(
             item { Spacer(Modifier.height(16.dp)) }
 
             // Section: About
-            item { SettingsSectionHeader("About") }
+            item { SettingsSectionHeader(stringResource(Res.string.settings_section_about)) }
             item { Spacer(Modifier.height(4.dp)) }
             item {
                 val uriHandler = LocalUriHandler.current
                 ListItem(
-                    headlineContent = { Text("View on GitHub") },
-                    supportingContent = { Text("github.com/emilflach/lokcal", color = colors.foregroundSupport) },
+                    headlineContent = { Text(stringResource(Res.string.settings_view_on_github)) },
+                    supportingContent = { Text(stringResource(Res.string.settings_github_url), color = colors.foregroundSupport) },
                     colors = itemColors,
                     modifier = Modifier
                         .clip(getRoundedCornerShape(0, 2))
@@ -367,7 +418,7 @@ fun SettingsScreen(
             item { Spacer(Modifier.height(2.dp)) }
             item {
                 ListItem(
-                    headlineContent = { Text("Open source licenses") },
+                    headlineContent = { Text(stringResource(Res.string.settings_open_source_licenses)) },
                     colors = itemColors,
                     modifier = Modifier
                         .clip(getRoundedCornerShape(1, 2))

@@ -16,6 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import lokcal.shared.generated.resources.Res
+import lokcal.shared.generated.resources.search_configure_sources_desc
+import lokcal.shared.generated.resources.search_online_query
+import lokcal.shared.generated.resources.search_search_online_button
+import lokcal.shared.generated.resources.search_setup_sources_subtitle
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun SearchOnlineLink(
@@ -37,7 +43,7 @@ fun SearchOnlineLink(
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = if (sourcesConfigured) "Search for \"$query\" online" else "Set up your online search sources",
+            text = if (sourcesConfigured) stringResource(Res.string.search_online_query, query) else stringResource(Res.string.search_setup_sources_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             color = color.foregroundDefault,
             modifier = Modifier.weight(1f)
@@ -55,7 +61,7 @@ fun SearchOnlineLink(
             ) {
                 Icon(
                     imageVector = if (sourcesConfigured) Icons.Default.Search else Icons.Default.Settings,
-                    contentDescription = if (sourcesConfigured) "Search online" else "Configure search sources",
+                    contentDescription = if (sourcesConfigured) stringResource(Res.string.search_search_online_button) else stringResource(Res.string.search_configure_sources_desc),
                     tint = color.foregroundDefault
                 )
             }

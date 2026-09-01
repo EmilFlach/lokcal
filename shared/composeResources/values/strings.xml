@@ -1,7 +1,189 @@
 <resources>
-    <string name="cyclone">Cyclone</string>
-    <string name="open_github">Open github</string>
-    <string name="run">Run</string>
-    <string name="stop">Stop</string>
-    <string name="theme">Theme</string>
+    <!-- Common -->
+    <string name="common_save">Save</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_back">Back</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_add">Add</string>
+    <string name="common_enabled">Enabled</string>
+    <string name="common_disabled">Disabled</string>
+    <string name="common_filter">Filter</string>
+    <string name="common_name">Name</string>
+    <string name="common_kcal_value">%1$d kcal</string>
+    <string name="common_kg_value">%1$s kg</string>
+    <string name="common_enable">Enable</string>
+    <string name="common_step_tracking">Step tracking</string>
+    <string name="common_add_food">Add food</string>
+    <string name="common_image_url_label">Image URL</string>
+    <string name="common_google_image_search_desc">Google Image Search</string>
+    <string name="common_steal_image_desc">Steal image URL</string>
+    <string name="common_total_portions_label">Total portions</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_manage">Manage</string>
+    <string name="settings_manage_meals">Manage meals</string>
+    <string name="settings_manage_foods">Manage foods</string>
+    <string name="settings_manage_exercises">Manage exercises</string>
+    <string name="settings_weight_log">Weight log</string>
+    <string name="settings_section_preferences">Preferences</string>
+    <string name="settings_starting_kcal_title">Starting kcal</string>
+    <string name="settings_set_starting_kcal_title">Set starting kcal</string>
+    <string name="settings_kcal_field_label">kcal</string>
+    <string name="settings_search_sources_title">Search sources</string>
+    <string name="settings_search_sources_subtitle">Configure online food search sources</string>
+    <string name="settings_section_health">Health</string>
+    <string name="settings_health_connected">Connected via Health Connect</string>
+    <string name="settings_health_not_connected">Not connected</string>
+    <string name="settings_section_data">Data</string>
+    <string name="settings_export_database">Export database</string>
+    <string name="settings_export_success">Database export successful</string>
+    <string name="settings_export_failed">Database export failed</string>
+    <string name="settings_export_success_desc">Export successful</string>
+    <string name="settings_export_failed_desc">Export failed</string>
+    <string name="settings_import_database">Import database</string>
+    <string name="settings_import_success">Database import successful</string>
+    <string name="settings_import_failed">Database import failed</string>
+    <string name="settings_import_success_desc">Import successful</string>
+    <string name="settings_import_failed_desc">Import failed</string>
+    <string name="settings_section_backup">Backup</string>
+    <string name="settings_nightly_backup_directory">Nightly backup directory</string>
+    <string name="settings_no_directory_set">No directory set</string>
+    <string name="settings_nightly_backup">Nightly backup</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_view_on_github">View on GitHub</string>
+    <string name="settings_github_url">github.com/emilflach/lokcal</string>
+    <string name="settings_open_source_licenses">Open source licenses</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title">Lokcal</string>
+    <string name="onboarding_tagline">A calorie tracker that is instant, uses real grocery data and respects your privacy</string>
+    <string name="onboarding_body">Don\'t set a goal yet. Just track for four weeks to see how you actually eat. Learn the rhythm of weighing food at home and estimating while out.</string>
+    <string name="onboarding_step1">Log everything. Even (especially) the bad days.</string>
+    <string name="onboarding_step2">Weigh yourself daily. Do this for one month to find your baseline, then switch to weekly.</string>
+    <string name="onboarding_step3">Review the data. After 4 weeks, your stats are complete enough to start making informed changes.</string>
+    <string name="onboarding_start_tracking">Start Tracking</string>
+    <string name="onboarding_footnote">A starting calorie goal was set for you. Adjust it anytime in Settings.</string>
+
+    <!-- Statistics -->
+    <string name="statistics_title">Statistics</string>
+    <string name="statistics_demo_title">Demo</string>
+    <string name="statistics_period_month">30 days</string>
+    <string name="statistics_period_three_months">90 days</string>
+    <string name="statistics_period_all">All time</string>
+    <string name="statistics_got_it">Got it</string>
+    <string name="statistics_daily_averages">Daily averages</string>
+    <string name="statistics_eaten_kcal">Eaten kcal</string>
+    <string name="statistics_burned_kcal">Burned kcal</string>
+    <string name="statistics_net_kcal">Net kcal</string>
+    <string name="statistics_net_intake_title">Net intake</string>
+    <string name="statistics_net_intake_body">Calories eaten minus calories burned through exercise. This is what actually drives weight change — not your raw eaten total.</string>
+    <string name="statistics_net_below_goal">Net is %1$d kcal below your %2$d kcal goal</string>
+    <string name="statistics_net_above_goal">Net is %1$d kcal above your %2$d kcal goal</string>
+    <string name="statistics_net_on_target">Net is on target (%1$d kcal goal)</string>
+    <string name="statistics_maintenance_calories">Maintenance calories</string>
+    <string name="statistics_maintenance_calories_body">The calorie level at which your weight stays constant, estimated from your real data. If your weight is stable, your net intake equals your maintenance.</string>
+    <string name="statistics_maintenance_value">~%1$d kcal/day</string>
+    <string name="statistics_weight_trend">Weight trend</string>
+    <string name="statistics_weight_trend_body">How much your weight is changing per week, based on a trend line through all your weigh-ins. More reliable than comparing just your first and last measurement.</string>
+    <string name="statistics_trend_gaining">↑ Gaining %1$s kg/week</string>
+    <string name="statistics_trend_losing">↓ Losing %1$s kg/week</string>
+    <string name="statistics_trend_stable">→ Stable (%1$s kg/week)</string>
+    <string name="statistics_what_this_means">What this means</string>
+    <string name="statistics_how_this_works_title">How this works</string>
+    <string name="statistics_how_this_works_body">Based on your net calorie intake and actual weight change over the selected period. The more consistently you log, the more accurate this becomes.</string>
+    <string name="statistics_net_daily_calories">Net daily calories</string>
+    <string name="statistics_legend_goal">Goal</string>
+    <string name="statistics_legend_weight">Weight</string>
+    <string name="statistics_no_weight_data">Add daily weigh-ins to see your weight trend alongside calories</string>
+    <string name="statistics_top_calorie_sources">Top calorie sources</string>
+    <string name="statistics_top_calorie_sources_body">The foods that contributed the most calories in this period. Small changes to your top items — like portion size or frequency — tend to have the biggest impact on your overall intake.</string>
+    <string name="statistics_kcal_per_100g">%1$d kcal/100g</string>
+    <string name="statistics_getting_started">Getting started</string>
+    <string name="statistics_steps_done">%1$d / 2 done</string>
+    <string name="statistics_intro_text">Statistics show the relationship between what you eat, your exercise, and how your weight changes over time. Two things will unlock all the insights:</string>
+    <string name="statistics_step_log_food">Log food for 7 days</string>
+    <string name="statistics_step_log_food_status">%1$d / 7 days</string>
+    <string name="statistics_step_log_food_unlocks">Daily averages · calorie chart · top food sources</string>
+    <string name="statistics_step_weigh_ins">Add daily weigh-ins</string>
+    <string name="statistics_step_weigh_ins_unlocks">Weight trend · maintenance calories · personalized recommendations</string>
+    <string name="statistics_weigh_tip">Tip: weigh yourself at the same time each morning for the most accurate trend.</string>
+    <string name="statistics_explore_demo">Explore demo</string>
+    <string name="statistics_unlocks_prefix">Unlocks: %1$s</string>
+    <string name="statistics_info_content_description">Info: %1$s</string>
+
+    <!-- Meals -->
+    <string name="meals_title">Meals</string>
+    <string name="meals_item_summary">%1$d portions, %2$s kcal, %3$dg • %4$d times</string>
+
+    <!-- Foods -->
+    <string name="foods_title">Foods</string>
+    <string name="foods_edit_title">Edit food</string>
+    <string name="foods_energy_label">Energy kcal per 100g</string>
+    <string name="foods_serving_size_label">Serving size</string>
+    <string name="foods_optional_fields">Optional fields</string>
+    <string name="foods_product_url_label">Product URL</string>
+    <string name="foods_gtin_label">GTIN-13</string>
+    <string name="foods_source_label">Source</string>
+    <string name="foods_aliases_title">Aliases</string>
+    <string name="foods_add_alias_button">Add Alias</string>
+    <string name="foods_no_aliases">No aliases yet. Add brand names, translations, or alternative names.</string>
+    <string name="foods_delete_alias_desc">Delete alias</string>
+    <string name="foods_add_alias_dialog_title">Add Alias</string>
+    <string name="foods_alias_field_label">Alias (brand name, translation, etc.)</string>
+    <string name="foods_item_summary_with_serving">%1$d kcal • %2$sg • %3$d times</string>
+    <string name="foods_item_summary_no_serving">%1$d kcal • %2$d times</string>
+
+    <!-- Weight -->
+    <string name="weight_title">Weight</string>
+    <string name="weight_add_dialog_title">Add today\'s weight</string>
+    <string name="weight_kg_field_label">kg</string>
+    <string name="weight_add_weight_desc">Add weight</string>
+    <string name="weight_chart_label">Weights</string>
+
+    <!-- Exercise -->
+    <string name="exercise_title">Exercise</string>
+    <string name="exercise_health_connect_prompt">Connect Health Connect to track steps automatically</string>
+    <string name="exercise_minutes_kcal_summary">%1$d min · %2$d kcal</string>
+    <string name="exercise_kcal_time_summary">%1$d kcal · %2$s</string>
+
+    <!-- Edit Meal -->
+    <string name="edit_meal_title">Edit %1$s</string>
+    <string name="edit_meal_delete_desc">Delete meal</string>
+    <string name="edit_meal_items_header">Items</string>
+
+    <!-- Meal Time -->
+    <string name="meal_time_save_as_meal_title">Save as meal</string>
+    <string name="meal_time_same_as_yesterday">Same as yesterday</string>
+    <string name="meal_time_leftovers">Leftovers</string>
+
+    <!-- Source Preferences -->
+    <string name="source_prefs_title">Search Sources</string>
+    <string name="source_prefs_body">Open Food Facts is always included. You can optionally add one regional source — its results will appear first.</string>
+    <string name="source_prefs_regional_source">Regional source</string>
+    <string name="source_prefs_none">None</string>
+    <string name="source_prefs_none_only">Use Open Food Facts only</string>
+    <string name="source_prefs_always_included">Always included</string>
+    <string name="source_prefs_open_food_facts">Open Food Facts</string>
+    <string name="source_prefs_global_database">Global open food database</string>
+
+    <!-- Loading -->
+    <string name="loading_seeding">Seeding data... %1$d%%</string>
+    <string name="loading_initializing">Initializing...</string>
+
+    <!-- Search -->
+    <string name="search_no_local_results">No local results found</string>
+    <string name="search_online_instead">Search online instead?</string>
+    <string name="search_setup_sources_subtitle">Set up your online search sources</string>
+    <string name="search_search_online_button">Search online</string>
+    <string name="search_configure_sources_button">Configure sources</string>
+    <string name="search_online_query">Search for \"%1$s\" online</string>
+    <string name="search_configure_sources_desc">Configure search sources</string>
+
+    <!-- Main -->
+    <string name="main_today">Today</string>
+    <string name="main_ok">OK</string>
+    <string name="main_weight_desc">Weight</string>
+    <string name="main_statistics_desc">Statistics</string>
+    <string name="main_settings_desc">Settings</string>
 </resources>

@@ -22,6 +22,30 @@ import com.emilflach.lokcal.ui.components.PlatformScaffold
 import com.emilflach.lokcal.ui.components.SingleInputAlertDialog
 import com.emilflach.lokcal.ui.dialogs.StealImageDialog
 import io.ktor.http.*
+import lokcal.shared.generated.resources.Res
+import lokcal.shared.generated.resources.common_add
+import lokcal.shared.generated.resources.common_add_food
+import lokcal.shared.generated.resources.common_back
+import lokcal.shared.generated.resources.common_cancel
+import lokcal.shared.generated.resources.common_delete
+import lokcal.shared.generated.resources.common_google_image_search_desc
+import lokcal.shared.generated.resources.common_image_url_label
+import lokcal.shared.generated.resources.common_name
+import lokcal.shared.generated.resources.common_steal_image_desc
+import lokcal.shared.generated.resources.foods_add_alias_button
+import lokcal.shared.generated.resources.foods_add_alias_dialog_title
+import lokcal.shared.generated.resources.foods_alias_field_label
+import lokcal.shared.generated.resources.foods_aliases_title
+import lokcal.shared.generated.resources.foods_delete_alias_desc
+import lokcal.shared.generated.resources.foods_edit_title
+import lokcal.shared.generated.resources.foods_energy_label
+import lokcal.shared.generated.resources.foods_gtin_label
+import lokcal.shared.generated.resources.foods_no_aliases
+import lokcal.shared.generated.resources.foods_optional_fields
+import lokcal.shared.generated.resources.foods_product_url_label
+import lokcal.shared.generated.resources.foods_serving_size_label
+import lokcal.shared.generated.resources.foods_source_label
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,10 +73,10 @@ fun FoodEditScreen(
     PlatformScaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (isEdit) "Edit food" else "Add food") },
+                title = { Text(if (isEdit) stringResource(Res.string.foods_edit_title) else stringResource(Res.string.common_add_food)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.common_back))
                     }
                 },
                 actions = {
@@ -60,7 +84,7 @@ fun FoodEditScreen(
                         IconButton(onClick = {
                             viewModel.delete(onDeleted)
                         }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Delete")
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.common_delete))
                         }
                     }
                 },
@@ -84,7 +108,7 @@ fun FoodEditScreen(
                 OutlinedTextField(
                     value = state.name,
                     onValueChange = { viewModel.updateName(it) },
-                    label = { Text("Name") },
+                    label = { Text(stringResource(Res.string.common_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -92,7 +116,7 @@ fun FoodEditScreen(
                 OutlinedTextField(
                     value = state.energyText,
                     onValueChange = { viewModel.updateEnergyText(it) },
-                    label = { Text("Energy kcal per 100g") },
+                    label = { Text(stringResource(Res.string.foods_energy_label)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
@@ -101,17 +125,17 @@ fun FoodEditScreen(
                 OutlinedTextField(
                     value = state.servingSize,
                     onValueChange = { viewModel.updateServingSize(it) },
-                    label = { Text("Serving size") },
+                    label = { Text(stringResource(Res.string.foods_serving_size_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(Modifier.height(16.dp))
-                Text("Optional fields")
+                Text(stringResource(Res.string.foods_optional_fields))
                 OutlinedTextField(
                     value = state.productUrl,
                     onValueChange = { viewModel.updateProductUrl(it) },
-                    label = { Text("Product URL") },
+                    label = { Text(stringResource(Res.string.foods_product_url_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -119,7 +143,7 @@ fun FoodEditScreen(
                 OutlinedTextField(
                     value = state.imageUrl,
                     onValueChange = { viewModel.updateImageUrl(it) },
-                    label = { Text("Image URL") },
+                    label = { Text(stringResource(Res.string.common_image_url_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
@@ -129,10 +153,10 @@ fun FoodEditScreen(
                                     "https://www.google.com/search?q=${state.name.encodeURLParameter()}&udm=2&tbs=isz:i"
                                 uriHandler.openUri(url)
                             }) {
-                                Icon(Icons.Default.ImageSearch, contentDescription = "Google Image Search")
+                                Icon(Icons.Default.ImageSearch, contentDescription = stringResource(Res.string.common_google_image_search_desc))
                             }
                             IconButton(onClick = { viewModel.openStealDialog() }) {
-                                Icon(Icons.Default.ContentCopy, contentDescription = "Steal image URL")
+                                Icon(Icons.Default.ContentCopy, contentDescription = stringResource(Res.string.common_steal_image_desc))
                             }
                         }
                     }
@@ -141,7 +165,7 @@ fun FoodEditScreen(
                 OutlinedTextField(
                     value = state.gtin13,
                     onValueChange = { viewModel.updateGtin13(it) },
-                    label = { Text("GTIN-13") },
+                    label = { Text(stringResource(Res.string.foods_gtin_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -149,7 +173,7 @@ fun FoodEditScreen(
                 OutlinedTextField(
                     value = state.source,
                     onValueChange = { viewModel.updateSource(it) },
-                    label = { Text("Source") },
+                    label = { Text(stringResource(Res.string.foods_source_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -198,16 +222,16 @@ private fun AliasManagementSection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
         ) {
-            Text("Aliases", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(Res.string.foods_aliases_title), style = MaterialTheme.typography.titleMedium)
             FilledTonalButton(onClick = { showAddDialog = true }) {
                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.padding(end = 4.dp))
-                Text("Add Alias")
+                Text(stringResource(Res.string.foods_add_alias_button))
             }
         }
 
         if (aliases.isEmpty()) {
             Text(
-                "No aliases yet. Add brand names, translations, or alternative names.",
+                stringResource(Res.string.foods_no_aliases),
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.foregroundSupport
             )
@@ -249,7 +273,7 @@ private fun AliasCard(
         ) {
             Text(alias.alias, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete alias")
+                Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.foods_delete_alias_desc))
             }
         }
     }
@@ -261,11 +285,11 @@ private fun AddAliasDialog(
     onAdd: (String) -> Unit
 ) {
     SingleInputAlertDialog(
-        title = "Add Alias",
-        fieldLabel = "Alias (brand name, translation, etc.)",
+        title = stringResource(Res.string.foods_add_alias_dialog_title),
+        fieldLabel = stringResource(Res.string.foods_alias_field_label),
         initialValue = "",
-        confirmText = "Add",
-        dismissText = "Cancel",
+        confirmText = stringResource(Res.string.common_add),
+        dismissText = stringResource(Res.string.common_cancel),
         keyboardType = KeyboardType.Text,
         error = null,
         onConfirm = { value -> if (value.isNotBlank()) onAdd(value.trim()) },

@@ -17,6 +17,17 @@ import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.AppBackHandler
 import com.emilflach.lokcal.ui.components.PlatformScaffold
 import com.emilflach.lokcal.viewmodel.SourcePreferenceViewModel
+import lokcal.shared.generated.resources.Res
+import lokcal.shared.generated.resources.common_back
+import lokcal.shared.generated.resources.source_prefs_always_included
+import lokcal.shared.generated.resources.source_prefs_body
+import lokcal.shared.generated.resources.source_prefs_global_database
+import lokcal.shared.generated.resources.source_prefs_none
+import lokcal.shared.generated.resources.source_prefs_none_only
+import lokcal.shared.generated.resources.source_prefs_open_food_facts
+import lokcal.shared.generated.resources.source_prefs_regional_source
+import lokcal.shared.generated.resources.source_prefs_title
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,10 +45,10 @@ fun SourcePreferenceScreen(
     PlatformScaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Search Sources") },
+                title = { Text(stringResource(Res.string.source_prefs_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.common_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -57,7 +68,7 @@ fun SourcePreferenceScreen(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Open Food Facts is always included. You can optionally add one regional source — its results will appear first.",
+                text = stringResource(Res.string.source_prefs_body),
                 style = MaterialTheme.typography.bodyMedium,
                 color = colors.foregroundSupport,
                 modifier = Modifier.padding(bottom = 24.dp)
@@ -65,7 +76,7 @@ fun SourcePreferenceScreen(
 
             // Optional regional sources
             Text(
-                text = "Regional source",
+                text = stringResource(Res.string.source_prefs_regional_source),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = colors.foregroundDefault,
@@ -81,14 +92,14 @@ fun SourcePreferenceScreen(
                     modifier = Modifier.clickable { viewModel.selectNone() },
                     headlineContent = {
                         Text(
-                            text = "None",
+                            text = stringResource(Res.string.source_prefs_none),
                             style = MaterialTheme.typography.bodyLarge,
                             color = colors.foregroundDefault
                         )
                     },
                     supportingContent = {
                         Text(
-                            text = "Use Open Food Facts only",
+                            text = stringResource(Res.string.source_prefs_none_only),
                             style = MaterialTheme.typography.bodySmall,
                             color = colors.foregroundSupport
                         )
@@ -129,7 +140,7 @@ fun SourcePreferenceScreen(
 
             // Always-included section
             Text(
-                text = "Always included",
+                text = stringResource(Res.string.source_prefs_always_included),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = colors.foregroundDefault,
@@ -143,14 +154,14 @@ fun SourcePreferenceScreen(
                 ListItem(
                     headlineContent = {
                         Text(
-                            text = "Open Food Facts",
+                            text = stringResource(Res.string.source_prefs_open_food_facts),
                             style = MaterialTheme.typography.bodyLarge,
                             color = colors.foregroundDefault
                         )
                     },
                     supportingContent = {
                         Text(
-                            text = "Global open food database",
+                            text = stringResource(Res.string.source_prefs_global_database),
                             style = MaterialTheme.typography.bodySmall,
                             color = colors.foregroundSupport
                         )

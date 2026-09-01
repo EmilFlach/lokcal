@@ -15,6 +15,15 @@ import com.emilflach.lokcal.ui.components.*
 import com.emilflach.lokcal.util.NumberUtils.sanitizeDecimalInput
 import com.emilflach.lokcal.viewmodel.MealTimeViewModel
 import kotlin.math.roundToInt
+import lokcal.shared.generated.resources.Res
+import lokcal.shared.generated.resources.common_cancel
+import lokcal.shared.generated.resources.common_name
+import lokcal.shared.generated.resources.common_save
+import lokcal.shared.generated.resources.common_total_portions_label
+import lokcal.shared.generated.resources.meal_time_leftovers
+import lokcal.shared.generated.resources.meal_time_same_as_yesterday
+import lokcal.shared.generated.resources.meal_time_save_as_meal_title
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,15 +44,15 @@ fun MealTimeScreen(
 
     if (showSaveMealDialog) {
         DualInputAlertDialog(
-            title = "Save as meal",
-            field1Label = "Name",
+            title = stringResource(Res.string.meal_time_save_as_meal_title),
+            field1Label = stringResource(Res.string.common_name),
             field1Initial = "",
             field1KeyboardType = KeyboardType.Text,
-            field2Label = "Total portions",
+            field2Label = stringResource(Res.string.common_total_portions_label),
             field2Initial = "1",
             field2KeyboardType = KeyboardType.Decimal,
-            confirmText = "Save",
-            dismissText = "Cancel",
+            confirmText = stringResource(Res.string.common_save),
+            dismissText = stringResource(Res.string.common_cancel),
             onConfirm = { name, portions ->
                 viewModel.saveAsMealFromInputs(name, sanitizeDecimalInput(portions))
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
@@ -57,6 +66,8 @@ fun MealTimeScreen(
     }
     val requesters = remember { FocusRequesters() }
     val listState = rememberLazyListState()
+    val sameAsYesterdayTitle = stringResource(Res.string.meal_time_same_as_yesterday)
+    val leftoversTitle = stringResource(Res.string.meal_time_leftovers)
 
     LaunchedEffect(Unit) {
         if (shouldHighlightLatest) {
@@ -98,14 +109,14 @@ fun MealTimeScreen(
                 )
 
                 mealTimeSuggestionsSection(
-                    title = "Same as yesterday",
+                    title = sameAsYesterdayTitle,
                     items = state.yesterdayItems,
                     viewModel = viewModel,
                     requesters = requesters,
                 )
 
                 mealTimeSuggestionsSection(
-                    title = "Leftovers",
+                    title = leftoversTitle,
                     items = state.leftoversItems,
                     viewModel = viewModel,
                     requesters = requesters,

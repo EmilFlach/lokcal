@@ -28,6 +28,11 @@ import com.emilflach.lokcal.ui.util.LocalImageCache
 import com.emilflach.lokcal.ui.util.rememberKtorImageLoader
 import com.emilflach.lokcal.viewmodel.MealsListViewModel
 import kotlinx.coroutines.launch
+import lokcal.shared.generated.resources.Res
+import lokcal.shared.generated.resources.common_filter
+import lokcal.shared.generated.resources.meals_item_summary
+import lokcal.shared.generated.resources.meals_title
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,7 +75,7 @@ fun MealsListScreen(
     PlatformScaffold(
         topBar = {
             MealTopBar(
-                title = "Meals",
+                title = stringResource(Res.string.meals_title),
                 onBack = onBack,
                 showSearch = true,
                 showOnlineSearch = false,
@@ -81,7 +86,7 @@ fun MealsListScreen(
                     IconButton(onClick = { viewModel.toggleMissingImagesFilter() }) {
                         Icon(
                             Icons.Filled.FilterList,
-                            contentDescription = "Filter",
+                            contentDescription = stringResource(Res.string.common_filter),
                             tint = if (filterMissingImages) colors.foregroundBrand else colors.foregroundDefault
                         )
                     }
@@ -122,7 +127,7 @@ fun MealsListScreen(
                         }
                         val (grams, kcal) = totals
                         val freq = frequencies["MEAL" to meal.id] ?: 0
-                        Text("${portions.toInt()} portions, $kcal kcal, ${grams.toInt()}g • $freq times")
+                        Text(stringResource(Res.string.meals_item_summary, portions.toInt(), kcal.toString(), grams.toInt(), freq))
                     },
                     modifier = Modifier.clip(
                         getRoundedCornerShape(

@@ -23,6 +23,15 @@ import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.*
 import com.emilflach.lokcal.ui.util.EntityImageData
 import com.emilflach.lokcal.viewmodel.ExerciseListViewModel
+import lokcal.shared.generated.resources.Res
+import lokcal.shared.generated.resources.common_enable
+import lokcal.shared.generated.resources.common_kcal_value
+import lokcal.shared.generated.resources.common_step_tracking
+import lokcal.shared.generated.resources.exercise_health_connect_prompt
+import lokcal.shared.generated.resources.exercise_kcal_time_summary
+import lokcal.shared.generated.resources.exercise_minutes_kcal_summary
+import lokcal.shared.generated.resources.exercise_title
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,7 +61,7 @@ fun ExerciseListScreen(
     PlatformScaffold(
         topBar = {
             MealTopBar(
-                title = "Exercise",
+                title = stringResource(Res.string.exercise_title),
                 onBack = onBack,
                 showSearch = false,
             )
@@ -101,14 +110,14 @@ fun ExerciseListScreen(
 
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                "Step tracking",
+                                stringResource(Res.string.common_step_tracking),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = colors.foregroundDefault,
                                 modifier = Modifier.padding(end = 8.dp),
                             )
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                text = "Connect Health Connect to track steps automatically",
+                                text = stringResource(Res.string.exercise_health_connect_prompt),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = colors.foregroundSupport,
                                 modifier = Modifier.padding(end = 8.dp),
@@ -116,7 +125,7 @@ fun ExerciseListScreen(
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(onClick = onEnableHealth) {
-                            Text(text = "Enable")
+                            Text(text = stringResource(Res.string.common_enable))
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
@@ -142,10 +151,10 @@ fun ExerciseListScreen(
                     title = label,
                     subtitle = when {
                         e.exercise_type == ExerciseRepository.AUTOMATIC_STEPS_KEY ->
-                            "${e.duration_min.toInt()} min · ${e.energy_kcal_total.toInt()} kcal"
+                            stringResource(Res.string.exercise_minutes_kcal_summary, e.duration_min.toInt(), e.energy_kcal_total.toInt())
                         e.energy_kcal_total > 0 ->
-                            "${e.energy_kcal_total.toInt()} kcal · ${e.timestamp.toDisplayTime()}"
-                        else -> "${e.energy_kcal_total.toInt()} kcal"
+                            stringResource(Res.string.exercise_kcal_time_summary, e.energy_kcal_total.toInt(), e.timestamp.toDisplayTime())
+                        else -> stringResource(Res.string.common_kcal_value, e.energy_kcal_total.toInt())
                     },
                     index = actualIndex,
                     size = totalSize,

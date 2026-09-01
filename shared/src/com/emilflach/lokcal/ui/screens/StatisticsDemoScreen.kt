@@ -11,6 +11,10 @@ import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.AppBackHandler
 import com.emilflach.lokcal.ui.components.PlatformScaffold
 import com.emilflach.lokcal.viewmodel.StatisticsViewModel
+import lokcal.shared.generated.resources.Res
+import lokcal.shared.generated.resources.common_back
+import lokcal.shared.generated.resources.statistics_demo_title
+import org.jetbrains.compose.resources.stringResource
 
 // Reference end date for all demo data
 private const val DEMO_END = "2026-04-09"
@@ -44,10 +48,10 @@ fun StatisticsDemoScreen(onBack: () -> Unit) {
     PlatformScaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Demo") },
+                title = { Text(stringResource(Res.string.statistics_demo_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.common_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.backgroundPage)
