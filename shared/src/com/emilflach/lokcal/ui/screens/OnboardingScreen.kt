@@ -11,6 +11,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import lokcal.shared.generated.resources.Res
+import lokcal.shared.generated.resources.onboarding_body
+import lokcal.shared.generated.resources.onboarding_footnote
+import lokcal.shared.generated.resources.onboarding_start_tracking
+import lokcal.shared.generated.resources.onboarding_step1
+import lokcal.shared.generated.resources.onboarding_step2
+import lokcal.shared.generated.resources.onboarding_step3
+import lokcal.shared.generated.resources.onboarding_tagline
+import lokcal.shared.generated.resources.onboarding_title
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun OnboardingScreen(onGetStarted: () -> Unit) {
@@ -30,7 +40,7 @@ internal fun OnboardingScreen(onGetStarted: () -> Unit) {
             Spacer(Modifier.weight(1f))
 
             Text(
-                text = "Lokcal",
+                text = stringResource(Res.string.onboarding_title),
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 40.sp,
@@ -41,7 +51,7 @@ internal fun OnboardingScreen(onGetStarted: () -> Unit) {
             Spacer(Modifier.height(12.dp))
 
             Text(
-                text = "A calorie tracker that is instant, uses real grocery data and respects your privacy",
+                text = stringResource(Res.string.onboarding_tagline),
                 style = MaterialTheme.typography.titleMedium.copy(
                     color = colors.foregroundDefault,
                     fontWeight = FontWeight.Normal
@@ -52,7 +62,7 @@ internal fun OnboardingScreen(onGetStarted: () -> Unit) {
             Spacer(Modifier.height(40.dp))
 
             Text(
-                text = "Don't set a goal yet. Just track for four weeks to see how you actually eat. Learn the rhythm of weighing food at home and estimating while out.",
+                text = stringResource(Res.string.onboarding_body),
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = colors.foregroundSupport,
                     lineHeight = 22.sp
@@ -62,11 +72,11 @@ internal fun OnboardingScreen(onGetStarted: () -> Unit) {
 
             Spacer(Modifier.height(36.dp))
 
-            OnboardingStep(number = "1", text = "Log everything. Even (especially) the bad days.")
+            OnboardingStep(number = "1", text = stringResource(Res.string.onboarding_step1))
             Spacer(Modifier.height(16.dp))
-            OnboardingStep(number = "2", text = "Weigh yourself daily. Do this for one month to find your baseline, then switch to weekly.")
+            OnboardingStep(number = "2", text = stringResource(Res.string.onboarding_step2))
             Spacer(Modifier.height(16.dp))
-            OnboardingStep(number = "3", text = "Review the data. After 4 weeks, your stats are complete enough to start making informed changes.")
+            OnboardingStep(number = "3", text = stringResource(Res.string.onboarding_step3))
 
             Spacer(Modifier.weight(1.5f))
 
@@ -82,7 +92,7 @@ internal fun OnboardingScreen(onGetStarted: () -> Unit) {
                 )
             ) {
                 Text(
-                    text = "Start Tracking",
+                    text = stringResource(Res.string.onboarding_start_tracking),
                     style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
                 )
             }
@@ -90,7 +100,7 @@ internal fun OnboardingScreen(onGetStarted: () -> Unit) {
             Spacer(Modifier.height(12.dp))
 
             Text(
-                text = "A starting calorie goal was set for you. Adjust it anytime in Settings.",
+                text = stringResource(Res.string.onboarding_footnote),
                 style = MaterialTheme.typography.bodySmall.copy(color = colors.foregroundDisabled),
                 textAlign = TextAlign.Center
             )

@@ -14,6 +14,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import lokcal.shared.generated.resources.Res
+import lokcal.shared.generated.resources.loading_initializing
+import lokcal.shared.generated.resources.loading_seeding
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun AppLoadingScreen(seedingProgress: Float?) {
@@ -35,7 +39,7 @@ internal fun AppLoadingScreen(seedingProgress: Float?) {
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Seeding data... ${(seedingProgress * 100).toInt()}%",
+                    text = stringResource(Res.string.loading_seeding, (seedingProgress * 100).toInt()),
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.foregroundDefault
                 )
@@ -43,7 +47,7 @@ internal fun AppLoadingScreen(seedingProgress: Float?) {
                 CircularProgressIndicator(color = colors.backgroundBrand)
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Initializing...",
+                    text = stringResource(Res.string.loading_initializing),
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.foregroundDefault
                 )

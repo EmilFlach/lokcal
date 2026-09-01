@@ -33,6 +33,18 @@ import com.emilflach.lokcal.viewmodel.WeightListViewModel
 import ir.ehsannarmani.compose_charts.LineChart
 import ir.ehsannarmani.compose_charts.models.*
 import ir.ehsannarmani.compose_charts.models.DrawStyle.Stroke
+import lokcal.shared.generated.resources.Res
+import lokcal.shared.generated.resources.common_back
+import lokcal.shared.generated.resources.common_cancel
+import lokcal.shared.generated.resources.common_delete
+import lokcal.shared.generated.resources.common_kg_value
+import lokcal.shared.generated.resources.common_save
+import lokcal.shared.generated.resources.weight_add_dialog_title
+import lokcal.shared.generated.resources.weight_add_weight_desc
+import lokcal.shared.generated.resources.weight_chart_label
+import lokcal.shared.generated.resources.weight_kg_field_label
+import lokcal.shared.generated.resources.weight_title
+import org.jetbrains.compose.resources.stringResource
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,11 +72,11 @@ fun WeightListScreen(
 
     if (showAddDialog) {
         SingleInputAlertDialog(
-            title = "Add today's weight",
-            fieldLabel = "kg",
+            title = stringResource(Res.string.weight_add_dialog_title),
+            fieldLabel = stringResource(Res.string.weight_kg_field_label),
             initialValue = input,
-            confirmText = "Save",
-            dismissText = "Cancel",
+            confirmText = stringResource(Res.string.common_save),
+            dismissText = stringResource(Res.string.common_cancel),
             keyboardType = KeyboardType.Decimal,
             error = error,
             onConfirm = { value ->
@@ -82,15 +94,15 @@ fun WeightListScreen(
     PlatformScaffold(
         topBar = {
                 TopAppBar(
-                    title = { Text("Weight") },
+                    title = { Text(stringResource(Res.string.weight_title)) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.common_back))
                         }
                     },
                     actions = {
                         IconButton(onClick = { viewModel.openAddDialog(true) }) {
-                            Icon(Icons.Filled.Add, contentDescription = "Add weight")
+                            Icon(Icons.Filled.Add, contentDescription = stringResource(Res.string.weight_add_weight_desc))
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -111,12 +123,12 @@ fun WeightListScreen(
             }
             items(items) { item: WeightLog ->
                 ListItem(
-                    headlineContent = { Text("${item.weight_kg} kg") },
+                    headlineContent = { Text(stringResource(Res.string.common_kg_value, item.weight_kg.toString())) },
                     supportingContent = { Text(item.date, color = colors.foregroundSupport) },
                     trailingContent = {
                         Icon(
                             imageVector = Icons.Filled.Delete,
-                            contentDescription = "Delete",
+                            contentDescription = stringResource(Res.string.common_delete),
                             modifier = Modifier
                                 .size(24.dp)
                                 .clickable {
@@ -144,6 +156,7 @@ fun WeightChart(viewModel: WeightListViewModel) {
     val weights = chart.weights
 
     val graphTextStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.foregroundSupport)
+    val weightsLabel = stringResource(Res.string.weight_chart_label)
     Box(
         modifier = Modifier.height(200.dp).fillMaxWidth().padding(vertical = 16.dp)) {
         LineChart(
@@ -162,7 +175,7 @@ fun WeightChart(viewModel: WeightListViewModel) {
             data = remember (weights) {
                 listOf(
                     Line(
-                        label = "Weights",
+                        label = weightsLabel,
                         values = weights,
                         color = SolidColor(colors.foregroundBrand),
                         firstGradientFillColor = colors.foregroundBrand.copy(alpha = .5f),
@@ -177,7 +190,7 @@ fun WeightChart(viewModel: WeightListViewModel) {
             animationMode = AnimationMode.Together(),
         )
         Text(
-            text = "${chart.min} kg",
+            text = stringResource(Res.string.common_kg_value, chart.min.toString()),
             style = graphTextStyle,
             modifier = Modifier
                 .align(Alignment.BottomStart)
@@ -187,7 +200,7 @@ fun WeightChart(viewModel: WeightListViewModel) {
                 .padding(horizontal = 8.dp, vertical = 2.dp),
         )
         Text(
-            text = "${chart.max} kg",
+            text = stringResource(Res.string.common_kg_value, chart.max.toString()),
             style = graphTextStyle,
             modifier = Modifier
                 .align(Alignment.TopStart)

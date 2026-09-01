@@ -28,6 +28,18 @@ import com.emilflach.lokcal.ui.dialogs.StealImageDialog
 import com.emilflach.lokcal.ui.util.EntityImageData
 import com.emilflach.lokcal.viewmodel.EditMealViewModel
 import io.ktor.http.*
+import lokcal.shared.generated.resources.Res
+import lokcal.shared.generated.resources.common_add_food
+import lokcal.shared.generated.resources.common_back
+import lokcal.shared.generated.resources.common_google_image_search_desc
+import lokcal.shared.generated.resources.common_image_url_label
+import lokcal.shared.generated.resources.common_name
+import lokcal.shared.generated.resources.common_steal_image_desc
+import lokcal.shared.generated.resources.common_total_portions_label
+import lokcal.shared.generated.resources.edit_meal_delete_desc
+import lokcal.shared.generated.resources.edit_meal_items_header
+import lokcal.shared.generated.resources.edit_meal_title
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,17 +60,17 @@ fun EditMealScreen(
     PlatformScaffold(
         topBar = {
                 TopAppBar(
-                    title = { Text("Edit ${state.name}") },
+                    title = { Text(stringResource(Res.string.edit_meal_title, state.name)) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.common_back))
                         }
                     },
                     actions = {
                         IconButton(onClick = {
                             viewModel.deleteMeal(onDeleted)
                         }) {
-                            Icon(Icons.Outlined.Delete, contentDescription = "Delete meal")
+                            Icon(Icons.Outlined.Delete, contentDescription = stringResource(Res.string.edit_meal_delete_desc))
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -82,7 +94,7 @@ fun EditMealScreen(
                     value = state.name,
                     onValueChange = viewModel::setName,
                     singleLine = true,
-                    label = { Text("Name") },
+                    label = { Text(stringResource(Res.string.common_name)) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(8.dp))
@@ -90,7 +102,7 @@ fun EditMealScreen(
                     value = state.imageUrl,
                     onValueChange = viewModel::setImageUrl,
                     singleLine = true,
-                    label = { Text("Image URL") },
+                    label = { Text(stringResource(Res.string.common_image_url_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
                         Row {
@@ -98,10 +110,10 @@ fun EditMealScreen(
                                 val url = "https://www.google.com/search?q=${state.name.encodeURLParameter()}&udm=2&tbs=isz:i"
                                 uriHandler.openUri(url)
                             }) {
-                                Icon(Icons.Default.ImageSearch, contentDescription = "Google Image Search")
+                                Icon(Icons.Default.ImageSearch, contentDescription = stringResource(Res.string.common_google_image_search_desc))
                             }
                             IconButton(onClick = { viewModel.openStealDialog() }) {
-                                Icon(Icons.Default.ContentCopy, contentDescription = "Steal image URL")
+                                Icon(Icons.Default.ContentCopy, contentDescription = stringResource(Res.string.common_steal_image_desc))
                             }
                         }
                     }
@@ -111,11 +123,11 @@ fun EditMealScreen(
                     value = state.totalPortions,
                     onValueChange = viewModel::setTotalPortionsText,
                     singleLine = true,
-                    label = { Text("Total portions") },
+                    label = { Text(stringResource(Res.string.common_total_portions_label)) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(16.dp))
-                Text("Items", style = MaterialTheme.typography.titleMedium, color = colors.foregroundDefault)
+                Text(stringResource(Res.string.edit_meal_items_header), style = MaterialTheme.typography.titleMedium, color = colors.foregroundDefault)
                 Spacer(Modifier.height(8.dp))
             }
             items(state.items, key = { it.mealItemId }) { item ->
@@ -153,7 +165,7 @@ fun EditMealScreen(
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Add food")
+                    Text(stringResource(Res.string.common_add_food))
                 }
             }
         }

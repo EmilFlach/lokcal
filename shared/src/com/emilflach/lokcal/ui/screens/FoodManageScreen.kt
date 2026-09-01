@@ -29,6 +29,13 @@ import com.emilflach.lokcal.ui.util.LocalImageCache
 import com.emilflach.lokcal.ui.util.rememberKtorImageLoader
 import com.emilflach.lokcal.viewmodel.FoodEditViewModel
 import kotlinx.coroutines.launch
+import lokcal.shared.generated.resources.Res
+import lokcal.shared.generated.resources.common_add_food
+import lokcal.shared.generated.resources.common_filter
+import lokcal.shared.generated.resources.foods_item_summary_no_serving
+import lokcal.shared.generated.resources.foods_item_summary_with_serving
+import lokcal.shared.generated.resources.foods_title
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,7 +78,7 @@ fun FoodManageScreen(
     PlatformScaffold(
         topBar = {
             MealTopBar(
-                title = "Foods",
+                title = stringResource(Res.string.foods_title),
                 onBack = onBack,
                 showSearch = true,
                 showOnlineSearch = false,
@@ -82,12 +89,12 @@ fun FoodManageScreen(
                     IconButton(onClick = { viewModel.toggleMissingImagesFilter() }) {
                         Icon(
                             Icons.Filled.FilterList,
-                            contentDescription = "Filter",
+                            contentDescription = stringResource(Res.string.common_filter),
                             tint = if (filterMissingImages) colors.foregroundBrand else colors.foregroundDefault
                         )
                     }
                     IconButton(onClick = { onOpenEdit(null) }) {
-                        Icon(Icons.Filled.Add, contentDescription = "Add food")
+                        Icon(Icons.Filled.Add, contentDescription = stringResource(Res.string.common_add_food))
                     }
                 }
             )
@@ -122,7 +129,10 @@ fun FoodManageScreen(
                         val kcal = food.energy_kcal_per_100g
                         val servingSize = food.serving_size?.let { if (it % 1 == 0.0) it.toLong().toString() else it.toString() }
                         val freq = frequencies["FOOD" to food.id] ?: 0
-                        Text("${kcal.toInt()} kcal${if (servingSize != null) " • ${servingSize}g" else ""} • $freq times")
+                        Text(
+                            if (servingSize != null) stringResource(Res.string.foods_item_summary_with_serving, kcal.toInt(), servingSize, freq)
+                            else stringResource(Res.string.foods_item_summary_no_serving, kcal.toInt(), freq)
+                        )
                     },
                     modifier = Modifier.clip(
                         getRoundedCornerShape(

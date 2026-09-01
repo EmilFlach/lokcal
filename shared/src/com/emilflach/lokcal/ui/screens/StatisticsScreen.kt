@@ -31,6 +31,55 @@ import com.emilflach.lokcal.viewmodel.StatisticsViewModel
 import ir.ehsannarmani.compose_charts.LineChart
 import ir.ehsannarmani.compose_charts.models.*
 import ir.ehsannarmani.compose_charts.models.DrawStyle.Stroke
+import lokcal.shared.generated.resources.Res
+import lokcal.shared.generated.resources.common_back
+import lokcal.shared.generated.resources.common_kcal_value
+import lokcal.shared.generated.resources.common_kg_value
+import lokcal.shared.generated.resources.statistics_burned_kcal
+import lokcal.shared.generated.resources.statistics_daily_averages
+import lokcal.shared.generated.resources.statistics_eaten_kcal
+import lokcal.shared.generated.resources.statistics_explore_demo
+import lokcal.shared.generated.resources.statistics_getting_started
+import lokcal.shared.generated.resources.statistics_got_it
+import lokcal.shared.generated.resources.statistics_how_this_works_body
+import lokcal.shared.generated.resources.statistics_how_this_works_title
+import lokcal.shared.generated.resources.statistics_info_content_description
+import lokcal.shared.generated.resources.statistics_intro_text
+import lokcal.shared.generated.resources.statistics_kcal_per_100g
+import lokcal.shared.generated.resources.statistics_legend_goal
+import lokcal.shared.generated.resources.statistics_legend_weight
+import lokcal.shared.generated.resources.statistics_maintenance_calories
+import lokcal.shared.generated.resources.statistics_maintenance_calories_body
+import lokcal.shared.generated.resources.statistics_maintenance_value
+import lokcal.shared.generated.resources.statistics_net_above_goal
+import lokcal.shared.generated.resources.statistics_net_below_goal
+import lokcal.shared.generated.resources.statistics_net_daily_calories
+import lokcal.shared.generated.resources.statistics_net_intake_title
+import lokcal.shared.generated.resources.statistics_net_intake_body
+import lokcal.shared.generated.resources.statistics_net_kcal
+import lokcal.shared.generated.resources.statistics_net_on_target
+import lokcal.shared.generated.resources.statistics_no_weight_data
+import lokcal.shared.generated.resources.statistics_period_all
+import lokcal.shared.generated.resources.statistics_period_month
+import lokcal.shared.generated.resources.statistics_period_three_months
+import lokcal.shared.generated.resources.statistics_step_log_food
+import lokcal.shared.generated.resources.statistics_step_log_food_status
+import lokcal.shared.generated.resources.statistics_step_log_food_unlocks
+import lokcal.shared.generated.resources.statistics_step_weigh_ins
+import lokcal.shared.generated.resources.statistics_step_weigh_ins_unlocks
+import lokcal.shared.generated.resources.statistics_steps_done
+import lokcal.shared.generated.resources.statistics_title
+import lokcal.shared.generated.resources.statistics_top_calorie_sources
+import lokcal.shared.generated.resources.statistics_top_calorie_sources_body
+import lokcal.shared.generated.resources.statistics_trend_gaining
+import lokcal.shared.generated.resources.statistics_trend_losing
+import lokcal.shared.generated.resources.statistics_trend_stable
+import lokcal.shared.generated.resources.statistics_unlocks_prefix
+import lokcal.shared.generated.resources.statistics_weigh_tip
+import lokcal.shared.generated.resources.statistics_weight_trend
+import lokcal.shared.generated.resources.statistics_weight_trend_body
+import lokcal.shared.generated.resources.statistics_what_this_means
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,10 +104,10 @@ fun StatisticsScreen(
     PlatformScaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Statistics") },
+                title = { Text(stringResource(Res.string.statistics_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.common_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.backgroundPage)
@@ -111,7 +160,7 @@ internal fun StatisticsBody(
         InfoAlertDialog(
             title = title,
             body = body,
-            confirmText = "Got it",
+            confirmText = stringResource(Res.string.statistics_got_it),
             onDismiss = { activeTooltip = null }
         )
     }
@@ -166,9 +215,9 @@ internal fun StatisticsBody(
                             ) {
                                 Text(
                                     text = when (p) {
-                                        StatisticsViewModel.Period.MONTH -> "30 days"
-                                        StatisticsViewModel.Period.THREE_MONTHS -> "90 days"
-                                        StatisticsViewModel.Period.ALL -> "All time"
+                                        StatisticsViewModel.Period.MONTH -> stringResource(Res.string.statistics_period_month)
+                                        StatisticsViewModel.Period.THREE_MONTHS -> stringResource(Res.string.statistics_period_three_months)
+                                        StatisticsViewModel.Period.ALL -> stringResource(Res.string.statistics_period_all)
                                     },
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
@@ -198,7 +247,7 @@ internal fun StatisticsBody(
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
-                            "Daily averages",
+                            stringResource(Res.string.statistics_daily_averages),
                             style = MaterialTheme.typography.bodySmall,
                             color = colors.foregroundSupport
                         )
@@ -209,7 +258,7 @@ internal fun StatisticsBody(
                         ) {
                             Column(horizontalAlignment = Alignment.Start) {
                                 Text(
-                                    "Eaten kcal",
+                                    stringResource(Res.string.statistics_eaten_kcal),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = colors.foregroundSupport
                                 )
@@ -224,7 +273,7 @@ internal fun StatisticsBody(
                             if (ins.avgBurned > 10) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(
-                                        "Burned kcal",
+                                        stringResource(Res.string.statistics_burned_kcal),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = colors.foregroundSupport
                                     )
@@ -239,7 +288,7 @@ internal fun StatisticsBody(
                             }
                             Column(horizontalAlignment = Alignment.End) {
                                 Text(
-                                    "Net kcal",
+                                    stringResource(Res.string.statistics_net_kcal),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = colors.foregroundSupport
                                 )
@@ -253,8 +302,8 @@ internal fun StatisticsBody(
                                     )
                                     Spacer(Modifier.width(3.dp))
                                     TooltipIcon(
-                                        title = "Net intake",
-                                        body = "Calories eaten minus calories burned through exercise. This is what actually drives weight change — not your raw eaten total.",
+                                        title = stringResource(Res.string.statistics_net_intake_title),
+                                        body = stringResource(Res.string.statistics_net_intake_body),
                                         onShow = showTooltip,
                                         colors = colors
                                     )
@@ -264,9 +313,9 @@ internal fun StatisticsBody(
                         Spacer(Modifier.height(10.dp))
                         Text(
                             when {
-                                underBudget -> "Net is ${-delta} kcal below your $budgetInt kcal goal"
-                                overBudget  -> "Net is $delta kcal above your $budgetInt kcal goal"
-                                else        -> "Net is on target ($budgetInt kcal goal)"
+                                underBudget -> stringResource(Res.string.statistics_net_below_goal, -delta, budgetInt)
+                                overBudget  -> stringResource(Res.string.statistics_net_above_goal, delta, budgetInt)
+                                else        -> stringResource(Res.string.statistics_net_on_target, budgetInt)
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = when {
@@ -286,20 +335,20 @@ internal fun StatisticsBody(
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        "Maintenance calories",
+                                        stringResource(Res.string.statistics_maintenance_calories),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = colors.foregroundSupport
                                     )
                                     Spacer(Modifier.width(3.dp))
                                     TooltipIcon(
-                                        title = "Maintenance calories",
-                                        body = "The calorie level at which your weight stays constant, estimated from your real data. If your weight is stable, your net intake equals your maintenance.",
+                                        title = stringResource(Res.string.statistics_maintenance_calories),
+                                        body = stringResource(Res.string.statistics_maintenance_calories_body),
                                         onShow = showTooltip,
                                         colors = colors
                                     )
                                 }
                                 Text(
-                                    "~${maint.toInt()} kcal/day",
+                                    stringResource(Res.string.statistics_maintenance_value, maint.toInt()),
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.Bold,
                                     color = colors.foregroundDefault
@@ -312,9 +361,9 @@ internal fun StatisticsBody(
                             Spacer(Modifier.height(14.dp))
                             val totalChange = ins.impliedTotalWeightChangeKg ?: 0.0
                             val trendText = when {
-                                trend > StatisticsViewModel.TREND_THRESHOLD_KG_PER_WEEK || totalChange > StatisticsViewModel.TOTAL_CHANGE_THRESHOLD_KG  -> "↑ Gaining ${trend.roundToTwoDecimals()} kg/week"
-                                trend < -StatisticsViewModel.TREND_THRESHOLD_KG_PER_WEEK || totalChange < -StatisticsViewModel.TOTAL_CHANGE_THRESHOLD_KG -> "↓ Losing ${(-trend).roundToTwoDecimals()} kg/week"
-                                else -> "→ Stable (${if (trend >= 0) "+" else ""}${trend.roundToTwoDecimals()} kg/week)"
+                                trend > StatisticsViewModel.TREND_THRESHOLD_KG_PER_WEEK || totalChange > StatisticsViewModel.TOTAL_CHANGE_THRESHOLD_KG  -> stringResource(Res.string.statistics_trend_gaining, trend.roundToTwoDecimals().toString())
+                                trend < -StatisticsViewModel.TREND_THRESHOLD_KG_PER_WEEK || totalChange < -StatisticsViewModel.TOTAL_CHANGE_THRESHOLD_KG -> stringResource(Res.string.statistics_trend_losing, (-trend).roundToTwoDecimals().toString())
+                                else -> stringResource(Res.string.statistics_trend_stable, "${if (trend >= 0) "+" else ""}${trend.roundToTwoDecimals()}")
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -323,14 +372,14 @@ internal fun StatisticsBody(
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        "Weight trend",
+                                        stringResource(Res.string.statistics_weight_trend),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = colors.foregroundSupport
                                     )
                                     Spacer(Modifier.width(3.dp))
                                     TooltipIcon(
-                                        title = "Weight trend",
-                                        body = "How much your weight is changing per week, based on a trend line through all your weigh-ins. More reliable than comparing just your first and last measurement.",
+                                        title = stringResource(Res.string.statistics_weight_trend),
+                                        body = stringResource(Res.string.statistics_weight_trend_body),
                                         onShow = showTooltip,
                                         colors = colors
                                     )
@@ -364,14 +413,14 @@ internal fun StatisticsBody(
                     Column(modifier = Modifier.padding(20.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                "What this means",
+                                stringResource(Res.string.statistics_what_this_means),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = colors.foregroundSupport
                             )
                             Spacer(Modifier.width(3.dp))
                             TooltipIcon(
-                                title = "How this works",
-                                body = "Based on your net calorie intake and actual weight change over the selected period. The more consistently you log, the more accurate this becomes.",
+                                title = stringResource(Res.string.statistics_how_this_works_title),
+                                body = stringResource(Res.string.statistics_how_this_works_body),
                                 onShow = showTooltip,
                                 colors = colors
                             )
@@ -401,6 +450,9 @@ internal fun StatisticsBody(
                 val chartMin = minOf(minNet, budget) - pad
                 val chartMax = maxOf(maxNet, budget) + pad
                 val graphTextStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.foregroundSupport)
+                val netIntakeLabel = stringResource(Res.string.statistics_net_intake_title)
+                val goalLabel = stringResource(Res.string.statistics_legend_goal)
+                val weightLabel = stringResource(Res.string.statistics_legend_weight)
 
                 val interpolatedWeights = remember(weightData, days) {
                     interpolateWeightsForDays(weightData, days)
@@ -433,7 +485,7 @@ internal fun StatisticsBody(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "Net daily calories",
+                            stringResource(Res.string.statistics_net_daily_calories),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = colors.foregroundDefault
@@ -442,10 +494,10 @@ internal fun StatisticsBody(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            LegendDot(color = colors.foregroundBrand, label = "Net intake", style = graphTextStyle)
-                            LegendDot(color = colors.foregroundSupport.copy(alpha = 0.5f), label = "Goal", style = graphTextStyle)
+                            LegendDot(color = colors.foregroundBrand, label = stringResource(Res.string.statistics_net_intake_title), style = graphTextStyle)
+                            LegendDot(color = colors.foregroundSupport.copy(alpha = 0.5f), label = stringResource(Res.string.statistics_legend_goal), style = graphTextStyle)
                             if (normalizedWeights != null) {
-                                LegendDot(color = colors.foregroundSuccess, label = "Weight", style = graphTextStyle)
+                                LegendDot(color = colors.foregroundSuccess, label = stringResource(Res.string.statistics_legend_weight), style = graphTextStyle)
                             }
                         }
                     }
@@ -459,7 +511,7 @@ internal fun StatisticsBody(
                         val lines = remember(smoothedNetIntake, normalizedWeights, budget) {
                             buildList {
                                 add(Line(
-                                    label = "Net intake",
+                                    label = netIntakeLabel,
                                     values = smoothedNetIntake,
                                     color = SolidColor(colors.foregroundBrand),
                                     firstGradientFillColor = colors.foregroundBrand.copy(alpha = 0.3f),
@@ -471,7 +523,7 @@ internal fun StatisticsBody(
                                 ))
                                 if (smoothedNetIntake.isNotEmpty()) {
                                     add(Line(
-                                        label = "Goal",
+                                        label = goalLabel,
                                         values = List(smoothedNetIntake.size) { budget },
                                         color = SolidColor(colors.foregroundSupport.copy(alpha = 0.5f)),
                                         firstGradientFillColor = Color.Transparent,
@@ -484,7 +536,7 @@ internal fun StatisticsBody(
                                 }
                                 normalizedWeights?.let {
                                     add(Line(
-                                        label = "Weight",
+                                        label = weightLabel,
                                         values = it,
                                         color = SolidColor(colors.foregroundSuccess),
                                         firstGradientFillColor = Color.Transparent,
@@ -512,7 +564,7 @@ internal fun StatisticsBody(
                             animationMode = AnimationMode.Together { it * 2L },
                         )
                         Text(
-                            text = "${minNet.toInt()} kcal",
+                            text = stringResource(Res.string.common_kcal_value, minNet.toInt()),
                             style = graphTextStyle,
                             modifier = Modifier
                                 .align(Alignment.BottomStart)
@@ -522,7 +574,7 @@ internal fun StatisticsBody(
                                 .padding(horizontal = 8.dp, vertical = 2.dp),
                         )
                         Text(
-                            text = "${maxNet.toInt()} kcal",
+                            text = stringResource(Res.string.common_kcal_value, maxNet.toInt()),
                             style = graphTextStyle,
                             modifier = Modifier
                                 .align(Alignment.TopStart)
@@ -533,7 +585,7 @@ internal fun StatisticsBody(
                         )
                         if (weightScaleMin != null && weightScaleMax != null) {
                             Text(
-                                text = "${weightScaleMin.roundToOneDecimal()} kg",
+                                text = stringResource(Res.string.common_kg_value, weightScaleMin.roundToOneDecimal().toString()),
                                 style = graphTextStyle,
                                 modifier = Modifier
                                     .align(Alignment.BottomEnd)
@@ -543,7 +595,7 @@ internal fun StatisticsBody(
                                     .padding(horizontal = 8.dp, vertical = 2.dp),
                             )
                             Text(
-                                text = "${weightScaleMax.roundToOneDecimal()} kg",
+                                text = stringResource(Res.string.common_kg_value, weightScaleMax.roundToOneDecimal().toString()),
                                 style = graphTextStyle,
                                 modifier = Modifier
                                     .align(Alignment.TopEnd)
@@ -558,7 +610,7 @@ internal fun StatisticsBody(
                     if (weightData.isEmpty()) {
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            "Add daily weigh-ins to see your weight trend alongside calories",
+                            stringResource(Res.string.statistics_no_weight_data),
                             style = MaterialTheme.typography.bodySmall,
                             color = colors.foregroundSupport
                         )
@@ -576,14 +628,14 @@ internal fun StatisticsBody(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
-                        "Top calorie sources",
+                        stringResource(Res.string.statistics_top_calorie_sources),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = colors.foregroundDefault
                     )
                     TooltipIcon(
-                        title = "Top calorie sources",
-                        body = "The foods that contributed the most calories in this period. Small changes to your top items — like portion size or frequency — tend to have the biggest impact on your overall intake.",
+                        title = stringResource(Res.string.statistics_top_calorie_sources),
+                        body = stringResource(Res.string.statistics_top_calorie_sources_body),
                         onShow = showTooltip,
                         colors = colors
                     )
@@ -626,13 +678,13 @@ private fun OnboardingCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Getting started",
+                    stringResource(Res.string.statistics_getting_started),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = colors.foregroundDefault
                 )
                 Text(
-                    "$stepsComplete / 2 done",
+                    stringResource(Res.string.statistics_steps_done, stepsComplete),
                     style = MaterialTheme.typography.bodySmall,
                     color = if (stepsComplete == 2) colors.foregroundSuccess else colors.foregroundSupport
                 )
@@ -652,7 +704,7 @@ private fun OnboardingCard(
             if (daysFilled == 0L && !hasWeightData) {
                 Spacer(Modifier.height(14.dp))
                 Text(
-                    "Statistics show the relationship between what you eat, your exercise, and how your weight changes over time. Two things will unlock all the insights:",
+                    stringResource(Res.string.statistics_intro_text),
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.foregroundSupport
                 )
@@ -663,9 +715,9 @@ private fun OnboardingCard(
             // Step 1: Food logging
             OnboardingStep(
                 done = foodDone,
-                title = "Log food for 7 days",
-                statusLabel = if (!foodDone) "${daysFilled} / 7 days" else null,
-                unlocks = "Daily averages · calorie chart · top food sources",
+                title = stringResource(Res.string.statistics_step_log_food),
+                statusLabel = if (!foodDone) stringResource(Res.string.statistics_step_log_food_status, daysFilled.toInt()) else null,
+                unlocks = stringResource(Res.string.statistics_step_log_food_unlocks),
                 colors = colors
             )
 
@@ -676,9 +728,9 @@ private fun OnboardingCard(
             // Step 2: Weight tracking
             OnboardingStep(
                 done = weightDone,
-                title = "Add daily weigh-ins",
+                title = stringResource(Res.string.statistics_step_weigh_ins),
                 statusLabel = null,
-                unlocks = "Weight trend · maintenance calories · personalized recommendations",
+                unlocks = stringResource(Res.string.statistics_step_weigh_ins_unlocks),
                 colors = colors
             )
 
@@ -686,7 +738,7 @@ private fun OnboardingCard(
             if (foodDone && !weightDone) {
                 Spacer(Modifier.height(14.dp))
                 Text(
-                    "Tip: weigh yourself at the same time each morning for the most accurate trend.",
+                    stringResource(Res.string.statistics_weigh_tip),
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.foregroundSupport
                 )
@@ -700,7 +752,7 @@ private fun OnboardingCard(
                     onClick = onOpenDemo,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Explore demo", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(Res.string.statistics_explore_demo), style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -742,7 +794,7 @@ private fun OnboardingStep(
             }
             Spacer(Modifier.height(3.dp))
             Text(
-                text = "Unlocks: $unlocks",
+                text = stringResource(Res.string.statistics_unlocks_prefix, unlocks),
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.foregroundSupport.copy(alpha = 0.7f)
             )
@@ -767,7 +819,7 @@ private fun TooltipIcon(
     ) {
         Icon(
             imageVector = Icons.Filled.Info,
-            contentDescription = "Info: $title",
+            contentDescription = stringResource(Res.string.statistics_info_content_description, title),
             modifier = Modifier.size(14.dp),
             tint = colors.foregroundSupport.copy(alpha = 0.45f)
         )
@@ -792,14 +844,14 @@ private fun TopFoodItem(
             Text(item.item_name, style = MaterialTheme.typography.bodyMedium)
         },
         supportingContent = {
-            val densityText = kcalDensity?.let { "${it.toInt()} kcal/100g" } ?: ""
+            val densityText = kcalDensity?.let { stringResource(Res.string.statistics_kcal_per_100g, it.toInt()) } ?: ""
             if (densityText.isNotEmpty()) {
                 Text(densityText, style = MaterialTheme.typography.bodySmall, color = colors.foregroundSupport)
             }
         },
         trailingContent = {
             Text(
-                text = "${totalKcal.toInt()} kcal",
+                text = stringResource(Res.string.common_kcal_value, totalKcal.toInt()),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium
             )

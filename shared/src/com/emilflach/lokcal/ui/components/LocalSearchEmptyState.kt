@@ -13,6 +13,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.LocalRecipesColors
+import lokcal.shared.generated.resources.Res
+import lokcal.shared.generated.resources.search_configure_sources_button
+import lokcal.shared.generated.resources.search_no_local_results
+import lokcal.shared.generated.resources.search_online_instead
+import lokcal.shared.generated.resources.search_search_online_button
+import lokcal.shared.generated.resources.search_setup_sources_subtitle
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun LocalSearchEmptyState(
@@ -28,12 +35,12 @@ fun LocalSearchEmptyState(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "No local results found",
+            text = stringResource(Res.string.search_no_local_results),
             style = MaterialTheme.typography.titleMedium,
             color = color.foregroundDefault
         )
         Text(
-            text = if (sourcesConfigured) "Search online instead?" else "Set up your online search sources",
+            text = if (sourcesConfigured) stringResource(Res.string.search_online_instead) else stringResource(Res.string.search_setup_sources_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = color.foregroundSupport,
             modifier = Modifier.padding(top = 4.dp)
@@ -46,7 +53,7 @@ fun LocalSearchEmptyState(
                 contentColor = color.foregroundDefault
             )
         ) {
-            Text(if (sourcesConfigured) "Search online" else "Configure sources")
+            Text(if (sourcesConfigured) stringResource(Res.string.search_search_online_button) else stringResource(Res.string.search_configure_sources_button))
         }
     }
 }

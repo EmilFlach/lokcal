@@ -20,6 +20,14 @@ import androidx.compose.ui.unit.dp
 import com.emilflach.lokcal.theme.RecipesColors
 import com.emilflach.lokcal.util.currentDateIso
 import kotlinx.datetime.LocalDate
+import lokcal.shared.generated.resources.Res
+import lokcal.shared.generated.resources.common_cancel
+import lokcal.shared.generated.resources.main_ok
+import lokcal.shared.generated.resources.main_settings_desc
+import lokcal.shared.generated.resources.main_statistics_desc
+import lokcal.shared.generated.resources.main_today
+import lokcal.shared.generated.resources.main_weight_desc
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,10 +75,10 @@ fun MainSummaryHeader(
                     TextButton(onClick = {
                         onDateSelect(LocalDate.parse(currentDateIso()))
                         showDatePicker = false
-                    }) { Text("Today", color = colors.foregroundBrand) }
+                    }) { Text(stringResource(Res.string.main_today), color = colors.foregroundBrand) }
                     Spacer(Modifier.weight(1f))
                     TextButton(onClick = { showDatePicker = false }) {
-                        Text("Cancel", color = colors.foregroundSupport)
+                        Text(stringResource(Res.string.common_cancel), color = colors.foregroundSupport)
                     }
                     TextButton(onClick = {
                         datePickerState.selectedDateMillis?.let { millis ->
@@ -78,7 +86,7 @@ fun MainSummaryHeader(
                             onDateSelect(LocalDate.fromEpochDays(days))
                         }
                         showDatePicker = false
-                    }) { Text("OK", color = colors.foregroundBrand) }
+                    }) { Text(stringResource(Res.string.main_ok), color = colors.foregroundBrand) }
                 }
             },
             colors = datePickerColors
@@ -117,7 +125,7 @@ fun MainSummaryHeader(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.MonitorWeight,
-                        contentDescription = "Weight",
+                        contentDescription = stringResource(Res.string.main_weight_desc),
                         tint = colors.foregroundSupport,
                     )
                 }
@@ -146,7 +154,7 @@ fun MainSummaryHeader(
             IconButton(onClick = onOpenStatistics, modifier = Modifier.requiredSize(40.dp)) {
                 Icon(
                     imageVector = Icons.Outlined.InsertChart,
-                    contentDescription = "Statistics",
+                    contentDescription = stringResource(Res.string.main_statistics_desc),
                     tint = colors.foregroundSupport,
                 )
             }
@@ -156,7 +164,7 @@ fun MainSummaryHeader(
             IconButton(onClick = onOpenSettings, modifier = Modifier.requiredSize(40.dp)) {
                 Icon(
                     imageVector = Icons.Outlined.Settings,
-                    contentDescription = "Settings",
+                    contentDescription = stringResource(Res.string.main_settings_desc),
                     tint = colors.foregroundSupport,
                 )
             }
