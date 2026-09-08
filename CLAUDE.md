@@ -23,6 +23,8 @@ For common or `src@jvm/` changes — especially UI — start the app **once** an
 
 ### Builds and tests
 
+**Physical devices:** always build and run in release mode (`-v release`) on Android phones and iOS devices. Compose debug performance is not representative. For Android connection and deployment, use the [android-device-run skill](.claude/skills/android-device-run/SKILL.md).
+
 Build the JVM/desktop target first (fastest). Always build per-module (`-m`) — bare `./kotlin build` builds every target. Always build → test → fix.
 
 | Changed | Build | Test |
