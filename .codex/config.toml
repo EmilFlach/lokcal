@@ -1,0 +1,6 @@
+[mcp_servers."Compose Hot Reload"]
+command = "./kotlin"
+args = ["compose-hot-reload-mcp-server"]
+
+[mcp_servers.klibs]
+url = "https://api.klibs.io/mcp"
