@@ -138,9 +138,7 @@ struct MainView: UIViewControllerRepresentable {
     let refreshKey: Int
 
     func makeUIViewController(context: Context) -> UIViewController {
-        let currentDate = getCurrentDateIso()
         return ScreenFactoriesKt.MainViewController(
-            dateIso: currentDate,
             onOpenMeal: { mealType, dateIso in
                 navigationPath.append(NavigationDestination.mealTime(
                     mealType: mealType,

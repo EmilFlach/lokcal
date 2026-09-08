@@ -32,7 +32,9 @@ class MainViewModel(
     private val exerciseRepo: ExerciseRepository,
     private val weightRepo: WeightRepository,
     private val settingsRepo: SettingsRepository,
-    initialDateIso: String
+    initialDateIso: String,
+    private val dateProvider: () -> String = ::currentDateIso,
+    private val viewModelScope: CoroutineScope = CoroutineScope(Dispatchers.Main)
 ) {
     val initialPage = 5000
     val pageCount = 10000
@@ -45,11 +47,15 @@ class MainViewModel(
     private val _animationTrigger = MutableStateFlow(0)
     val animationTrigger: StateFlow<Int> = _animationTrigger.asStateFlow()
 
-    private val viewModelScope = CoroutineScope(Dispatchers.Main)
+    // Keep page identities fixed even when the local calendar day changes.
+    private val pageAnchor = LocalDate.parse(dateProvider())
+    private var observedToday = pageAnchor
+    private var selectedDate = LocalDate.parse(initialDateIso)
+    private var loadJob: Job? = null
     private val automaticStepsSyncManager = AutomaticStepsSyncManager(exerciseRepo, settingsRepo)
 
     init {
-        loadFor(_uiState.value.selectedDate)
+        loadFor(selectedDate)
         startPeriodicUpdates()
     }
 
@@ -60,7 +66,7 @@ class MainViewModel(
                     HealthManager.arePermissionsGranted() &&
                     automaticStepsSyncManager.sync()
                 ) {
-                    loadFor(_uiState.value.selectedDate)
+                    loadFor(selectedDate)
                 }
                 delay(10000.milliseconds)
                 _animationTrigger.value++
@@ -77,28 +83,26 @@ class MainViewModel(
     fun getSelectedDateIso(): String = _uiState.value.selectedDate.toString()
 
     fun onPageSelected(page: Int) {
-        val today = LocalDate.parse(currentDateIso())
-        val diff = page - initialPage
-        val targetDate = today.plus(diff, DateTimeUnit.DAY)
-        if (_uiState.value.selectedDate != targetDate) {
+        val targetDate = getDateForPage(page)
+        if (selectedDate != targetDate) {
             loadFor(targetDate)
         }
     }
 
     fun getPageForDate(date: LocalDate): Int {
-        val today = LocalDate.parse(currentDateIso())
-        val diff = (date.toEpochDays() - today.toEpochDays()).toInt()
+        val diff = (date.toEpochDays() - pageAnchor.toEpochDays()).toInt()
         return initialPage + diff
     }
 
     fun getDateForPage(page: Int): LocalDate {
-        val today = LocalDate.parse(currentDateIso())
         val diff = page - initialPage
-        return today.plus(diff, DateTimeUnit.DAY)
+        return pageAnchor.plus(diff, DateTimeUnit.DAY)
     }
 
     fun loadFor(date: LocalDate) {
-        viewModelScope.launch {
+        selectedDate = date
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             val dayState = getDayStateFor(date)
             val last7 = computeLast7Deltas(date)
             _uiState.value = _uiState.value.copy(
@@ -183,13 +187,26 @@ class MainViewModel(
         }.reversed()
     }
 
+    /** Follow today across midnight, but keep deliberately selected historical dates. */
+    fun refreshCurrentDate() {
+        val today = LocalDate.parse(dateProvider())
+        if (today == observedToday) return
+        loadFor(resolveDateForRefresh(today))
+    }
+
+    private fun resolveDateForRefresh(today: LocalDate): LocalDate {
+        val target = if (selectedDate == observedToday) today else selectedDate
+        observedToday = today
+        return target
+    }
+
     fun refresh() {
-        loadFor(_uiState.value.selectedDate)
+        loadFor(resolveDateForRefresh(LocalDate.parse(dateProvider())))
     }
 
     fun formattedDate(): String {
         val selectedDate = _uiState.value.selectedDate
-        val isToday = selectedDate.toString() == currentDateIso()
+        val isToday = selectedDate.toString() == dateProvider()
 
         val weekDay =
             if (isToday) "Today" else selectedDate.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.titlecase() }

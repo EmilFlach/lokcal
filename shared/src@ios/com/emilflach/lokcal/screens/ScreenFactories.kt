@@ -82,7 +82,6 @@ fun isExerciseTypeBuiltIn(id: Long): Boolean =
 
 // Main Screen
 fun MainViewController(
-    dateIso: String,
     onOpenMeal: (String, String) -> Unit,
     onOpenExercise: (String) -> Unit,
     onOpenSettings: () -> Unit,
@@ -93,9 +92,6 @@ fun MainViewController(
 ) = ComposeUIViewController {
     AppTheme {
         CompositionLocalProvider(LocalImageCache provides globalImageCacheRepo) {
-            LaunchedEffect(dateIso) {
-                globalMainViewModel.loadFor(LocalDate.parse(dateIso))
-            }
             LaunchedEffect(refreshKey) {
                 globalMainViewModel.refresh()
             }

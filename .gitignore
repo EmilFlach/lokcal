@@ -19,3 +19,6 @@ captures
 lokcal.db
 build/web-dist/
 build/web-assets/
+
+# Local MCP configuration may contain credentials.
+/.ai/mcp/mcp.json

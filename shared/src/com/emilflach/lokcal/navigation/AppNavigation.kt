@@ -14,7 +14,6 @@ import com.emilflach.lokcal.ui.screens.*
 import com.emilflach.lokcal.util.currentDateIso
 import com.emilflach.lokcal.viewmodel.*
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDate
 
 @Composable
 internal fun AppNavigation(
@@ -65,9 +64,8 @@ internal fun AppNavigation(
             },
             entryProvider = entryProvider {
                 entry<Screen.Main> { s ->
-                    LaunchedEffect(s.dateIso) {
-                        mainViewModel.loadFor(LocalDate.parse(s.dateIso))
-                    }
+                    // The retained view model owns the selection. Reapplying the
+                    // root route's startup date would undo rollover or date picking.
                     LaunchedEffect(refreshToggle) {
                         mainViewModel.refresh()
                     }

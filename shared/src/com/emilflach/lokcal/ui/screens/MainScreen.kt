@@ -10,6 +10,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.testTag
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.flow.drop
 import com.emilflach.lokcal.theme.LocalRecipesColors
 import com.emilflach.lokcal.ui.components.GradientBackground
 import com.emilflach.lokcal.ui.components.isNativeNavigation
@@ -34,21 +39,40 @@ fun MainScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val animationTrigger by viewModel.animationTrigger.collectAsState()
-    val pagerState = rememberPagerState(initialPage = viewModel.initialPage) { viewModel.pageCount }
+    val isWindowFocused = LocalWindowInfo.current.isWindowFocused
+    LaunchedEffect(viewModel, isWindowFocused) {
+        if (isWindowFocused) {
+            viewModel.refresh()
+            while (isActive) {
+                viewModel.refreshCurrentDate()
+                delay(10_000)
+            }
+        }
+    }
+    val pagerState = rememberPagerState(
+        initialPage = viewModel.getPageForDate(uiState.selectedDate)
+    ) { viewModel.pageCount }
     val isProgrammaticScroll = remember { arrayOf(false) }
 
     LaunchedEffect(uiState.selectedDate) {
         val targetPage = viewModel.getPageForDate(uiState.selectedDate)
         if (pagerState.currentPage != targetPage) {
             isProgrammaticScroll[0] = true
-            pagerState.animateScrollToPage(targetPage)
-            isProgrammaticScroll[0] = false
+            try {
+                pagerState.animateScrollToPage(targetPage)
+            } finally {
+                isProgrammaticScroll[0] = false
+            }
         }
     }
 
-    LaunchedEffect(pagerState.currentPage) {
-        if (!isProgrammaticScroll[0]) {
-            viewModel.onPageSelected(pagerState.currentPage)
+    LaunchedEffect(pagerState, viewModel) {
+        // The first emission describes initialization, not user navigation. In
+        // particular, it may still show yesterday while the focus refresh loads today.
+        snapshotFlow { pagerState.currentPage }.drop(1).collect { page ->
+            if (!isProgrammaticScroll[0]) {
+                viewModel.onPageSelected(page)
+            }
         }
     }
 
@@ -118,7 +142,7 @@ fun MainScreen(
                         pagerSnapDistance = PagerSnapDistance.atMost(1)
                     ),
                     beyondViewportPageCount = 1,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).testTag("main_day_pager")
                 ) { page ->
                 val date = remember(page) { viewModel.getDateForPage(page) }
                 var dayState by remember(date) { mutableStateOf(DayState()) }
